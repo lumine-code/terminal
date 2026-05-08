@@ -587,7 +587,17 @@ export class TerminalElement extends HTMLElement {
     }
 
     if (Config.get('xterm.webgl')) {
-      this.terminal.loadAddon(new WebglAddon());
+      let webglAddon: WebglAddon | null = null;
+      try {
+        webglAddon = new WebglAddon();
+      } catch (err) {
+        // The addon will throw on instantiation if a WebGL context cannot be
+        // acquired.
+        console.warn('terminal.xterm.webgl is true, but platform does not support WebGL');
+      }
+      if (webglAddon) {
+        this.terminal.loadAddon(webglAddon);
+      }
     }
 
     if (Config.get('xterm.ligatures')) {
