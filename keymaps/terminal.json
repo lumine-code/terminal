@@ -1,0 +1,55 @@
+{
+  ".platform-darwin atom-workspace": {
+    "ctrl-`": "terminal:focus",
+    "ctrl-~ n": "terminal:open",
+    "ctrl-~ up": "terminal:open-split-up",
+    "ctrl-~ down": "terminal:open-split-down",
+    "ctrl-~ left": "terminal:open-split-left",
+    "ctrl-~ right": "terminal:open-split-right",
+    "ctrl-~ b": "terminal:open-split-bottom-dock",
+    "ctrl-~ l": "terminal:open-split-left-dock",
+    "ctrl-~ r": "terminal:open-split-right-dock",
+    "ctrl-~ x": "terminal:run-selected-text",
+    "ctrl-~ i": "terminal:insert-selected-text"
+  },
+  ".platform-darwin terminal-view": {
+    "cmd-alt-k": "terminal:clear",
+    "ctrl-l": "terminal:clear",
+    "cmd-f": "terminal:find",
+    "cmd-g": "terminal:find-next",
+    "cmd-shift-g": "terminal:find-previous",
+    "cmd-e": "terminal:set-selection-as-find-pattern",
+    "ctrl-`": "terminal:unfocus"
+  },
+  ".platform-darwin .terminal-find-palette atom-text-editor": {
+    "cmd-f": "terminal:find",
+    "cmd-g": "terminal:find-next",
+    "cmd-shift-g": "terminal:find-previous"
+  },
+  ".platform-win32 atom-workspace, .platform-linux atom-workspace": {
+    "ctrl-`": "terminal:focus",
+    "ctrl-~ n": "terminal:open",
+    "ctrl-~ up": "terminal:open-split-up",
+    "ctrl-~ down": "terminal:open-split-down",
+    "ctrl-~ left": "terminal:open-split-left",
+    "ctrl-~ right": "terminal:open-split-right",
+    "ctrl-~ b": "terminal:open-split-bottom-dock",
+    "ctrl-~ l": "terminal:open-split-left-dock",
+    "ctrl-~ r": "terminal:open-split-right-dock",
+    "ctrl-~ x": "terminal:run-selected-text",
+    "ctrl-~ i": "terminal:insert-selected-text"
+  },
+  ".platform-win32 terminal-view, .platform-linux terminal-view": {
+    "ctrl-l": "terminal:clear",
+    "ctrl-f": "terminal:find",
+    "f3": "terminal:find-next",
+    "shift-f3": "terminal:find-previous",
+    "ctrl-e": "terminal:set-selection-as-find-pattern",
+    "ctrl-`": "terminal:unfocus"
+  },
+  ".platform-win32 .terminal-find-palette atom-text-editor, .platform-linux .terminal-find-palette atom-text-editor": {
+    "ctrl-f": "terminal:find",
+    "f3": "terminal:find-next",
+    "shift-f3": "terminal:find-previous"
+  }
+}
