@@ -6,6 +6,11 @@
 * Updated package metadata, documentation links, and license attribution.
 * Switched from the `@pulsar-edit/node-pty` fork to upstream `node-pty` (`^1.1.0`),
   which now publishes stable releases with the same `node-addon-api` binding.
+* Rewrote the package in plain CommonJS JavaScript. The TypeScript sources and the
+  Rollup build step are gone; the package now loads directly from `lib/`.
+* Dropped the `typescript`, `rollup`, `tslib`, and `@pulsar-edit/types` (`@types/atom`)
+  toolchain dependencies. The `@xterm/addon-ligatures` ESM addon now loads through
+  Node's `require(esm)` support instead of being bundled.
 
 ## 0.1.0
 
