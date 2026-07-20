@@ -4,6 +4,8 @@
 * Renamed the custom terminal element from `pulsar-terminal` to `terminal-view`.
   Keymaps and stylesheets that target the old element name must be updated.
 * Updated package metadata, documentation links, and license attribution.
+* Switched from the `@pulsar-edit/node-pty` fork to upstream `node-pty` (`^1.1.0`),
+  which now publishes stable releases with the same `node-addon-api` binding.
 
 ## 0.1.0
 
