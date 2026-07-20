@@ -11,6 +11,10 @@
 * Dropped the `typescript`, `rollup`, `tslib`, and `@pulsar-edit/types` (`@types/atom`)
   toolchain dependencies. The `@xterm/addon-ligatures` ESM addon now loads through
   Node's `require(esm)` support instead of being bundled.
+* Converted the keymap to JSON and the stylesheets to CSS with custom properties.
+* Flattened `lib/`: the pty worker moved from `lib/worker/pty.js` to `lib/pty-worker.js`.
+* Removed the legacy `platformioIDETerminal` service. The `terminal` service (`2.0.0`)
+  is now the sole provided service.
 
 ## 0.1.0
 

@@ -65,7 +65,6 @@ The terminal treats CSS custom properties on `:root` as the source of truth for 
 ## Services
 
 - **terminal** (`2.0.0`): provided to let other packages open terminals and run commands in them.
-- **platformioIDETerminal** (`1.1.0`): provided to offer the widely used `platformio-ide-terminal` service API for backward compatibility.
 
 ## Contributing
 

@@ -50,12 +50,6 @@
     "temp": "^0.9.4"
   },
   "providedServices": {
-    "platformioIDETerminal": {
-      "description": "Run commands and open terminals.",
-      "versions": {
-        "1.1.0": "providePlatformioIDETerminalService"
-      }
-    },
     "terminal": {
       "description": "Run commands and open terminals.",
       "versions": {
