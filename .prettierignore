@@ -1,0 +1,7 @@
+# Dependencies and lockfiles
+node_modules/
+package-lock.json
+
+# Vendored / third-party (not our source)
+# xterm.js's own base stylesheet — kept verbatim for easy refresh on upgrade.
+styles/xterm.css

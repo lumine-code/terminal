@@ -1,111 +1,105 @@
+const { TerminalModel } = require("../lib/model");
 
-const { TerminalModel } = require('../lib/model');
-
-const fs = require('fs-extra');
-const path = require('path');
-const temp = require('temp');
+const fs = require("fs-extra");
+const path = require("path");
+const temp = require("temp");
 
 temp.track();
 
-describe('TerminalModel', () => {
+describe("TerminalModel", () => {
   let model, pane, element, tmpdir, uri, terminals;
 
   beforeEach(async () => {
-    uri = 'terminal://some-session-id';
+    uri = "terminal://some-session-id";
     terminals = new Set();
     model = new TerminalModel({ uri, terminals });
     await model.ready();
-    pane = jasmine.createSpyObj('pane', ['destroyItem', 'getActiveItem', 'activateItem']);
-    element = jasmine.createSpyObj(
-      'element',
-      [
-        'destroy',
-        'refitTerminal',
-        'focusTerminal',
-        'clickOnCurrentAnchor',
-        'getCurrentAnchorHref',
-        'restartPtyProcess'
-      ]
-    );
-    element.terminal = jasmine.createSpyObj('terminal', ['getSelection']);
-    element.pty = jasmine.createSpyObj('pty', ['write']);
+    pane = jasmine.createSpyObj("pane", ["destroyItem", "getActiveItem", "activateItem"]);
+    element = jasmine.createSpyObj("element", [
+      "destroy",
+      "refitTerminal",
+      "focusTerminal",
+      "clickOnCurrentAnchor",
+      "getCurrentAnchorHref",
+      "restartPtyProcess",
+    ]);
+    element.terminal = jasmine.createSpyObj("terminal", ["getSelection"]);
+    element.pty = jasmine.createSpyObj("pty", ["write"]);
     tmpdir = await temp.mkdir();
   });
 
   afterEach(async () => await temp.cleanup());
 
-  it('handles a previous active item that has no getPath() method', async () => {
-    atom.config.set('terminal.terminal.useProjectRootAsCwd', true);
+  it("handles a previous active item that has no getPath() method", async () => {
+    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
     atom.project.setPaths([tmpdir]);
-    spyOn(atom.workspace, 'getActivePaneItem').andReturn({});
+    spyOn(atom.workspace, "getActivePaneItem").andReturn({});
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
   });
 
-  it('handles a previous active item whose getPath() method returns a directory', async () => {
-    atom.config.set('terminal.terminal.useProjectRootAsCwd', true);
+  it("handles a previous active item whose getPath() method returns a directory", async () => {
+    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
-    let previousActiveItem = jasmine.createSpyObj('somemodel', ['getPath']);
+    let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
     previousActiveItem.getPath.andReturn(tmpdir);
-    spyOn(atom.workspace, 'getActivePaneItem').andReturn(previousActiveItem);
+    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
   });
 
-  it('handles a previous active item whose getPath() method returns a file', async () => {
-    atom.config.set('terminal.terminal.useProjectRootAsCwd', true);
+  it("handles a previous active item whose getPath() method returns a file", async () => {
+    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
-    let previousActiveItem = jasmine.createSpyObj('somemodel', ['getPath']);
+    let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
     previousActiveItem.getPath.andReturn(`${tmpdir}${path.sep}foo.txt`);
-    spyOn(atom.workspace, 'getActivePaneItem').andReturn(previousActiveItem);
+    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
   });
 
   it('handles a previous active item that has a "selectedPath" property that returns a directory', async () => {
-    atom.config.set('terminal.terminal.useProjectRootAsCwd', true);
+    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
     let previousActiveItem = {};
     previousActiveItem.selectedPath = tmpdir;
-    spyOn(atom.workspace, 'getActivePaneItem').andReturn(previousActiveItem);
+    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
   });
 
   it('handles a previous active item that has a "selectedPath" property that returns a file', async () => {
-    atom.config.set('terminal.terminal.useProjectRootAsCwd', true);
+    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
     let previousActiveItem = {};
     previousActiveItem.selectedPath = `${tmpdir}${path.sep}foo.txt`;
-    spyOn(atom.workspace, 'getActivePaneItem').andReturn(previousActiveItem);
+    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
   });
 
-  it('handles a previous active item whose getPath() returns an invalid path', async () => {
-    let dirPath = path.join(tmpdir, 'dir');
+  it("handles a previous active item whose getPath() returns an invalid path", async () => {
+    let dirPath = path.join(tmpdir, "dir");
     await fs.mkdir(dirPath);
     atom.project.setPaths([dirPath]);
-    let previousActiveItem = jasmine.createSpyObj('somemodel', ['getPath']);
-    previousActiveItem.getPath.andReturn(
-      path.join(tmpdir, 'non-existent-dir')
-    );
-    spyOn(atom.workspace, 'getActivePaneItem').andReturn(previousActiveItem);
+    let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
+    previousActiveItem.getPath.andReturn(path.join(tmpdir, "non-existent-dir"));
+    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(dirPath);
   });
 
-  it('handles a previous active item which exists in the project path and has getPath()', async () => {
+  it("handles a previous active item which exists in the project path and has getPath()", async () => {
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
     previousActiveItem.getPath.andReturn("/some/dir/file");
     spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
@@ -116,7 +110,7 @@ describe('TerminalModel', () => {
     expect(newModel.getPath()).toBe(expected[0]);
   });
 
-  it('handles a previous active item which exists in the project path and has selectedPath', async () => {
+  it("handles a previous active item which exists in the project path and has selectedPath", async () => {
     let previousActiveItem = {};
     previousActiveItem.selectedPath = "/some/dir/file";
     spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
@@ -127,96 +121,96 @@ describe('TerminalModel', () => {
     expect(newModel.getPath()).toBe(expected[0]);
   });
 
-  it('handles being constructed with a target cwd', async () => {
+  it("handles being constructed with a target cwd", async () => {
     let expected = __dirname;
     let url = new URL(uri);
-    url.searchParams.set('cwd', __filename);
+    url.searchParams.set("cwd", __filename);
     let newModel = new TerminalModel({ uri: url.href, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(expected);
   });
 
-  it('serializes', () => {
+  it("serializes", () => {
     let specificUri = model.getURI();
     expect(model.serialize()).toEqual({
-      deserializer: 'TerminalModel',
-      version: '1.0.0',
-      uri: specificUri
+      deserializer: "TerminalModel",
+      version: "1.0.0",
+      uri: specificUri,
     });
   });
 
-  describe('destroy()', () => {
-    it('destroys the element', () => {
+  describe("destroy()", () => {
+    it("destroys the element", () => {
       model.element = element;
       model.destroy();
       expect(model.element.destroy).toHaveBeenCalled();
     });
 
-    it('removes the terminal from the master set', () => {
+    it("removes the terminal from the master set", () => {
       expect(terminals.has(model)).toBe(true);
       model.destroy();
       expect(terminals.has(model)).toBe(false);
     });
   });
 
-  describe('getTitle()', () => {
-    it('uses the standard title by default', () => {
-      expect(model.getTitle()).toBe('Terminal');
+  describe("getTitle()", () => {
+    it("uses the standard title by default", () => {
+      expect(model.getTitle()).toBe("Terminal");
     });
 
-    it('adds the active indicator to the title when active', () => {
-      atom.config.set('terminal.terminal.activeTerminalIndicator', '⦿ ');
-      spyOn(model, 'isActive').andReturn(true);
-      expect(model.getTitle()).toBe('⦿ Terminal');
+    it("adds the active indicator to the title when active", () => {
+      atom.config.set("terminal.terminal.activeTerminalIndicator", "⦿ ");
+      spyOn(model, "isActive").andReturn(true);
+      expect(model.getTitle()).toBe("⦿ Terminal");
     });
   });
 
-  describe('getElement()', () => {
-    it('returns the element', () => {
-      let expected = { something: 'something' };
+  describe("getElement()", () => {
+    it("returns the element", () => {
+      let expected = { something: "something" };
       model.element = expected;
       expect(model.getElement()).toBe(expected);
     });
   });
 
-  describe('getLongTitle()', () => {
-    it('returns the correct long title when the title is the default', () => {
-      expect(model.getLongTitle()).toBe('Terminal');
+  describe("getLongTitle()", () => {
+    it("returns the correct long title when the title is the default", () => {
+      expect(model.getLongTitle()).toBe("Terminal");
     });
 
-    it('returns the correct long title when the title has been customized', () => {
-      model.title = 'some new title';
-      expect(model.getLongTitle()).toBe('Terminal (some new title)');
+    it("returns the correct long title when the title has been customized", () => {
+      model.title = "some new title";
+      expect(model.getLongTitle()).toBe("Terminal (some new title)");
     });
   });
 
-  describe('onDidChangeTitle()', () => {
-    it('broadcasts title changes', () => {
-      let spy = jasmine.createSpy('titleSpy');
+  describe("onDidChangeTitle()", () => {
+    it("broadcasts title changes", () => {
+      let spy = jasmine.createSpy("titleSpy");
       let disposable = model.onDidChangeTitle(spy);
-      let expected = 'new title';
-      model.emitter.emit('did-change-title', expected);
+      let expected = "new title";
+      model.emitter.emit("did-change-title", expected);
       expect(spy).toHaveBeenCalledWith(expected);
       disposable.dispose();
     });
   });
 
-  describe('getIconName()', () => {
-    it('shows the correct icon', () => {
-      expect(model.getIconName()).toBe('terminal');
+  describe("getIconName()", () => {
+    it("shows the correct icon", () => {
+      expect(model.getIconName()).toBe("terminal");
     });
   });
 
-  describe('getPath()', () => {
-    it('represents cwd correctly', () => {
-      let expected = '/some/dir';
+  describe("getPath()", () => {
+    it("represents cwd correctly", () => {
+      let expected = "/some/dir";
       model.cwd = expected;
       expect(model.getPath()).toBe(expected);
     });
   });
 
-  describe('isModified()', () => {
-    it('is initially false', () => {
+  describe("isModified()", () => {
+    it("is initially false", () => {
       expect(model.isModified()).toBe(false);
     });
 
@@ -226,20 +220,20 @@ describe('TerminalModel', () => {
     });
   });
 
-  describe('onDidChangeModified()', () => {
-    it('notifies observers when the modified status changes', () => {
-      let spy = jasmine.createSpy('modified-spy');
+  describe("onDidChangeModified()", () => {
+    it("notifies observers when the modified status changes", () => {
+      let spy = jasmine.createSpy("modified-spy");
       let disposable = model.onDidChangeModified(spy);
-      model.emitter.emit('did-change-modified', true);
+      model.emitter.emit("did-change-modified", true);
       expect(spy).toHaveBeenCalledWith(true);
       disposable.dispose();
     });
   });
 
-  describe('handleNewData()', () => {
-    it('functions as expected when the model initially has no pane set', () => {
+  describe("handleNewData()", () => {
+    it("functions as expected when the model initially has no pane set", () => {
       pane.getActiveItem.andReturn({});
-      spyOn(atom.workspace, 'paneForItem').andReturn(pane);
+      spyOn(atom.workspace, "paneForItem").andReturn(pane);
       model.handleNewData();
       expect(atom.workspace.paneForItem).toHaveBeenCalled();
     });
@@ -261,55 +255,55 @@ describe('TerminalModel', () => {
     it('does not change the "modified" attribute at all when the current item is the active item', () => {
       pane.getActiveItem.andReturn(model);
       model.pane = pane;
-      spyOn(model.emitter, 'emit');
+      spyOn(model.emitter, "emit");
       model.handleNewData();
-      expect(model.emitter.emit.calls.filter(
-        call => call.args[0] === 'did-change-modified'
-      ).length).toBe(0);
+      expect(
+        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+      ).toBe(0);
     });
 
     it('does not change the "modified" attribute at all when the current item is not active item', () => {
       pane.getActiveItem.andReturn({});
       model.pane = pane;
       model.modified = true;
-      spyOn(model.emitter, 'emit');
+      spyOn(model.emitter, "emit");
       model.handleNewData();
-      expect(model.emitter.emit.calls.filter(
-        call => call.args[0] === 'did-change-modified'
-      ).length).toBe(0);
+      expect(
+        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+      ).toBe(0);
     });
 
     it('does change the "modified" attribute when necessary', () => {
       pane.getActiveItem.andReturn({});
       model.pane = pane;
-      spyOn(model.emitter, 'emit');
+      spyOn(model.emitter, "emit");
       model.handleNewData();
-      expect(model.emitter.emit.calls.filter(
-        call => call.args[0] === 'did-change-modified'
-      ).length).toBe(1);
+      expect(
+        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+      ).toBe(1);
     });
   });
 
-  describe('getSessionId()', () => {
-    it('returns a unique ID for the terminal', () => {
-      expect(model.getSessionId()).toBe('some-session-id');
+  describe("getSessionId()", () => {
+    it("returns a unique ID for the terminal", () => {
+      expect(model.getSessionId()).toBe("some-session-id");
     });
   });
 
-  describe('refitTerminal()', () => {
-    it('should be able to refit the terminal even when an element has not been set', () => {
+  describe("refitTerminal()", () => {
+    it("should be able to refit the terminal even when an element has not been set", () => {
       model.refitTerminal();
     });
 
-    it('should be able to refit the terminal with an element set', () => {
+    it("should be able to refit the terminal with an element set", () => {
       model.element = element;
       model.refitTerminal();
       expect(model.element.refitTerminal).toHaveBeenCalled();
     });
   });
 
-  describe('focusTerminal()', () => {
-    it('calls through to the element', () => {
+  describe("focusTerminal()", () => {
+    it("calls through to the element", () => {
       model.element = element;
       model.focusTerminal();
       expect(model.element.focusTerminal).toHaveBeenCalled();
@@ -317,26 +311,26 @@ describe('TerminalModel', () => {
 
     it('sets the correct "modified" value (when the old value was `false`)', () => {
       model.element = element;
-      spyOn(model.emitter, 'emit');
+      spyOn(model.emitter, "emit");
       model.focusTerminal();
       expect(model.modified).toBe(false);
-      expect(model.emitter.emit.calls.filter(
-        call => call.args[0] === 'did-change-modified'
-      ).length).toBe(0);
+      expect(
+        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+      ).toBe(0);
     });
 
     it('sets the correct "modified" value (when the old value was `true`)', () => {
       model.element = element;
       model.modified = true;
-      spyOn(model.emitter, 'emit');
+      spyOn(model.emitter, "emit");
       model.focusTerminal();
       expect(model.modified).toBe(false);
-      expect(model.emitter.emit.calls.filter(
-        call => call.args[0] === 'did-change-modified'
-      ).length).toBe(1);
+      expect(
+        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+      ).toBe(1);
     });
 
-    it('activates the pane item', () => {
+    it("activates the pane item", () => {
       model.element = element;
       model.pane = pane;
       model.focusTerminal();
@@ -350,60 +344,57 @@ describe('TerminalModel', () => {
     });
   });
 
-  describe('exit()', () => {
-    it('destroys the model', () => {
+  describe("exit()", () => {
+    it("destroys the model", () => {
       model.pane = pane;
       model.exit();
       expect(model.pane.destroyItem.calls[0].args).toEqual([model, true]);
     });
   });
 
-  describe('restartPtyProcess()', () => {
-    it('is a no-op with no element set', () => {
+  describe("restartPtyProcess()", () => {
+    it("is a no-op with no element set", () => {
       model.restartPtyProcess();
       expect(element.restartPtyProcess).not.toHaveBeenCalled();
     });
 
-    it('works with an element set', () => {
+    it("works with an element set", () => {
       model.element = element;
       model.restartPtyProcess();
       expect(element.restartPtyProcess).toHaveBeenCalled();
     });
   });
 
-  describe('getSelection()', () => {
-    it('gets text from the terminal', () => {
+  describe("getSelection()", () => {
+    it("gets text from the terminal", () => {
       model.element = element;
       model.getSelection();
       expect(model.element.terminal.getSelection).toHaveBeenCalled();
     });
   });
 
-
-  describe('run()', () => {
-    it('runs a command', () => {
+  describe("run()", () => {
+    it("runs a command", () => {
       model.element = element;
-      let expectedText = 'some text';
+      let expectedText = "some text";
       model.run(expectedText);
       let args = model.element.pty.write.calls[0].args;
-      expect(args).toEqual(
-        [expectedText + (process.platform === 'win32' ? '\r' : '\n')]
-      );
+      expect(args).toEqual([expectedText + (process.platform === "win32" ? "\r" : "\n")]);
     });
   });
 
-  describe('paste()', () => {
-    it('inserts text', () => {
+  describe("paste()", () => {
+    it("inserts text", () => {
       model.element = element;
-      let expectedText = 'some text';
+      let expectedText = "some text";
       model.paste(expectedText);
       let args = model.element.pty.write.calls[0].args;
       expect(args).toEqual([expectedText]);
     });
   });
 
-  describe('setActive()', () => {
-    it('manages the active terminal correctly', async () => {
+  describe("setActive()", () => {
+    it("manages the active terminal correctly", async () => {
       let activePane = atom.workspace.getCenter().getActivePane();
       let newTerminals = new Set();
       let model1 = new TerminalModel({ uri, terminals: newTerminals });
@@ -425,9 +416,8 @@ describe('TerminalModel', () => {
     });
   });
 
-
-  describe('moveToPane()', () => {
-    it('(mock)', async () => {
+  describe("moveToPane()", () => {
+    it("(mock)", async () => {
       const expected = { getContainer: () => ({ getLocation: () => {} }) };
       model.moveToPane(expected);
       expect(model.pane).toBe(expected);
@@ -439,7 +429,7 @@ describe('TerminalModel', () => {
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
       expect(model.dock).toBe(undefined);
-    })
+    });
 
     it("(left)", async () => {
       const dock = atom.workspace.getLeftDock();
@@ -447,7 +437,7 @@ describe('TerminalModel', () => {
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
       expect(model.dock).toBe(dock);
-    })
+    });
 
     it("(right)", async () => {
       const dock = atom.workspace.getRightDock();
@@ -455,7 +445,7 @@ describe('TerminalModel', () => {
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
       expect(model.dock).toBe(dock);
-    })
+    });
 
     it("(bottom)", async () => {
       const dock = atom.workspace.getBottomDock();
@@ -463,11 +453,11 @@ describe('TerminalModel', () => {
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
       expect(model.dock).toBe(dock);
-    })
+    });
   });
 
-  describe('isVisible()', () => {
-    it('works within a pane', () => {
+  describe("isVisible()", () => {
+    it("works within a pane", () => {
       let activePane = atom.workspace.getCenter().getActivePane();
       model.moveToPane(activePane);
       expect(model.isVisible()).toBe(false);
@@ -475,7 +465,7 @@ describe('TerminalModel', () => {
       expect(model.isVisible()).toBe(true);
     });
 
-    it('works within a dock', () => {
+    it("works within a dock", () => {
       let dock = atom.workspace.getBottomDock();
       let activePane = dock.getActivePane();
       model.moveToPane(activePane);
@@ -486,49 +476,49 @@ describe('TerminalModel', () => {
     });
   });
 
-  describe('isActive()', () => {
+  describe("isActive()", () => {
     beforeEach(() => {
-      atom.config.set('terminal.behavior.activeTerminalLogic', 'visible');
+      atom.config.set("terminal.behavior.activeTerminalLogic", "visible");
     });
 
-    it('works when the terminal is visible and active', () => {
+    it("works when the terminal is visible and active", () => {
       model.activeIndex = 0;
-      spyOn(model, 'isVisible').andReturn(true);
+      spyOn(model, "isVisible").andReturn(true);
       expect(model.isActive()).toBe(true);
     });
 
-    it('works when the terminal is visible and not active', () => {
+    it("works when the terminal is visible and not active", () => {
       model.activeIndex = 1;
-      spyOn(model, 'isVisible').andReturn(true);
+      spyOn(model, "isVisible").andReturn(true);
       expect(model.isActive()).toBe(false);
     });
 
-    it('works when the terminal is invisible and active', () => {
+    it("works when the terminal is invisible and active", () => {
       model.activeIndex = 0;
-      spyOn(model, 'isVisible').andReturn(false);
+      spyOn(model, "isVisible").andReturn(false);
       expect(model.isActive()).toBe(false);
     });
 
-    it('works when the terminal is invisible and active (and we have opted into it via config)', () => {
-      atom.config.set('terminal.behavior.activeTerminalLogic', 'all');
+    it("works when the terminal is invisible and active (and we have opted into it via config)", () => {
+      atom.config.set("terminal.behavior.activeTerminalLogic", "all");
       model.activeIndex = 0;
-      spyOn(model, 'isVisible').andReturn(false);
+      spyOn(model, "isVisible").andReturn(false);
       expect(model.isActive()).toBe(true);
     });
   });
 
-  describe('TerminalModel.is()', () => {
-    it('works when the item is a terminal model', () => {
+  describe("TerminalModel.is()", () => {
+    it("works when the item is a terminal model", () => {
       expect(TerminalModel.is(model)).toBe(true);
     });
 
-    it('works when the item is not a terminal model', () => {
-      let item = document.createElement('div');
+    it("works when the item is not a terminal model", () => {
+      let item = document.createElement("div");
       expect(TerminalModel.is(item)).toBe(false);
     });
   });
 
-  describe('TerminalModel.recalculateActive()', () => {
+  describe("TerminalModel.recalculateActive()", () => {
     const createTerminals = (num = 1) => {
       const terminals = [];
       for (let i = 0; i < num; i++) {
@@ -538,15 +528,15 @@ describe('TerminalModel', () => {
           emitter: {
             emit() {},
           },
-          setIndex: function(newIndex) {
+          setIndex: function (newIndex) {
             this.activeIndex = newIndex;
-            this.emitter.emit('did-change-title', this.title);
+            this.emitter.emit("did-change-title", this.title);
           },
           title: `title ${i}`,
         });
       }
       return terminals;
-    }
+    };
 
     it("active first", () => {
       const terminals = createTerminals(2);
@@ -564,7 +554,7 @@ describe('TerminalModel', () => {
     });
 
     it("activeTerminalLogic = 'all'", () => {
-      atom.config.set('terminal.behavior.activeTerminalLogic', 'all');
+      atom.config.set("terminal.behavior.activeTerminalLogic", "all");
       const terminals = createTerminals(2);
       spyOn(terminals[0], "isVisible").andReturn(false);
       spyOn(terminals[1], "isVisible").andReturn(true);
@@ -591,5 +581,4 @@ describe('TerminalModel', () => {
       expect(terminals[1].emitter.emit).toHaveBeenCalledWith("did-change-title", "title 1");
     });
   });
-
 });

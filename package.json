@@ -15,6 +15,12 @@
     "powershell",
     "cmd"
   ],
+  "files": [
+    "lib",
+    "keymaps",
+    "menus",
+    "styles"
+  ],
   "repository": "https://github.com/lumine-code/terminal",
   "bugs": {
     "url": "https://github.com/lumine-code/terminal/issues"
@@ -25,6 +31,11 @@
   "engines": {
     "atom": "*",
     "node": ">=20"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "activationHooks": [
     "core:loaded-shell-environment"
@@ -47,6 +58,12 @@
     "which": "^5.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^18.2.2",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.5",
     "temp": "^0.9.4"
   },
   "providedServices": {
