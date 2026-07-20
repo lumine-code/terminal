@@ -1,8 +1,8 @@
 {
   "name": "terminal",
   "main": "./lib/terminal",
-  "version": "0.3.2",
-  "description": "A terminal emulator built into Pulsar",
+  "version": "1.0.0",
+  "description": "A terminal emulator built into Lumine.",
   "keywords": [
     "terminal",
     "term",
@@ -21,10 +21,16 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm run build"
   },
-  "repository": "https://github.com/pulsar-edit/terminal",
+  "repository": "https://github.com/lumine-code/terminal",
+  "bugs": {
+    "url": "https://github.com/lumine-code/terminal/issues"
+  },
+  "homepage": "https://github.com/lumine-code/terminal#readme",
+  "author": "lumine-code",
   "license": "MIT",
   "engines": {
-    "atom": ">=1.132.0 <2.0.0"
+    "atom": "*",
+    "node": ">=20"
   },
   "activationHooks": [
     "core:loaded-shell-environment"

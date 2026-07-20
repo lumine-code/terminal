@@ -3,7 +3,7 @@
 //
 // `node-pty` expects to be able to use Node’s `worker_threads` library to get
 // around an issue on Windows. That means we can’t consume it directly within
-// Pulsar's renderer process because of
+// Lumine's renderer process because of
 // https://github.com/electron/electron/issues/18540#issuecomment-665752233.
 //
 // The workaround is to run a worker script via `ELECTRON_RUN_AS_NODE=1` to use
@@ -154,7 +154,7 @@ async function processMessage (data: PtyMessage) {
   }
 }
 
-process.title = `node (Pulsar terminal process ${process.pid})`;
+process.title = `node (Lumine terminal process ${process.pid})`;
 
 // We'll communicate with the parent process via newline-delimited JSON
 // messages. This lets us use a newline as a message delimiter without us

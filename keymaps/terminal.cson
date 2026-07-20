@@ -17,7 +17,7 @@
   # Insert the selected text into the active terminal.
   "ctrl-~ i": "terminal:insert-selected-text"
 
-".platform-darwin pulsar-terminal":
+".platform-darwin terminal-view":
   # Cmd-K clears the buffer in Terminal.app and iTerm. That's taken in the
   # default keymap for pane management tasks, so we can't supersede it. Instead
   # we'll use something close to it.
@@ -61,9 +61,9 @@
   # Insert the selected text into the active terminal.
   "ctrl-~ i": "terminal:insert-selected-text"
 
-".platform-win32 pulsar-terminal, .platform-linux pulsar-terminal":
+".platform-win32 terminal-view, .platform-linux terminal-view":
   # Ctrl-L is a standard way of clearing the terminal buffer in a Unix shell.
-  # In Pulsar, it's used to select the entire line in an editor… but we're not
+  # In Lumine, it's used to select the entire line in an editor… but we're not
   # in an editor, so we can also use it for clearing the buffer!
   "ctrl-l": "terminal:clear"
   # These purposefully shadow the default shortcuts from the `find-and-replace`

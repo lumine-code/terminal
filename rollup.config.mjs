@@ -5,7 +5,7 @@ import typescript from '@rollup/plugin-typescript';
 import { resolve as resolvePath } from 'path';
 import { readFileSync } from 'fs';
 
-// This is a preset Rollup configuration file designed for Pulsar community
+// This is a preset Rollup configuration file designed for Lumine community
 // packages written in TypeScript. Here's what it gives us:
 //
 // * All dependencies that use CommonJS are preserved as-is.

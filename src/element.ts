@@ -39,7 +39,7 @@ import { shell } from '@electron/remote';
 // that it results in a pixel height that snaps to the nearest pixel (or
 // sub-pixel, taking device pixel ratio into account).
 //
-// In theory, this would be needed for synchronization with Pulsar, since the
+// In theory, this would be needed for synchronization with Lumine, since the
 // editor code does something similar. In practice, though, line height values
 // seem to be applied differently in XTerm; a shared line-height value between
 // the editor and the terminal window results in much taller lines in the
@@ -106,7 +106,7 @@ export class TerminalElement extends HTMLElement {
   }> = {};
 
   static create () {
-    return document.createElement('pulsar-terminal') as TerminalElement;
+    return document.createElement('terminal-view') as TerminalElement;
   }
 
   async initialize (model: TerminalModel) {
@@ -294,7 +294,7 @@ export class TerminalElement extends HTMLElement {
     return true;
   }
 
-  // Returns `true` if, at the current moment, Pulsar’s `KeymapManager` has at
+  // Returns `true` if, at the current moment, Lumine’s `KeymapManager` has at
   // least one pending keybinding that belongs to one of this package's commands.
   //
   // We use this to decide whether we should re-propagate a keyboard event that
@@ -314,16 +314,16 @@ export class TerminalElement extends HTMLElement {
   // This is a heuristic that allows for certain exceptions to xterm.js's
   // aggressive management of keyboard events. Lots of keybindings have some sort
   // of obscure effect in a PTY, and that vastly constrains the set of bindings
-  // that can reliably be used to bind to Pulsar commands when the terminal has
+  // that can reliably be used to bind to Lumine commands when the terminal has
   // focus. The way out of that is to register a custom keyboard handler so that
   // we get first dibs on handling any keyboard event.
   //
   // But that also means we've got to do the work to decide if a given keyboard
-  // event _would_ trigger a Pulsar keybinding… without actually triggering the
+  // event _would_ trigger a Lumine keybinding… without actually triggering the
   // key binding!
   //
   // Ideally, more of this work will one day be performed by the `KeymapManager`
-  // instance at `atom.keymaps` — which would more easily let us give Pulsar
+  // instance at `atom.keymaps` — which would more easily let us give Lumine
   // keybindings _in general_ precedence over terminal bindings. But this is
   // enough to get us past the issue of this package not even being able to
   // trigger _some of its own commands_ when the terminal has focus.
@@ -358,7 +358,7 @@ export class TerminalElement extends HTMLElement {
     let result = bindings.exactMatchCandidates.some((kb: KeyBinding) => this.#shouldPrioritizeBinding(kb, ancestorChain));
 
     if (result) {
-      Logger.log('Assuming control of keybinding:', keystroke, 'because it matches at least one Pulsar binding');
+      Logger.log('Assuming control of keybinding:', keystroke, 'because it matches at least one Lumine binding');
     }
     return result;
   }
@@ -546,7 +546,7 @@ export class TerminalElement extends HTMLElement {
     // swallowed by xterm.js.
     this.terminal.onKey((event) => {
       // Take keys that were already handled by xterm.js and handle them again
-      // in Pulsar.
+      // in Lumine.
       //
       // It's hard to know exactly when to do this. If we _never_ do it,
       // certain keybindings just won't ever work when the terminal is fully
@@ -625,7 +625,7 @@ export class TerminalElement extends HTMLElement {
       // would trigger any commands defined by this package.
       if (this.#keyboardEventMatchesKeybinding(event)) {
         // It does, so it's worth preempting xterm.js's own key handling and
-        // allow this event to bubble so Pulsar can handle it.
+        // allow this event to bubble so Lumine can handle it.
         //
         // This means that a user can bind one of this package's commands to
         // (e.g.) `Ctrl+C` and shoot themselves in the foot, losing the ability
@@ -636,7 +636,7 @@ export class TerminalElement extends HTMLElement {
 
       // Everything that doesn't match any of this package's keybindings at
       // least gets a chance at being handled by xterm.js. Anything that fails
-      // to get handled will bubble up and be handled by Pulsar anyway.
+      // to get handled will bubble up and be handled by Lumine anyway.
       return true;
     });
 
@@ -979,4 +979,4 @@ export class TerminalElement extends HTMLElement {
   }
 }
 
-customElements.define('pulsar-terminal', TerminalElement);
+customElements.define('terminal-view', TerminalElement);

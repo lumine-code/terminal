@@ -1,8 +1,8 @@
 # terminal
 
-Terminal emulation in Pulsar.
+A terminal emulator built into Lumine.
 
-![screenshot of terminal package](https://raw.githubusercontent.com/pulsar-edit/terminal/main/images/terminal-package-screenshot.png)
+![screenshot of terminal package](https://raw.githubusercontent.com/lumine-code/terminal/main/images/terminal-package-screenshot.png)
 
 Uses [XTerm](https://xtermjs.org/) and [`node-pty`](https://github.com/microsoft/node-pty).
 
@@ -13,18 +13,18 @@ Based heavily on [`atomic-terminal`](https://github.com/atom-community/terminal)
 The simplest command is bound to <kbd>Ctrl-\`</kbd> on all platforms: `terminal:focus`. This command will focus the last active terminal (if one exists), or else create a new terminal.
 
 > [!NOTE]
-> When focus is in a terminal, the terminal itself may handle some keystrokes _instead of_ Pulsar. If you notice that some of your keybindings don’t work inside the terminal, press <kbd>Ctrl-\`</kbd> while the terminal is focused in order to _unfocus_ the terminal; at that point you’ll be able to press any key sequence and have it be interpreted by Pulsar instead of your terminal.
+> When focus is in a terminal, the terminal itself may handle some keystrokes _instead of_ Lumine. If you notice that some of your keybindings don’t work inside the terminal, press <kbd>Ctrl-\`</kbd> while the terminal is focused in order to _unfocus_ the terminal; at that point you’ll be able to press any key sequence and have it be interpreted by Lumine instead of your terminal.
 
-Most of the package’s keybindings rely on a [key sequence](https://docs.pulsar-edit.dev/using-pulsar/basics/#key-sequence): first press the main shortcut (<kbd>Ctrl-~</kbd> on all platforms), then press a second key.
+Most of the package’s keybindings rely on a key sequence: first press the main shortcut (<kbd>Ctrl-~</kbd> on all platforms), then press a second key.
 
-If you want to make any of these commands available via a simpler keybinding, you can [customize your keybindings](https://docs.pulsar-edit.dev/customizing-pulsar/customizing-keybindings/).
+If you want to make any of these commands available via a simpler keybinding, you can [customize your keybindings](https://lumine-code.github.io/docs.html#customizing-lumine/keybindings).
 
 ### Workspace keybindings
 
 > [!NOTE]
 > In US QWERTY layouts, <kbd>\`</kbd> and <kbd>\~</kbd> are assigned to the key above <kbd>Tab</kbd>. Hence <kbd>Ctrl-\~</kbd> in the table below can be read as <kbd>Ctrl-Shift-\`</kbd> for US QWERTY users.
 >
-> In other locales with other keyboard layouts, however, these symbols will rarely share a key. If you’ve got such a layout, you can [rebind these commands](https://docs.pulsar-edit.dev/customizing-pulsar/customizing-keybindings/) to match the symbols assigned to the key above <kbd>Tab</kbd>.
+> In other locales with other keyboard layouts, however, these symbols will rarely share a key. If you’ve got such a layout, you can [rebind these commands](https://lumine-code.github.io/docs.html#customizing-lumine/keybindings) to match the symbols assigned to the key above <kbd>Tab</kbd>.
 >
 > In time, we hope to make this unnecessary by making it possible for keymaps to bind directly to certain keyboard keys in layout-independent fashion.
 
@@ -156,7 +156,7 @@ Be sure to switch the **Color Theme** setting to **Config** in order for these c
 > [!TIP]
 > As stated in the package settings, all color values support transparency and can accept `rgba()` CSS literal values, even though the color picker in the `settings-view` UI [doesn’t (yet) let you specify an alpha channel](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/color#html.elements.input.alpha).
 >
-> To add an alpha channel to any color value, first customize it in the `settings-view` UI (so that the appropriate key is placed in your `config.cson`); then [edit your `config.cson`](https://docs.pulsar-edit.dev/customizing-pulsar/global-configuration-settings/) and drill down from the top-level `terminal:key` to find the value you just customized. Change it to the value you want, then save your `config.cson`.
+> To add an alpha channel to any color value, first customize it in the `settings-view` UI (so that the appropriate key is placed in your `config.cson`); then [edit your `config.cson`](https://lumine-code.github.io/docs.html#customizing-lumine/global-settings) and drill down from the top-level `terminal:key` to find the value you just customized. Change it to the value you want, then save your `config.cson`.
 
 ### Legacy themes
 

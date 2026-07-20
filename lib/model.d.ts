@@ -7,7 +7,7 @@ export type TerminalModelOptions = {
 export type Signal = 'SIGTERM' | 'SIGQUIT' | 'SIGINT';
 export declare function isSafeSignal(signal: string): signal is Signal;
 /**
- * The representation of a terminal in the Pulsar workspace.
+ * The representation of a terminal in the Lumine workspace.
  */
 export declare class TerminalModel {
     #private;

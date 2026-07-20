@@ -1,8 +1,11 @@
 MIT License
-pulsar-edit/terminal
-Copyright (c) 2025 Pulsar-Edit
+lumine-code/terminal
+Copyright (c) 2026 asiloisad
 
 BASED ON:
+
+pulsar-edit/terminal
+Copyright (c) 2025 Pulsar-Edit
 
 atom-community/terminal (atomic-terminal)
 Copyright (c) 2020 atom-community. All Rights Reserved.

@@ -178,7 +178,7 @@ export default class Terminal {
         'terminal:focus-next': () => this.focusNext(),
         'terminal:focus-previous': () => this.focusPrevious()
       }),
-      atom.commands.add('pulsar-terminal', {
+      atom.commands.add('terminal-view', {
         'core:copy': (event) => {
           return this.copy(event);
         },
@@ -372,12 +372,12 @@ export default class Terminal {
 
   static inferTerminalElement (event: CommandEvent) {
     if (!event.target || !(event.target instanceof HTMLElement)) return null;
-    return event.target.closest<TerminalElement>('pulsar-terminal');
+    return event.target.closest<TerminalElement>('terminal-view');
   }
 
   static async open (uri: string, options: OpenOptions = {}): Promise<TerminalModel> {
     let url = new URL(uri);
-    // When calling `atom.workspace.open` with a URI, Pulsar does not consider
+    // When calling `atom.workspace.open` with a URI, Lumine does not consider
     // the active pane container when choosing a location for the new item. So
     // we must force it to do so by inspecting the active pane container and
     // turning it into a string suitable for passing to `options.location`.

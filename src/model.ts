@@ -35,7 +35,7 @@ export function isSafeSignal (signal: string): signal is Signal {
 }
 
 /**
- * The representation of a terminal in the Pulsar workspace.
+ * The representation of a terminal in the Lumine workspace.
  */
 export class TerminalModel {
   static is (other: unknown): other is TerminalModel {
