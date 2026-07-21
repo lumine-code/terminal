@@ -8,8 +8,10 @@
 # pre-execution hook, so the "output starts" mark (C) is omitted; the prompt
 # and exit-status marks are enough for the command decorations.
 
-if ($env:LUMINE_SHELL_INTEGRATION) { return }
-$env:LUMINE_SHELL_INTEGRATION = "1"
+# A global (not an environment variable — those are inherited by child
+# processes, which need their own integration) guards double-loading.
+if ($Global:LumineShellIntegration) { return }
+$Global:LumineShellIntegration = $true
 
 # Wrap the existing prompt so we don't lose the user's customizations.
 $Global:__LumineOriginalPrompt = $Function:prompt
