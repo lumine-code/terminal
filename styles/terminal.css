@@ -100,22 +100,31 @@ terminal-view {
   background: inherit;
 }
 
-/* Style xterm's scrollbar thumb to match the editor's scrollbar: same color,
-   drawn inset from the track edge like a native scrollbar. */
+/* Style xterm's overlay scrollbar to match the editor's: the same 10px-track
+   thumb the UI themes draw (5px radius, inset by a 3px transparent border via
+   `background-clip`), squaring off to full width while dragged. `!important`
+   beats the inline slider background xterm sets from its own theme. */
 .xterm-scrollable-element > .scrollbar > .slider {
-  background-color: var(--terminal-scrollbar-color) !important;
-  border-radius: 12px;
-  /* Reduce the apparent width of the scrollbar thumb relative to the track —
-     without reducing its actual width and thereby making it harder to click on —
-     by insetting it with a background-colored border, as native scrollbars do. */
-  border: 2.5px solid var(--terminal-internal-operative-background-color) !important;
-  background-clip: padding-box;
+  background: var(--terminal-scrollbar-color) !important;
+  background-clip: content-box !important;
+  border: 3px solid transparent;
+  border-radius: 5px;
 }
 
-.xterm-scrollable-element > .scrollbar > .slider:hover,
-.xterm-scrollable-element > .scrollbar.active > .slider {
-  background-color: var(--terminal-scrollbar-color) !important;
-  filter: brightness(1.25);
+.xterm-scrollable-element > .scrollbar > .slider.active {
+  border-radius: 0;
+  border-left-width: 0;
+  border-right-width: 0;
+}
+
+/* xterm hard-codes its scrollbar to auto-hide (fade out after scrolling). The
+   editor's scrollbars are permanently visible whenever the workspace carries
+   `scrollbars-visible-always` (the non-overlay native style, e.g. Windows and
+   Linux), so pin the terminal's scrollbar visible there too. Where the system
+   uses fading overlay scrollbars (macOS), both fade alike. */
+.scrollbars-visible-always .xterm-scrollable-element > .scrollbar {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .xterm {
