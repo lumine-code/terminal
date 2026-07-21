@@ -217,7 +217,7 @@ describe("TerminalElement", () => {
       it("is enabled if configured as such", async () => {
         atom.config.set("terminal.xterm.webLinks", true);
         await createElement();
-        let wasAdded = Terminal.prototype.loadAddon.calls.some((call) => {
+        let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebLinksAddon;
         });
         expect(wasAdded).toBe(true);
@@ -226,7 +226,7 @@ describe("TerminalElement", () => {
       it("is disabled if configured as such", async () => {
         atom.config.set("terminal.xterm.webLinks", false);
         await createElement();
-        let wasAdded = Terminal.prototype.loadAddon.calls.some((call) => {
+        let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebLinksAddon;
         });
         expect(wasAdded).toBe(false);
@@ -237,7 +237,7 @@ describe("TerminalElement", () => {
       it("is enabled if configured as such", async () => {
         atom.config.set("terminal.xterm.webgl", true);
         await createElement();
-        let wasAdded = Terminal.prototype.loadAddon.calls.some((call) => {
+        let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebglAddon;
         });
         expect(wasAdded).toBe(true);
@@ -246,7 +246,7 @@ describe("TerminalElement", () => {
       it("is disabled if configured as such", async () => {
         atom.config.set("terminal.xterm.webgl", false);
         await createElement();
-        let wasAdded = Terminal.prototype.loadAddon.calls.some((call) => {
+        let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebglAddon;
         });
         expect(wasAdded).toBe(false);

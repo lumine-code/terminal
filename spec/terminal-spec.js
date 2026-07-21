@@ -1,7 +1,8 @@
 const Terminal = require("../lib/terminal");
+const { Pty } = require("../lib/pty");
 const { URL } = require("url");
 
-const { activatePackage, wait } = require("./helpers");
+const { activatePackage, stubPty, wait } = require("./helpers");
 
 const DIV = document.createElement("div");
 
@@ -15,6 +16,8 @@ describe("Terminal", () => {
 
   describe("unfocus()", () => {
     it("focuses atom-workspace", async () => {
+      // Stub the PTY so this focus test doesn't wait on a real node-pty worker.
+      stubPty(Pty);
       jasmine.attachToDOM(atom.views.getView(atom.workspace));
       let model = await Terminal.openInCenterOrDock(atom.workspace);
       await model.ready();
