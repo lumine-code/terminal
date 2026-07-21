@@ -125,3 +125,15 @@ terminal-view {
 .xterm-screen {
   box-sizing: border-box;
 }
+
+/* Shell-integration (OSC 133) command markers: a slim bar in the left gutter of
+   each command's prompt row, tinted red when that command exited non-zero. */
+.terminal-command-decoration {
+  width: 3px !important;
+  background-color: var(--terminal-color-green);
+  opacity: 0.75;
+}
+
+.terminal-command-decoration--error {
+  background-color: var(--terminal-color-red);
+}

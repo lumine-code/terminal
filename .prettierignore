@@ -5,3 +5,6 @@ package-lock.json
 # Vendored / third-party (not our source)
 # xterm.js's own base stylesheet — kept verbatim for easy refresh on upgrade.
 styles/xterm.css
+
+# Hand-tuned shell scripts — Prettier has no shell/PowerShell parser.
+shell-integration/

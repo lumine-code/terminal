@@ -47,8 +47,22 @@ Commands available in `terminal-view`:
 - `terminal:set-selection-as-find-pattern`: use the selected terminal text as the find pattern,
 - `terminal:clear`: clear the terminal screen,
 - `terminal:send-sigint`: send an interrupt (SIGINT) to the running process,
+- `terminal:previous-command`: scroll to the previous command's prompt,
+- `terminal:next-command`: scroll to the next command's prompt,
 - `terminal:restart`: restart the terminal's process,
 - `terminal:unfocus`: move focus from the terminal to its pane container.
+
+## Shell integration
+
+The terminal recognizes OSC 133 shell-integration sequences. When your shell emits them, each command's prompt is marked in the left gutter — tinted red when the command exited non-zero — and you can jump between prompts with `terminal:previous-command` and `terminal:next-command`.
+
+This is off until your shell emits the sequences. Reference scripts live in this package's `shell-integration/` folder; source the one for your shell:
+
+- **bash** — in `~/.bashrc`: `source <package>/shell-integration/lumine.bash`
+- **zsh** — in `~/.zshrc`: `source <package>/shell-integration/lumine.zsh`
+- **PowerShell** — in your `$PROFILE`: `. <package>/shell-integration/lumine.ps1`
+
+The feature can be toggled under **Shell Integration** in the package settings.
 
 ## Customization
 

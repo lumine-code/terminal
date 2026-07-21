@@ -19,6 +19,7 @@
     "lib",
     "keymaps",
     "menus",
+    "shell-integration",
     "styles"
   ],
   "repository": "https://github.com/lumine-code/terminal",
