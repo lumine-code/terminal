@@ -6,9 +6,9 @@
     "ctrl-~ down": "terminal:open-split-down",
     "ctrl-~ left": "terminal:open-split-left",
     "ctrl-~ right": "terminal:open-split-right",
-    "ctrl-~ b": "terminal:open-split-bottom-dock",
-    "ctrl-~ l": "terminal:open-split-left-dock",
-    "ctrl-~ r": "terminal:open-split-right-dock",
+    "ctrl-~ b": "terminal:open-bottom-dock",
+    "ctrl-~ l": "terminal:open-left-dock",
+    "ctrl-~ r": "terminal:open-right-dock",
     "ctrl-~ x": "terminal:run-selected-text",
     "ctrl-~ i": "terminal:insert-selected-text"
   },
