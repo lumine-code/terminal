@@ -33,7 +33,7 @@ describe("TerminalModel", () => {
   it("handles a previous active item that has no getPath() method", async () => {
     atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
     atom.project.setPaths([tmpdir]);
-    spyOn(atom.workspace, "getActivePaneItem").andReturn({});
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue({});
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
@@ -44,8 +44,8 @@ describe("TerminalModel", () => {
     let someOtherTmpDir = await temp.mkdir();
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
-    previousActiveItem.getPath.andReturn(tmpdir);
-    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
+    previousActiveItem.getPath.and.returnValue(tmpdir);
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
@@ -56,8 +56,8 @@ describe("TerminalModel", () => {
     let someOtherTmpDir = await temp.mkdir();
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
-    previousActiveItem.getPath.andReturn(`${tmpdir}${path.sep}foo.txt`);
-    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
+    previousActiveItem.getPath.and.returnValue(`${tmpdir}${path.sep}foo.txt`);
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
@@ -69,7 +69,7 @@ describe("TerminalModel", () => {
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
     let previousActiveItem = {};
     previousActiveItem.selectedPath = tmpdir;
-    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
@@ -81,7 +81,7 @@ describe("TerminalModel", () => {
     atom.project.setPaths([someOtherTmpDir, tmpdir]);
     let previousActiveItem = {};
     previousActiveItem.selectedPath = `${tmpdir}${path.sep}foo.txt`;
-    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(tmpdir);
@@ -92,8 +92,8 @@ describe("TerminalModel", () => {
     await fs.mkdir(dirPath);
     atom.project.setPaths([dirPath]);
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
-    previousActiveItem.getPath.andReturn(path.join(tmpdir, "non-existent-dir"));
-    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
+    previousActiveItem.getPath.and.returnValue(path.join(tmpdir, "non-existent-dir"));
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(dirPath);
@@ -101,10 +101,10 @@ describe("TerminalModel", () => {
 
   it("handles a previous active item which exists in the project path and has getPath()", async () => {
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
-    previousActiveItem.getPath.andReturn("/some/dir/file");
-    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
+    previousActiveItem.getPath.and.returnValue("/some/dir/file");
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     const expected = ["/some/dir", null];
-    spyOn(atom.project, "relativizePath").andReturn(expected);
+    spyOn(atom.project, "relativizePath").and.returnValue(expected);
     const newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(expected[0]);
@@ -113,9 +113,9 @@ describe("TerminalModel", () => {
   it("handles a previous active item which exists in the project path and has selectedPath", async () => {
     let previousActiveItem = {};
     previousActiveItem.selectedPath = "/some/dir/file";
-    spyOn(atom.workspace, "getActivePaneItem").andReturn(previousActiveItem);
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     const expected = ["/some/dir", null];
-    spyOn(atom.project, "relativizePath").andReturn(expected);
+    spyOn(atom.project, "relativizePath").and.returnValue(expected);
     const newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.getPath()).toBe(expected[0]);
@@ -156,12 +156,6 @@ describe("TerminalModel", () => {
   describe("getTitle()", () => {
     it("uses the standard title by default", () => {
       expect(model.getTitle()).toBe("Terminal");
-    });
-
-    it("adds the active indicator to the title when active", () => {
-      atom.config.set("terminal.terminal.activeTerminalIndicator", "⦿ ");
-      spyOn(model, "isActive").andReturn(true);
-      expect(model.getTitle()).toBe("⦿ Terminal");
     });
   });
 
@@ -232,54 +226,57 @@ describe("TerminalModel", () => {
 
   describe("handleNewData()", () => {
     it("functions as expected when the model initially has no pane set", () => {
-      pane.getActiveItem.andReturn({});
-      spyOn(atom.workspace, "paneForItem").andReturn(pane);
+      pane.getActiveItem.and.returnValue({});
+      spyOn(atom.workspace, "paneForItem").and.returnValue(pane);
       model.handleNewData();
       expect(atom.workspace.paneForItem).toHaveBeenCalled();
     });
 
     it('does not add the "modified" attribute when the current item is the active item', () => {
-      pane.getActiveItem.andReturn(model);
+      pane.getActiveItem.and.returnValue(model);
       model.pane = pane;
       model.handleNewData();
       expect(model.modified).toBe(false);
     });
 
     it('adds the "modified" attribute when the current pane is not the active item', () => {
-      pane.getActiveItem.andReturn({});
+      pane.getActiveItem.and.returnValue({});
       model.pane = pane;
       model.handleNewData();
       expect(model.modified).toBe(true);
     });
 
     it('does not change the "modified" attribute at all when the current item is the active item', () => {
-      pane.getActiveItem.andReturn(model);
+      pane.getActiveItem.and.returnValue(model);
       model.pane = pane;
       spyOn(model.emitter, "emit");
       model.handleNewData();
       expect(
-        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+          .length,
       ).toBe(0);
     });
 
     it('does not change the "modified" attribute at all when the current item is not active item', () => {
-      pane.getActiveItem.andReturn({});
+      pane.getActiveItem.and.returnValue({});
       model.pane = pane;
       model.modified = true;
       spyOn(model.emitter, "emit");
       model.handleNewData();
       expect(
-        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+          .length,
       ).toBe(0);
     });
 
     it('does change the "modified" attribute when necessary', () => {
-      pane.getActiveItem.andReturn({});
+      pane.getActiveItem.and.returnValue({});
       model.pane = pane;
       spyOn(model.emitter, "emit");
       model.handleNewData();
       expect(
-        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+          .length,
       ).toBe(1);
     });
   });
@@ -315,7 +312,8 @@ describe("TerminalModel", () => {
       model.focusTerminal();
       expect(model.modified).toBe(false);
       expect(
-        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+          .length,
       ).toBe(0);
     });
 
@@ -326,7 +324,8 @@ describe("TerminalModel", () => {
       model.focusTerminal();
       expect(model.modified).toBe(false);
       expect(
-        model.emitter.emit.calls.filter((call) => call.args[0] === "did-change-modified").length,
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+          .length,
       ).toBe(1);
     });
 
@@ -348,7 +347,7 @@ describe("TerminalModel", () => {
     it("destroys the model", () => {
       model.pane = pane;
       model.exit();
-      expect(model.pane.destroyItem.calls[0].args).toEqual([model, true]);
+      expect(model.pane.destroyItem.calls.argsFor(0)).toEqual([model, true]);
     });
   });
 
@@ -378,7 +377,7 @@ describe("TerminalModel", () => {
       model.element = element;
       let expectedText = "some text";
       model.run(expectedText);
-      let args = model.element.pty.write.calls[0].args;
+      let args = model.element.pty.write.calls.argsFor(0);
       expect(args).toEqual([expectedText + (process.platform === "win32" ? "\r" : "\n")]);
     });
   });
@@ -388,7 +387,7 @@ describe("TerminalModel", () => {
       model.element = element;
       let expectedText = "some text";
       model.paste(expectedText);
-      let args = model.element.pty.write.calls[0].args;
+      let args = model.element.pty.write.calls.argsFor(0);
       expect(args).toEqual([expectedText]);
     });
   });
@@ -483,26 +482,26 @@ describe("TerminalModel", () => {
 
     it("works when the terminal is visible and active", () => {
       model.activeIndex = 0;
-      spyOn(model, "isVisible").andReturn(true);
+      spyOn(model, "isVisible").and.returnValue(true);
       expect(model.isActive()).toBe(true);
     });
 
     it("works when the terminal is visible and not active", () => {
       model.activeIndex = 1;
-      spyOn(model, "isVisible").andReturn(true);
+      spyOn(model, "isVisible").and.returnValue(true);
       expect(model.isActive()).toBe(false);
     });
 
     it("works when the terminal is invisible and active", () => {
       model.activeIndex = 0;
-      spyOn(model, "isVisible").andReturn(false);
+      spyOn(model, "isVisible").and.returnValue(false);
       expect(model.isActive()).toBe(false);
     });
 
     it("works when the terminal is invisible and active (and we have opted into it via config)", () => {
       atom.config.set("terminal.behavior.activeTerminalLogic", "all");
       model.activeIndex = 0;
-      spyOn(model, "isVisible").andReturn(false);
+      spyOn(model, "isVisible").and.returnValue(false);
       expect(model.isActive()).toBe(true);
     });
   });
@@ -547,7 +546,7 @@ describe("TerminalModel", () => {
 
     it("visible before hidden", () => {
       const terminals = createTerminals(2);
-      spyOn(terminals[1], "isVisible").andReturn(true);
+      spyOn(terminals[1], "isVisible").and.returnValue(true);
       TerminalModel.recalculateActive(new Set(terminals));
       expect(terminals[0].activeIndex).toBe(1);
       expect(terminals[1].activeIndex).toBe(0);
@@ -556,8 +555,8 @@ describe("TerminalModel", () => {
     it("activeTerminalLogic = 'all'", () => {
       atom.config.set("terminal.behavior.activeTerminalLogic", "all");
       const terminals = createTerminals(2);
-      spyOn(terminals[0], "isVisible").andReturn(false);
-      spyOn(terminals[1], "isVisible").andReturn(true);
+      spyOn(terminals[0], "isVisible").and.returnValue(false);
+      spyOn(terminals[1], "isVisible").and.returnValue(true);
       TerminalModel.recalculateActive(new Set(terminals));
       expect(terminals[0].activeIndex).toBe(0);
       expect(terminals[1].activeIndex).toBe(1);

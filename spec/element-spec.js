@@ -84,12 +84,12 @@ describe("TerminalElement", () => {
       "removeAllListeners",
     ]);
     ptyProcess.title = "some-test-process";
-    spyOn(Pty.prototype, "spawn").andCallFake(() => {
+    spyOn(Pty.prototype, "spawn").and.callFake(() => {
       return createMockWorkerProcess();
     });
-    spyOn(Pty.prototype, "booted").andReturn(Promise.resolve());
-    spyOn(Pty.prototype, "ready").andReturn(Promise.resolve());
-    spyOn(Pty.prototype, "kill").andReturn(undefined);
+    spyOn(Pty.prototype, "booted").and.returnValue(Promise.resolve());
+    spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
+    spyOn(Pty.prototype, "kill").and.returnValue(undefined);
     spyOn(shell, "openExternal");
     element = await createElement();
     tmpdir = await temp.mkdir();
@@ -136,13 +136,13 @@ describe("TerminalElement", () => {
     });
 
     it("destroys the terminal", () => {
-      spyOn(element.terminal, "dispose").andCallThrough();
+      spyOn(element.terminal, "dispose").and.callThrough();
       element.destroy();
       expect(element.terminal.dispose).toHaveBeenCalled();
     });
 
     it("disposes subscriptions", () => {
-      spyOn(element.subscriptions, "dispose").andCallThrough();
+      spyOn(element.subscriptions, "dispose").and.callThrough();
       element.destroy();
       expect(element.subscriptions.dispose).toHaveBeenCalled();
     });
@@ -194,7 +194,7 @@ describe("TerminalElement", () => {
     });
 
     it("notifies the user when the config field is invalid JSON", () => {
-      spyOn(atom.notifications, "addError").andCallThrough();
+      spyOn(atom.notifications, "addError").and.callThrough();
       atom.config.set("terminal.xterm.additionalOptions", `{ "foo": false`);
       expect(element.getExtraXTermOptions()).toEqual({});
       expect(atom.notifications.addError).toHaveBeenCalled();
@@ -206,7 +206,7 @@ describe("TerminalElement", () => {
     const { WebglAddon } = require("@xterm/addon-webgl");
 
     beforeEach(() => {
-      spyOn(Terminal.prototype, "loadAddon").andCallThrough();
+      spyOn(Terminal.prototype, "loadAddon").and.callThrough();
     });
 
     afterEach(() => {

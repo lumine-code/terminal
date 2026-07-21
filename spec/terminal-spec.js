@@ -44,9 +44,9 @@ describe("Terminal", () => {
         },
         run: jasmine.createSpy("newTerminal.run"),
       };
-      spyOn(Terminal, "getActiveTerminal").andReturn(activeTerminal);
-      spyOn(Terminal, "open").andReturn(newTerminal);
-      spyOn(Terminal, "canRunCommands").andReturn(Promise.resolve(true));
+      spyOn(Terminal, "getActiveTerminal").and.returnValue(activeTerminal);
+      spyOn(Terminal, "open").and.returnValue(newTerminal);
+      spyOn(Terminal, "canRunCommands").and.returnValue(Promise.resolve(true));
     });
 
     it("runs commands in a new terminal if configured to do so", async () => {
@@ -66,7 +66,7 @@ describe("Terminal", () => {
     });
 
     it("creates a new terminal if need be, even if configured to reuse terminals", async () => {
-      Terminal.getActiveTerminal.andReturn();
+      Terminal.getActiveTerminal.and.returnValue();
       atom.config.set("terminal.behavior.runInActive", true);
       await Terminal.runCommands(commands);
 
@@ -85,11 +85,11 @@ describe("Terminal", () => {
         },
         exit: jasmine.createSpy("activeTerminal.exit"),
         restartPtyProcess: jasmine.createSpy("activeTerminal.restartPtyProcess"),
-        getSelection: jasmine.createSpy("activeTerminal.copy").andReturn("copied"),
+        getSelection: jasmine.createSpy("activeTerminal.copy").and.returnValue("copied"),
         paste: jasmine.createSpy("activeTerminal.paste"),
         clear: jasmine.createSpy("activeTerminal.clear"),
       };
-      spyOn(Terminal, "getActiveTerminal").andReturn(activeTerminal);
+      spyOn(Terminal, "getActiveTerminal").and.returnValue(activeTerminal);
     });
 
     describe("close()", () => {
@@ -116,7 +116,7 @@ describe("Terminal", () => {
 
     describe("paste()", () => {
       it("pastes text into the active terminal", async () => {
-        spyOn(atom.clipboard, "read").andReturn("copied");
+        spyOn(atom.clipboard, "read").and.returnValue("copied");
         await Terminal.paste();
         expect(activeTerminal.paste).toHaveBeenCalledWith("copied");
       });
@@ -144,12 +144,12 @@ describe("Terminal", () => {
 
     it("specifies a cwd if a target is given", async () => {
       let testPath = `/test/path`;
-      spyOn(Terminal, "getPath").andReturn(testPath);
+      spyOn(Terminal, "getPath").and.returnValue(testPath);
       // `cwd` is appended to the URL, but only if the target is an element.
       // TODO: Does what I just said make any sense?
       await Terminal.open(uri, { target: DIV });
 
-      let url = new URL(atom.workspace.open.calls[0].args[0]);
+      let url = new URL(atom.workspace.open.calls.argsFor(0)[0]);
       expect(url.searchParams.get("cwd")).toBe(testPath);
     });
   });
