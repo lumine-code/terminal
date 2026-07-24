@@ -66,7 +66,7 @@ The feature can be toggled under **Shell Integration** in the package settings.
 
 ## Customization
 
-The terminal treats CSS custom properties on `:root` as the source of truth for its colors. Redefine any of them in your `styles.less` to override the defaults:
+The terminal treats CSS custom properties on `:root` as the source of truth for its colors. Redefine any of them in your `styles.css` to override the defaults:
 
 ```css
 :root {
