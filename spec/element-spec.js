@@ -201,6 +201,29 @@ describe("TerminalElement", () => {
     });
   });
 
+  describe("getOverviewRulerOptions()", () => {
+    // `overviewRuler.width` governs the xterm scrollbar width, so it should
+    // track whatever width the active theme gives the editor's native
+    // scrollbars rather than a hard-coded value.
+    it("sizes the scrollbar to match the editor's native scrollbar width", () => {
+      let probe = document.createElement("div");
+      probe.style.cssText =
+        "position: absolute; top: -9999px; width: 100px; height: 100px; overflow: scroll;";
+      element.appendChild(probe);
+      let editorScrollbarWidth = probe.offsetWidth - probe.clientWidth;
+      probe.remove();
+
+      let { width } = element.getOverviewRulerOptions();
+      if (editorScrollbarWidth > 0) {
+        expect(width).toBe(editorScrollbarWidth);
+      } else {
+        // Overlay scrollbars (e.g. macOS) reserve no width; the terminal falls
+        // back to a sensible default so the scrollbar stays usable.
+        expect(width).toBeGreaterThan(0);
+      }
+    });
+  });
+
   describe("createTerminal() addon", () => {
     const { WebLinksAddon } = require("@xterm/addon-web-links");
     const { WebglAddon } = require("@xterm/addon-webgl");

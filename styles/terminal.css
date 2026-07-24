@@ -96,14 +96,12 @@ terminal-view {
   background-color: var(--terminal-internal-operative-background-color) !important;
 }
 
-.xterm-viewport::-webkit-scrollbar-track {
-  background: inherit;
-}
-
-/* Style xterm's overlay scrollbar to match the editor's: the same 10px-track
-   thumb the UI themes draw (5px radius, inset by a 3px transparent border via
-   `background-clip`), squaring off to full width while dragged. `!important`
-   beats the inline slider background xterm sets from its own theme. */
+/* Draw xterm's scrollbar thumb to match Lumine's editor scrollbar: a rounded
+   thumb inset by a 3px transparent border via `background-clip` (so the track
+   shows through, as it does on the editor), squaring off to the full width
+   while dragged. The scrollbar *width* is matched to the editor's in
+   `lib/element.js` via `overviewRuler.width`. `!important` beats the inline
+   slider background xterm sets from its own theme. */
 .xterm-scrollable-element > .scrollbar > .slider {
   background: var(--terminal-scrollbar-color) !important;
   background-clip: content-box !important;
