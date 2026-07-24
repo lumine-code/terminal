@@ -68,8 +68,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: lumine/.nvmrc
-          cache: yarn
-          cache-dependency-path: lumine/yarn.lock
+          cache: npm
+          cache-dependency-path: lumine/package-lock.json
       - name: Install Linux build and headless-display dependencies
         run: |
           sudo apt-get update
@@ -81,12 +81,16 @@ jobs:
         run: npm ci --ignore-scripts
       # Mirrors the editor's own CI: install without scripts (patch-package and
       # some native install scripts misbehave; native modules are rebuilt for
-      # Electron below), then reproduce the pieces that matter. Serialized
-      # network access with retries absorbs flaky git-hosted fork downloads.
+      # Electron below), then reproduce the pieces that matter. npm records the
+      # @lumine-code git forks with ssh URLs, but the runner has no ssh key, so
+      # rewrite them to anonymous HTTPS (the forks are public). Serialized
+      # retries absorb flaky git-hosted fork downloads.
+      - name: Use HTTPS for GitHub git dependencies
+        run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
       - name: Install editor dependencies
         working-directory: lumine
         run: |
-          install() { yarn install --frozen-lockfile --ignore-scripts --network-concurrency 1; }
+          install() { npm ci --ignore-scripts; }
           install || install || install
       - name: Apply patches
         working-directory: lumine
@@ -96,8 +100,8 @@ jobs:
         run: node ./node_modules/electron/install.js
       - name: Rebuild native modules for Electron
         working-directory: lumine
-        run: yarn build
+        run: npm run build
       - name: Run the Jasmine spec suite
         working-directory: lumine
         timeout-minutes: 20
-        run: xvfb-run --auto-servernum yarn start --test ../terminal/spec
+        run: xvfb-run --auto-servernum npm start -- --test ../terminal/spec
