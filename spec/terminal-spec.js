@@ -133,6 +133,22 @@ describe("Terminal", () => {
     });
   });
 
+  describe("theme changes", () => {
+    it("re-reads its colors when a theme restyles without swapping stylesheets", async () => {
+      spyOn(Terminal, "updateTheme");
+
+      // What a theme variant switch looks like: no style sheet is added or
+      // removed and the active themes do not change, so this notification is
+      // the terminal's only cue that the palette moved.
+      await atom.themes.updateAppearance(() => {});
+      // The update is coalesced onto a microtask so it lands in the same task,
+      // and so within the cross-fade.
+      await null;
+
+      expect(Terminal.updateTheme).toHaveBeenCalled();
+    });
+  });
+
   describe("open()", () => {
     let uri;
     beforeEach(() => {
