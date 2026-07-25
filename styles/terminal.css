@@ -47,47 +47,18 @@ terminal-view {
   margin-left: auto;
 }
 
-/* These custom properties are the source of truth for the terminal's colors.
-   Terminal text is drawn onto a CANVAS element rather than styled with CSS, so
-   `lib/themes.js` reads these values with `getComputedStyle` /
-   `getPropertyValue` and hands them to xterm.js as a plain object.
+/* The terminal's colors are CSS custom properties (`--terminal-*`). Their
+   defaults live in Lumine core (`static/variables/base-variables.css`) — the
+   surface colors mirror the UI theme's panels, so terminals blend with the
+   docks they sit in — and themes override them. They are deliberately NOT
+   redefined here: theme stylesheets sort after package stylesheets, so a
+   definition in this file could never win anyway (which once left the
+   terminal on syntax colors while everything claimed panel colors).
 
-   The first block mirrors the active UI theme: terminals live in docks, so by
-   default they take panel colors and blend with the surrounding chrome rather
-   than mimicking the editor. The ANSI colors below ship with sensible
-   defaults; override any of them in your own stylesheet. */
-:root {
-  --terminal-text-color: var(--text-color);
-  --terminal-background-color: var(--tool-panel-background-color);
-  --terminal-selection-background-color: var(--background-color-selected);
-  --terminal-selection-text-color: var(--text-color-highlight);
-  --terminal-cursor-color: var(--text-color-highlight);
-
-  /* Match the workspace scrollbars, which panels share. */
-  --terminal-scrollbar-background-color: var(--scrollbar-background-color);
-  --terminal-scrollbar-color: var(--scrollbar-color);
-
-  --terminal-result-marker-color: var(--syntax-result-marker-color);
-  --terminal-result-marker-color-selected: var(--syntax-result-marker-color-selected);
-
-  --terminal-color-black: #2e3436;
-  --terminal-color-red: #cc0000;
-  --terminal-color-green: #4e9a06;
-  --terminal-color-yellow: #c4a000;
-  --terminal-color-blue: #3465a4;
-  --terminal-color-magenta: #75507b;
-  --terminal-color-cyan: #06989a;
-  --terminal-color-white: #d3d7cf;
-
-  --terminal-color-bright-black: #555753;
-  --terminal-color-bright-red: #ef2929;
-  --terminal-color-bright-green: #8ae234;
-  --terminal-color-bright-yellow: #fce94f;
-  --terminal-color-bright-blue: #729fcf;
-  --terminal-color-bright-magenta: #ad7fa8;
-  --terminal-color-bright-cyan: #34e2e2;
-  --terminal-color-bright-white: #eeeeec;
-}
+   Terminal text is drawn onto a CANVAS element rather than styled with CSS,
+   so `lib/themes.js` reads the resolved values with `getComputedStyle` /
+   `getPropertyValue` and hands them to xterm.js as a plain object. Override
+   any `--terminal-*` property in your user stylesheet to restyle. */
 
 /* xterm.js's own base stylesheet is vendored alongside this file as
    `xterm.css`. The rules below override a few of its defaults. */
