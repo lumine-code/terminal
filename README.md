@@ -16,7 +16,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 
 ## Installation
 
-To install `terminal` search for *terminal* in the Install pane of the Lumine settings or run `lumine --install lumine-code/terminal`.
+To install `terminal` search for _terminal_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/terminal`.
 
 ## Commands
 
