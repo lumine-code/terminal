@@ -5,16 +5,14 @@
   "version": "1.0.0",
   "description": "An embedded terminal emulator.",
   "keywords": [
-    "terminal",
-    "term",
     "xterm",
     "shell",
     "tty",
     "pty",
     "bash",
-    "sh",
     "powershell",
-    "cmd"
+    "cmd",
+    "node-pty"
   ],
   "files": [
     "lib",
