@@ -3,7 +3,7 @@
   "author": "lumine-code",
   "main": "./lib/terminal",
   "version": "1.0.0",
-  "description": "A terminal emulator built into Lumine.",
+  "description": "An embedded terminal emulator.",
   "keywords": [
     "terminal",
     "term",

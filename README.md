@@ -1,6 +1,6 @@
 # terminal
 
-A terminal emulator built into Lumine.
+An embedded terminal emulator.
 
 Runs real system shells inside the workspace, rendered with [xterm.js](https://xtermjs.org/) and driven by [node-pty](https://github.com/microsoft/node-pty).
 
