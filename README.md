@@ -14,9 +14,9 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Theming**: derives its colors from the active syntax theme, or from explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
 
-## Usage
+## Installation
 
-When a terminal is focused it handles most keystrokes itself, so some Lumine commands may not fire until you move focus out of it with `terminal:unfocus`.
+To install `terminal` search for *terminal* in the Install pane of the Lumine settings or run `lumine --install lumine-code/terminal`.
 
 ## Commands
 
@@ -52,7 +52,11 @@ Commands available in `terminal-view`:
 - `terminal:restart`: restart the terminal's process,
 - `terminal:unfocus`: move focus from the terminal to its pane container.
 
-## Shell integration
+## Usage
+
+When a terminal is focused it handles most keystrokes itself, so some Lumine commands may not fire until you move focus out of it with `terminal:unfocus`.
+
+## Configuration
 
 The terminal recognizes OSC 133 shell-integration sequences. When your shell emits them, each command's prompt is marked in the left gutter — tinted red when the command exited non-zero — and you can jump between prompts with `terminal:previous-command` and `terminal:next-command`.
 
