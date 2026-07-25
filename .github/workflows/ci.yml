@@ -51,12 +51,12 @@ jobs:
   integration:
     # Run the whole Jasmine spec suite inside a real Lumine build. The specs use
     # the editor runtime (the workspace, config, xterm) and mock the PTY, so
-    # this is the single place they run in CI now that there is no `npm test`.
+    # this is the single place they run in CI.
     name: Lumine integration specs
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      ATOM_JASMINE_REPORTER: list
+      LUMINE_JASMINE_REPORTER: list
     steps:
       - uses: actions/checkout@v6
         with:

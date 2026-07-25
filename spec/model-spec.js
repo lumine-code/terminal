@@ -2,7 +2,7 @@ const { TerminalModel } = require("../lib/model");
 
 const fs = require("fs-extra");
 const path = require("path");
-const temp = require("temp");
+const temp = require("@lumine-code/temp");
 
 temp.track();
 

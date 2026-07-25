@@ -9,7 +9,7 @@ const { Pty } = require("../lib/pty");
 const { activatePackage, wait } = require("./helpers");
 
 const path = require("path");
-const temp = require("temp");
+const temp = require("@lumine-code/temp");
 temp.track();
 
 let createdElements = [];

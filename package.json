@@ -31,9 +31,10 @@
   "license": "MIT",
   "engines": {
     "atom": "*",
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
+    "test": "cd ../lumine && npm run test:only -- ../terminal/spec",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
@@ -45,27 +46,27 @@
     "TerminalModel": "deserializeTerminalModel"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.2",
+    "@electron/remote": "^2.1.3",
+    "@lumine-code/etch": "https://github.com/lumine-code/etch.git#ace74599f9d6b54e9eb24ecb1e2407e9c35fcc74",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-ligatures": "^0.10.0",
     "@xterm/addon-search": "^0.16.0",
     "@xterm/addon-web-links": "^0.12.0",
     "@xterm/addon-webgl": "^0.19.0",
     "@xterm/xterm": "^6.0.0",
-    "@lumine-code/etch": "https://github.com/lumine-code/etch.git#ace74599f9d6b54e9eb24ecb1e2407e9c35fcc74",
-    "fs-extra": "^11.3.2",
+    "fs-extra": "^11.4.0",
     "ndjson": "^2.0.0",
     "node-pty": "^1.1.0",
-    "which": "^5.0.0"
+    "which": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.7.0",
+    "@lumine-code/temp": "https://github.com/lumine-code/node-temp.git#929dfd04196566b21baef93fddc24a19db329bd0",
+    "eslint": "^10.8.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.2.2",
     "globals": "^17.7.0",
-    "prettier": "^3.9.5",
-    "temp": "^0.9.4"
+    "prettier": "^3.9.6"
   },
   "providedServices": {
     "terminal": {
