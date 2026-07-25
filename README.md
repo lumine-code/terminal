@@ -11,7 +11,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Flexible placement**: opens terminals in the workspace center, any dock, or a split of the active pane.
 - **Editor integration**: runs or inserts the editor's selected text in the active terminal.
 - **Find**: searches the scrollback with an in-terminal find palette.
-- **Theming**: derives its colors from the active syntax theme, or from explicit color settings.
+- **Theming**: derives its colors from the active UI theme, or from explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
 
 ## Installation

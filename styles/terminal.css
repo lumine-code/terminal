@@ -52,21 +52,20 @@ terminal-view {
    `lib/themes.js` reads these values with `getComputedStyle` /
    `getPropertyValue` and hands them to xterm.js as a plain object.
 
-   The first block mirrors the active syntax theme. The ANSI colors below ship
-   with sensible defaults; override any of them in your own stylesheet. */
+   The first block mirrors the active UI theme: terminals live in docks, so by
+   default they take panel colors and blend with the surrounding chrome rather
+   than mimicking the editor. The ANSI colors below ship with sensible
+   defaults; override any of them in your own stylesheet. */
 :root {
-  --terminal-text-color: var(--syntax-text-color);
-  --terminal-background-color: var(--syntax-background-color);
-  --terminal-selection-background-color: var(--syntax-selection-color);
-  --terminal-selection-text-color: var(--syntax-text-color);
-  --terminal-cursor-color: var(--syntax-cursor-color);
+  --terminal-text-color: var(--text-color);
+  --terminal-background-color: var(--tool-panel-background-color);
+  --terminal-selection-background-color: var(--background-color-selected);
+  --terminal-selection-text-color: var(--text-color-highlight);
+  --terminal-cursor-color: var(--text-color-highlight);
 
-  /* Match the editor's scrollbar, which is tinted from the syntax background. */
-  --terminal-scrollbar-background-color: var(
-    --scrollbar-background-color-editor,
-    var(--scrollbar-background-color)
-  );
-  --terminal-scrollbar-color: var(--scrollbar-color-editor, var(--scrollbar-color));
+  /* Match the workspace scrollbars, which panels share. */
+  --terminal-scrollbar-background-color: var(--scrollbar-background-color);
+  --terminal-scrollbar-color: var(--scrollbar-color);
 
   --terminal-result-marker-color: var(--syntax-result-marker-color);
   --terminal-result-marker-color-selected: var(--syntax-result-marker-color-selected);
