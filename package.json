@@ -1,5 +1,6 @@
 {
   "name": "terminal",
+  "author": "lumine-code",
   "main": "./lib/terminal",
   "version": "1.0.0",
   "description": "A terminal emulator built into Lumine.",
@@ -27,7 +28,6 @@
     "url": "https://github.com/lumine-code/terminal/issues"
   },
   "homepage": "https://github.com/lumine-code/terminal#readme",
-  "author": "lumine-code",
   "license": "MIT",
   "engines": {
     "atom": "*",
