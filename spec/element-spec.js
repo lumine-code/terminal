@@ -261,6 +261,30 @@ describe("TerminalElement", () => {
     });
   });
 
+  describe("updateTheme()", () => {
+    it("repaints when the resolved colors change", () => {
+      atom.config.set("terminal.appearance.theme", "Atom Dark");
+      element.updateTheme();
+      expect(element.terminal.options.theme.background).toBe("#1d1f21");
+
+      atom.config.set("terminal.appearance.theme", "Atom Light");
+      element.updateTheme();
+      expect(element.terminal.options.theme.background).toBe("#ffffff");
+      expect(element.style.backgroundColor).toBe("rgb(255, 255, 255)");
+    });
+
+    it("leaves the glyph atlas alone when nothing moved", () => {
+      atom.config.set("terminal.appearance.theme", "Atom Dark");
+      element.updateTheme();
+
+      spyOn(element, "setMainBackgroundColor").and.callThrough();
+      element.updateTheme();
+      // Reapplying would also reassign `options.theme`, which makes xterm throw
+      // away its glyph atlas and repaint the whole viewport.
+      expect(element.setMainBackgroundColor).not.toHaveBeenCalled();
+    });
+  });
+
   describe("createTerminal() addon", () => {
     const { WebLinksAddon } = require("@xterm/addon-web-links");
     const { WebglAddon } = require("@xterm/addon-webgl");
