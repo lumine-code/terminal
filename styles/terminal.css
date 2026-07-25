@@ -94,6 +94,10 @@ terminal-view {
    `xterm.css`. The rules below override a few of its defaults. */
 .xterm-viewport {
   background-color: var(--terminal-internal-operative-background-color) !important;
+  /* xterm 6 scrolls via its overlay scrollable element; the viewport's own
+     `overflow-y: scroll` scrollbar is vestigial. Left visible, it renders a
+     dead native scrollbar (thumb/arrow buttons on hover) under the real one. */
+  scrollbar-width: none;
 }
 
 /* Draw xterm's scrollbar thumb to match Lumine's editor scrollbar: a rounded
@@ -115,18 +119,23 @@ terminal-view {
   border-right-width: 0;
 }
 
-/* xterm hard-codes its scrollbar to auto-hide (fade out after scrolling). The
-   editor's scrollbars are permanently visible whenever the workspace carries
-   `scrollbars-visible-always` (the non-overlay native style, e.g. Windows and
-   Linux), so pin the terminal's scrollbar visible there too. Where the system
-   uses fading overlay scrollbars (macOS), both fade alike. */
-.scrollbars-visible-always .xterm-scrollable-element > .scrollbar {
+/* xterm hard-codes its scrollbar to auto-hide (fade out after scrolling); the
+   editor's scrollbars are permanently visible, so pin the terminal's visible
+   too. `visibility` matters as much as `opacity`: xterm's rest-state class is
+   `invisible`, which historically collided with a global `.invisible`
+   utility class hiding the scrollbar via `visibility: hidden`. */
+.xterm-scrollable-element > .scrollbar {
   opacity: 1 !important;
   pointer-events: auto !important;
+  visibility: visible !important;
 }
 
+/* No right padding: the scrollbar sits at the right edge of the scrollable
+   element, and any inset there leaves a background strip between it and the
+   pane edge (the editor's scrollbar hugs the edge). xterm's fit addon already
+   reserves the scrollbar width, so the text keeps its distance. */
 .xterm {
-  padding: 5px;
+  padding: 5px 0 5px 5px;
 }
 
 .xterm-screen {
