@@ -7,7 +7,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 ## Features
 
 - **Real shells**: spawns system shells such as bash, zsh, fish, PowerShell, and cmd through node-pty.
-- **xterm.js rendering**: draws output with xterm.js and an optional WebGL renderer that falls back to canvas.
+- **xterm.js rendering**: draws output with xterm.js and an optional WebGL renderer that falls back to DOM rendering.
 - **Flexible placement**: opens terminals in the workspace center, any dock, or a split of the active pane.
 - **Editor integration**: runs or inserts the editor's selected text in the active terminal.
 - **Find**: searches the scrollback with an in-terminal find palette.

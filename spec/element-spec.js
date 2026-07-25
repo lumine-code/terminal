@@ -74,8 +74,6 @@ describe("TerminalElement", () => {
     await activatePackage();
     await atom.updateProcessEnvAndTriggerHooks();
 
-    atom.config.set("terminal.behavior.promptOnStartup", false);
-
     let ptyProcess = jasmine.createSpyObj("ptyProcess", [
       "kill",
       "write",
@@ -221,6 +219,45 @@ describe("TerminalElement", () => {
         // back to a sensible default so the scrollbar stays usable.
         expect(width).toBeGreaterThan(0);
       }
+    });
+  });
+
+  describe("getEnv()", () => {
+    it("advertises truecolor support", () => {
+      expect(element.getEnv().COLORTERM).toBe("truecolor");
+    });
+
+    it("lets the delete list remove COLORTERM", () => {
+      atom.config.set("terminal.terminal.env.deleteEnv", ["COLORTERM"]);
+      expect(element.getEnv().COLORTERM).toBe(undefined);
+    });
+  });
+
+  describe("getXtermOptions()", () => {
+    it("applies the configured scrollback", () => {
+      atom.config.set("terminal.xterm.scrollback", 4321);
+      expect(element.getXtermOptions().scrollback).toBe(4321);
+    });
+
+    it("lets additionalOptions override scrollback", () => {
+      atom.config.set("terminal.xterm.additionalOptions", `{ "scrollback": 99 }`);
+      expect(element.getXtermOptions().scrollback).toBe(99);
+    });
+  });
+
+  describe("showNotification()", () => {
+    it("is gated by behavior.showNotifications, except when forced", () => {
+      spyOn(atom.notifications, "addInfo");
+      element.showNotification("hello", "info");
+      expect(atom.notifications.addInfo).toHaveBeenCalled();
+
+      atom.notifications.addInfo.calls.reset();
+      atom.config.set("terminal.behavior.showNotifications", false);
+      element.showNotification("hello", "info");
+      expect(atom.notifications.addInfo).not.toHaveBeenCalled();
+
+      element.showNotification("hello", "info", { force: true });
+      expect(atom.notifications.addInfo).toHaveBeenCalled();
     });
   });
 
