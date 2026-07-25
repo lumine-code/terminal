@@ -82,7 +82,7 @@ The terminal treats CSS custom properties on `:root` as the source of truth for 
 
 ## Services
 
-- **terminal** (`2.0.0`): provided to let other packages open terminals and run commands in them.
+- **terminal** (`1.0.0`): provided to let other packages open terminals and run commands in them.
 
 ## Contributing
 

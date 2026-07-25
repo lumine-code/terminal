@@ -72,7 +72,7 @@
     "terminal": {
       "description": "Run commands and open terminals.",
       "versions": {
-        "2.0.0": "provideTerminalService"
+        "1.0.0": "provideTerminalService"
       }
     }
   }
