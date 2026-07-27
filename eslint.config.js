@@ -8,7 +8,7 @@ const prettier = require("eslint-config-prettier");
 // Modules the editor provides at runtime rather than this package installing
 // them. `node-pty` is re-exported from Lumine's `exports/` folder, which is on
 // NODE_PATH, so it resolves at run time but not to static analysis.
-const runtimeModules = ["atom", "electron", "@electron/remote", "node-pty"];
+const runtimeModules = ["atom", "electron", "@electron/remote", "@lumine-code/node-pty"];
 
 module.exports = [
   js.configs.recommended,
