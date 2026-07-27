@@ -54,7 +54,6 @@
     "@xterm/xterm": "^6.0.0",
     "fs-extra": "^11.4.0",
     "ndjson": "^2.0.0",
-    "node-pty": "^1.1.0",
     "which": "^7.0.0"
   },
   "devDependencies": {
