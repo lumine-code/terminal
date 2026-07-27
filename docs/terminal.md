@@ -9,7 +9,7 @@ Opens a terminal, or runs commands in one.
 | Consumed by | `consumeTerminal(terminal)`                           |
 | Owner       | [`terminal`](https://github.com/lumine-code/terminal) |
 
-For a package that has a command to run and wants the user to see it happen in the editor. To open the _system's_ terminal application instead, use [`terminal-spawn`](https://lumine-code.github.io/docs.html#services/terminal-spawn).
+For a package that has a command to run and wants the user to see it happen in the editor. To open the _system's_ terminal application instead, use `terminal-spawn`.
 
 ## Registration
 
