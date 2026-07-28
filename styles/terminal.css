@@ -47,13 +47,9 @@ terminal-view {
   margin-left: auto;
 }
 
-/* The terminal's colors are CSS custom properties (`--terminal-*`). Their
-   defaults live in Lumine core (`static/variables/base-variables.css`) — the
-   surface colors mirror the UI theme's panels, so terminals blend with the
-   docks they sit in — and themes override them. They are deliberately NOT
-   redefined here: theme stylesheets sort after package stylesheets, so a
-   definition in this file could never win anyway (which once left the
-   terminal on syntax colors while everything claimed panel colors).
+/* The terminal's colors are CSS custom properties (`--terminal-*`). Package
+   defaults live in variables.css and follow Lumine's shared UI/syntax
+   palette; themes and user stylesheets may override them.
 
    Terminal text is drawn onto a CANVAS element rather than styled with CSS,
    so `lib/themes.js` reads the resolved values with `getComputedStyle` /
