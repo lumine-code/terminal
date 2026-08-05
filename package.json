@@ -28,7 +28,7 @@
   "homepage": "https://github.com/lumine-code/terminal#readme",
   "license": "MIT",
   "engines": {
-    "atom": "*",
+    "lumine": "*",
     "node": ">=24"
   },
   "backgroundTips": [
