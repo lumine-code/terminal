@@ -2,6 +2,15 @@
   "name": "terminal",
   "author": "lumine-code",
   "main": "./lib/terminal",
+  "files": [
+    "docs",
+    "keymaps",
+    "lib",
+    "menus",
+    "shell-integration",
+    "spec",
+    "styles"
+  ],
   "version": "1.0.0",
   "description": "An embedded terminal emulator.",
   "keywords": [
@@ -13,13 +22,6 @@
     "powershell",
     "cmd",
     "node-pty"
-  ],
-  "files": [
-    "lib",
-    "keymaps",
-    "menus",
-    "shell-integration",
-    "styles"
   ],
   "repository": "https://github.com/lumine-code/terminal",
   "bugs": {
