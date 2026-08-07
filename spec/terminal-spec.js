@@ -1,4 +1,5 @@
 const Terminal = require("../lib/terminal");
+const { Config } = require("../lib/config");
 const { Pty } = require("../lib/pty");
 const { URL } = require("url");
 
@@ -170,6 +171,36 @@ describe("Terminal", () => {
 
       let url = new URL(atom.workspace.open.calls.argsFor(0)[0]);
       expect(url.searchParams.get("cwd")).toBe(testPath);
+    });
+  });
+
+  describe("deserializeTerminalModel()", () => {
+    let serialized;
+    beforeEach(() => {
+      serialized = { uri: Terminal.generateUri() };
+    });
+
+    // The pane that held a terminal is deserialized at startup, long before the
+    // package would otherwise activate, so this path only ever calls core APIs
+    // that exist on a loaded-but-not-activated package.
+    it("activates the package with APIs the editor still has", () => {
+      let pack = atom.packages.getLoadedPackage("terminal");
+      spyOn(pack, "activateNow").and.callThrough();
+      Terminal.deserializeTerminalModel(serialized);
+      expect(pack.activateNow).toHaveBeenCalled();
+    });
+
+    it("restores the terminal when the setting is on", () => {
+      Config.set("behavior.relaunchTerminalsOnStartup", true);
+      let model = Terminal.deserializeTerminalModel(serialized);
+      expect(model.sessionId).toBe(new URL(serialized.uri).host);
+      expect(Terminal.terminals.has(model)).toBe(true);
+      model.destroy();
+    });
+
+    it("restores nothing when the setting is off", () => {
+      Config.set("behavior.relaunchTerminalsOnStartup", false);
+      expect(Terminal.deserializeTerminalModel(serialized)).toBeUndefined();
     });
   });
 });
