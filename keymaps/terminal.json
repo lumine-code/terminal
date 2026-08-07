@@ -1,4 +1,8 @@
 {
+  // `ctrl-`` is a cross-editor convention, so it stays out of the alt- tier.
+  // Focus and unfocus are two commands rather than one toggle-focus because
+  // focus also creates a terminal when none is open; the pair reads as a
+  // toggle because the `terminal-view` binding below is on a deeper element.
   "atom-workspace": {
     "ctrl-`": "terminal:focus",
     "ctrl-~ n": "terminal:open",
@@ -8,7 +12,11 @@
     "ctrl-~ right": "terminal:open-split-right",
     "ctrl-~ b": "terminal:open-bottom-dock",
     "ctrl-~ l": "terminal:open-left-dock",
-    "ctrl-~ r": "terminal:open-right-dock",
+    "ctrl-~ r": "terminal:open-right-dock"
+  },
+  // These two read the active editor's selection rather than acting on a
+  // terminal, so they belong where that selection is.
+  "atom-text-editor:not([mini])": {
     "ctrl-~ x": "terminal:run-selected-text",
     "ctrl-~ i": "terminal:insert-selected-text"
   },
@@ -16,23 +24,21 @@
     "ctrl-l": "terminal:clear",
     "cmdorctrl-f": "terminal:find",
     "cmdorctrl-e": "terminal:set-selection-as-find-pattern",
-    "ctrl-`": "terminal:unfocus"
+    "ctrl-`": "terminal:unfocus",
+    "cmdorctrl-g": "terminal:find-next",
+    "cmdorctrl-shift-g": "terminal:find-previous"
   },
   ".platform-darwin terminal-view": {
-    "cmd-alt-k": "terminal:clear",
-    "cmd-g": "terminal:find-next",
-    "cmd-shift-g": "terminal:find-previous"
+    "cmd-alt-k": "terminal:clear"
   },
   ".platform-win32 terminal-view, .platform-linux terminal-view": {
     "f3": "terminal:find-next",
     "shift-f3": "terminal:find-previous"
   },
   ".terminal-find-palette atom-text-editor": {
-    "cmdorctrl-f": "terminal:find"
-  },
-  ".platform-darwin .terminal-find-palette atom-text-editor": {
-    "cmd-g": "terminal:find-next",
-    "cmd-shift-g": "terminal:find-previous"
+    "cmdorctrl-f": "terminal:find",
+    "cmdorctrl-g": "terminal:find-next",
+    "cmdorctrl-shift-g": "terminal:find-previous"
   },
   ".platform-win32 .terminal-find-palette atom-text-editor, .platform-linux .terminal-find-palette atom-text-editor": {
     "f3": "terminal:find-next",
