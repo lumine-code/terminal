@@ -107,7 +107,6 @@ describe("TerminalElement", () => {
     await wait(0);
     while (createdElements.length) {
       let el = createdElements.shift();
-      console.log("Destroying element", el.uid, "with PID:", el.pty?.id);
       el.destroy();
       if (el.parentNode) {
         el.parentNode.removeChild(el);
