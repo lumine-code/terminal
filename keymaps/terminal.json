@@ -21,6 +21,11 @@
     "ctrl-~ i": "terminal:insert-selected-text"
   },
   "terminal-view": {
+    // Ten chords opened a terminal and none closed or restarted one, so both
+    // were reachable from the menu alone. They sit here rather than at
+    // workspace scope because they act on the terminal that has focus.
+    "ctrl-~ w": "terminal:close",
+    "ctrl-~ s": "terminal:restart",
     "ctrl-l": "terminal:clear",
     "cmdorctrl-f": "terminal:find",
     "cmdorctrl-e": "terminal:set-selection-as-find-pattern",
