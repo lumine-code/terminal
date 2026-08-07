@@ -101,7 +101,8 @@ terminal-view {
    pane edge (the editor's scrollbar hugs the edge). xterm's fit addon already
    reserves the scrollbar width, so the text keeps its distance. */
 .xterm {
-  padding: 5px 0 5px 5px;
+  padding: calc(var(--component-padding)) 0;
+  padding-left: calc(var(--component-padding));
 }
 
 .xterm-screen {

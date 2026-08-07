@@ -2,7 +2,7 @@
   /* Package defaults follow Lumine's shared UI and syntax palette. Themes may
      override any --terminal-* property after this stylesheet. */
   --terminal-text-color: var(--text-color);
-  --terminal-background-color: var(--tool-panel-background-color);
+  --terminal-background-color: var(--syntax-background-color);
   --terminal-selection-background-color: var(--background-color-selected);
   --terminal-selection-text-color: var(--text-color-highlight);
   --terminal-cursor-color: var(--text-color-highlight);
