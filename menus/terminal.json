@@ -1,6 +1,7 @@
 {
   "context-menu": {
     "terminal-view": [
+      { "type": "separator" },
       {
         "label": "Close",
         "command": "terminal:close"
@@ -26,9 +27,11 @@
       {
         "label": "Close All Terminals",
         "command": "terminal:close-all"
-      }
+      },
+      { "type": "separator" }
     ],
-    "atom-text-editor, .tree-view, .tab-bar": [
+    "atom-text-editor:not([mini]), .tree-view, .tab-bar": [
+      { "type": "separator" },
       {
         "label": "Terminal",
         "submenu": [
@@ -82,7 +85,8 @@
             "command": "terminal:close-all"
           }
         ]
-      }
+      },
+      { "type": "separator" }
     ]
   },
   "menu": [
