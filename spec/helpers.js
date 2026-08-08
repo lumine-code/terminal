@@ -19,10 +19,14 @@ async function wait(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// Replace the PTY's process spawning with a no-op so specs don't launch a real
-// `node-pty` worker (which needs a native build). `Pty.start` still runs against
-// a fake process, and the readiness promises resolve immediately.
-function stubPty(Pty) {
+// Replace the PTY host's process spawning with a no-op so specs don't launch a
+// real `node-pty` worker (which needs a native build). `Pty.start` still runs
+// against a fake process, and the readiness promises resolve immediately. Any
+// host left over from an earlier spec is released first, so each spec observes
+// its own.
+function stubPty() {
+  const { Pty, PtyHost } = require("../lib/pty");
+  PtyHost.releaseShared();
   let makeStream = () => {
     let stream = {
       on: () => stream,
@@ -44,8 +48,8 @@ function stubPty(Pty) {
     removeAllListeners: () => {},
     pid: 1,
   };
-  spyOn(Pty.prototype, "spawn").and.returnValue(mockProcess);
-  spyOn(Pty.prototype, "booted").and.returnValue(Promise.resolve());
+  spyOn(PtyHost.prototype, "spawn").and.returnValue(mockProcess);
+  spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
   spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
   spyOn(Pty.prototype, "kill").and.returnValue(undefined);
   return mockProcess;

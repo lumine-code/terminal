@@ -4,7 +4,7 @@ const { shell } = require("@electron/remote");
 const { TerminalElement } = require("../lib/element");
 const { TerminalModel } = require("../lib/model");
 const { Terminal } = require("@xterm/xterm");
-const { Pty } = require("../lib/pty");
+const { Pty, PtyHost } = require("../lib/pty");
 
 const { activatePackage, wait } = require("./helpers");
 
@@ -15,7 +15,7 @@ temp.track();
 let createdElements = [];
 
 function createMockStream(name) {
-  let stream = jasmine.createSpyObj(name, ["on", "write"]);
+  let stream = jasmine.createSpyObj(name, ["on", "write", "end"]);
   stream.pipe = () => {
     return stream;
   };
@@ -82,10 +82,13 @@ describe("TerminalElement", () => {
       "removeAllListeners",
     ]);
     ptyProcess.title = "some-test-process";
-    spyOn(Pty.prototype, "spawn").and.callFake(() => {
+    // Each spec observes its own host; the shared one otherwise survives from
+    // whichever spec booted it first.
+    PtyHost.releaseShared();
+    spyOn(PtyHost.prototype, "spawn").and.callFake(() => {
       return createMockWorkerProcess();
     });
-    spyOn(Pty.prototype, "booted").and.returnValue(Promise.resolve());
+    spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "kill").and.returnValue(undefined);
     spyOn(shell, "openExternal");
@@ -181,6 +184,15 @@ describe("TerminalElement", () => {
 
     it("creates a pty instance", () => {
       expect(element.pty).toBeTruthy();
+    });
+
+    // The worker is booted at the top of `#createTerminal` so its startup runs
+    // alongside xterm's, and `restartPtyProcess` adopts it rather than booting
+    // a second one. Two workers here would mean the head start was thrown away
+    // and a ~100MB process leaked with it.
+    it("boots exactly one worker for the terminal it creates", () => {
+      expect(PtyHost.prototype.spawn.calls.count()).toBe(1);
+      expect(element.pty.launched).toBe(true);
     });
   });
 
@@ -352,6 +364,24 @@ describe("TerminalElement", () => {
       expect(element.isPtyProcessRunning()).toBe(true);
     });
 
+    // Left unset, node-pty spawns the shell at 80x30. The shell then writes its
+    // first output at a width the terminal does not have, and the refit that
+    // follows makes conpty reflow what it just printed — visible as the text
+    // flickering the moment it arrives.
+    it("spawns the shell at the size the terminal already is", async () => {
+      let launched;
+      spyOn(Pty.prototype, "launch").and.callFake(function (options) {
+        launched = options;
+        this.launched = true;
+        return Promise.resolve();
+      });
+
+      await element.restartPtyProcess();
+
+      expect(launched.options.cols).toBe(element.terminal.cols);
+      expect(launched.options.rows).toBe(element.terminal.rows);
+    });
+
     // This one is strange because I can't get `spawn` in `node-pty` to return
     // any sort of error with a nonexistent command. Putting this aside for
     // now.
@@ -370,6 +400,127 @@ describe("TerminalElement", () => {
         expect(element.pty).toBe(undefined);
         expect(atom.notifications.addError).toHaveBeenCalled();
       }
+    });
+  });
+});
+
+describe("Pty", () => {
+  let workerProcesses;
+
+  function spawnMessages(workerProcess) {
+    return workerProcess.stdin.write.calls
+      .allArgs()
+      .map(([raw]) => JSON.parse(raw))
+      .filter((message) => message.type === "spawn");
+  }
+
+  beforeEach(() => {
+    jasmine.useRealClock();
+    workerProcesses = [];
+    PtyHost.releaseShared();
+    spyOn(PtyHost.prototype, "spawn").and.callFake(() => {
+      let workerProcess = createMockWorkerProcess();
+      workerProcesses.push(workerProcess);
+      return workerProcess;
+    });
+    spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
+    spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
+  });
+
+  afterEach(() => {
+    PtyHost.releaseShared();
+  });
+
+  // Booting a host costs a whole Node startup and depends on nothing about the
+  // shell, so a caller must be able to pay it before it knows the cwd or the
+  // environment.
+  it("attaches to a host without being told which shell to run", async () => {
+    let pty = new Pty();
+    await pty.booted();
+    expect(PtyHost.prototype.spawn).toHaveBeenCalled();
+    expect(pty.launched).toBe(false);
+    expect(spawnMessages(workerProcesses[0]).length).toBe(0);
+  });
+
+  it("asks for the shell when ::launch is called", async () => {
+    let pty = new Pty();
+    await pty.launch({ file: "sh", args: [], options: {} });
+    expect(pty.launched).toBe(true);
+    let [spawned] = spawnMessages(workerProcesses[0]);
+    expect(spawned.payload.file).toBe("sh");
+    // Every message carries the session it belongs to, which is what lets one
+    // worker serve several terminals.
+    expect(spawned.id).toBe(pty.id);
+  });
+
+  // `start` decides whether to launch the shell it was constructed with only
+  // after awaiting the boot, by which point a caller may have launched one
+  // itself. Asking twice runs two shells inside the one terminal, which reads
+  // as the output arriving doubled and landing in the wrong places.
+  it("runs one shell when ::launch races the boot it was constructed with", async () => {
+    let pty = new Pty({ file: "sh", args: [], options: {} });
+    await pty.launch({ file: "sh", args: [], options: {} });
+    // Let `start` resume past its own await and reach its launch decision.
+    await null;
+    await null;
+
+    expect(spawnMessages(workerProcesses[0]).length).toBe(1);
+  });
+
+  describe("host sharing", () => {
+    it("runs every session on one worker by default", async () => {
+      let first = new Pty();
+      let second = new Pty();
+      await Promise.all([first.booted(), second.booted()]);
+
+      expect(workerProcesses.length).toBe(1);
+      expect(first.host).toBe(second.host);
+      expect(first.id).not.toBe(second.id);
+    });
+
+    it("gives a session its own worker when asked", async () => {
+      let shared = new Pty();
+      let isolated = new Pty(undefined, { dedicated: true });
+      await Promise.all([shared.booted(), isolated.booted()]);
+
+      expect(workerProcesses.length).toBe(2);
+      expect(isolated.host).not.toBe(shared.host);
+    });
+
+    // Killing one terminal must leave the others alone, which is the whole
+    // hazard of sharing a process between them.
+    it("keeps the shared worker alive when one session is killed", async () => {
+      let first = new Pty();
+      let second = new Pty();
+      await Promise.all([first.launch({ file: "sh" }), second.launch({ file: "sh" })]);
+
+      first.kill();
+
+      expect(first.host.destroyed).toBe(false);
+      expect(workerProcesses[0].stdin.end).not.toHaveBeenCalled();
+      expect(second.host.destroyed).toBe(false);
+    });
+
+    // A worker of its own has nothing left to do once its one session is gone,
+    // and the worker only exits when its stdin closes.
+    it("ends a dedicated worker once its session is killed", async () => {
+      let pty = new Pty(undefined, { dedicated: true });
+      await pty.launch({ file: "sh" });
+
+      pty.kill();
+
+      expect(pty.host.destroyed).toBe(true);
+      expect(workerProcesses[0].stdin.end).toHaveBeenCalled();
+    });
+
+    it("ends the shared worker when it is released", async () => {
+      let pty = new Pty();
+      await pty.booted();
+
+      PtyHost.releaseShared();
+
+      expect(pty.host.destroyed).toBe(true);
+      expect(workerProcesses[0].stdin.end).toHaveBeenCalled();
     });
   });
 });
