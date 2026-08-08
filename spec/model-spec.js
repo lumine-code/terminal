@@ -203,24 +203,18 @@ describe("TerminalModel", () => {
     });
   });
 
-  describe("isModified()", () => {
-    it("is initially false", () => {
-      expect(model.isModified()).toBe(false);
+  describe("the modified-state contract", () => {
+    // A terminal has nothing to save, so it opts out of the save-state API
+    // entirely. `tabs` and core both feature-detect these, and a terminal that
+    // reported itself modified was skipped by `tabs:close-saved-tabs`.
+    it("implements neither ::isModified nor ::onDidChangeModified", () => {
+      expect(model.isModified).toBeUndefined();
+      expect(model.onDidChangeModified).toBeUndefined();
     });
 
-    it('is considered to be modified when we change the "modified" property', () => {
-      model.modified = true;
-      expect(model.isModified()).toBe(true);
-    });
-  });
-
-  describe("onDidChangeModified()", () => {
-    it("notifies observers when the modified status changes", () => {
-      let spy = jasmine.createSpy("modified-spy");
-      let disposable = model.onDidChangeModified(spy);
-      model.emitter.emit("did-change-modified", true);
-      expect(spy).toHaveBeenCalledWith(true);
-      disposable.dispose();
+    it("implements neither ::shouldPromptToSave nor ::save", () => {
+      expect(model.shouldPromptToSave).toBeUndefined();
+      expect(model.save).toBeUndefined();
     });
   });
 
@@ -232,52 +226,28 @@ describe("TerminalModel", () => {
       expect(atom.workspace.paneForItem).toHaveBeenCalled();
     });
 
-    it('does not add the "modified" attribute when the current item is the active item', () => {
-      pane.getActiveItem.and.returnValue(model);
+    it("emits a title change only when the title actually changed", () => {
       model.pane = pane;
-      model.handleNewData();
-      expect(model.modified).toBe(false);
-    });
-
-    it('adds the "modified" attribute when the current pane is not the active item', () => {
-      pane.getActiveItem.and.returnValue({});
-      model.pane = pane;
-      model.handleNewData();
-      expect(model.modified).toBe(true);
-    });
-
-    it('does not change the "modified" attribute at all when the current item is the active item', () => {
-      pane.getActiveItem.and.returnValue(model);
-      model.pane = pane;
+      model.title = "one";
       spyOn(model.emitter, "emit");
       model.handleNewData();
-      expect(
-        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
-          .length,
-      ).toBe(0);
-    });
-
-    it('does not change the "modified" attribute at all when the current item is not active item', () => {
-      pane.getActiveItem.and.returnValue({});
-      model.pane = pane;
-      model.modified = true;
-      spyOn(model.emitter, "emit");
       model.handleNewData();
       expect(
-        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
-          .length,
-      ).toBe(0);
-    });
-
-    it('does change the "modified" attribute when necessary', () => {
-      pane.getActiveItem.and.returnValue({});
-      model.pane = pane;
-      spyOn(model.emitter, "emit");
-      model.handleNewData();
-      expect(
-        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
-          .length,
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-title").length,
       ).toBe(1);
+    });
+
+    it("never emits a modified change, whether or not it is the active item", () => {
+      pane.getActiveItem.and.returnValue({});
+      model.pane = pane;
+      spyOn(model.emitter, "emit");
+      model.handleNewData();
+      pane.getActiveItem.and.returnValue(model);
+      model.handleNewData();
+      expect(
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+          .length,
+      ).toBe(0);
     });
   });
 
@@ -306,27 +276,14 @@ describe("TerminalModel", () => {
       expect(model.element.focusTerminal).toHaveBeenCalled();
     });
 
-    it('sets the correct "modified" value (when the old value was `false`)', () => {
+    it("emits no modified change", () => {
       model.element = element;
       spyOn(model.emitter, "emit");
       model.focusTerminal();
-      expect(model.modified).toBe(false);
       expect(
         model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
           .length,
       ).toBe(0);
-    });
-
-    it('sets the correct "modified" value (when the old value was `true`)', () => {
-      model.element = element;
-      model.modified = true;
-      spyOn(model.emitter, "emit");
-      model.focusTerminal();
-      expect(model.modified).toBe(false);
-      expect(
-        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
-          .length,
-      ).toBe(1);
     });
 
     it("activates the pane item", () => {
