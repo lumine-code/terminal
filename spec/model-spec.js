@@ -36,7 +36,7 @@ describe("TerminalModel", () => {
     spyOn(atom.workspace, "getActivePaneItem").and.returnValue({});
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(tmpdir);
+    expect(newModel.cwd).toBe(tmpdir);
   });
 
   it("handles a previous active item whose getPath() method returns a directory", async () => {
@@ -48,7 +48,7 @@ describe("TerminalModel", () => {
     spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(tmpdir);
+    expect(newModel.cwd).toBe(tmpdir);
   });
 
   it("handles a previous active item whose getPath() method returns a file", async () => {
@@ -60,7 +60,7 @@ describe("TerminalModel", () => {
     spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(tmpdir);
+    expect(newModel.cwd).toBe(tmpdir);
   });
 
   it('handles a previous active item that has a "selectedPath" property that returns a directory', async () => {
@@ -72,7 +72,7 @@ describe("TerminalModel", () => {
     spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(tmpdir);
+    expect(newModel.cwd).toBe(tmpdir);
   });
 
   it('handles a previous active item that has a "selectedPath" property that returns a file', async () => {
@@ -84,7 +84,7 @@ describe("TerminalModel", () => {
     spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(tmpdir);
+    expect(newModel.cwd).toBe(tmpdir);
   });
 
   it("handles a previous active item whose getPath() returns an invalid path", async () => {
@@ -96,7 +96,7 @@ describe("TerminalModel", () => {
     spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(dirPath);
+    expect(newModel.cwd).toBe(dirPath);
   });
 
   it("handles a previous active item which exists in the project path and has getPath()", async () => {
@@ -107,7 +107,7 @@ describe("TerminalModel", () => {
     spyOn(atom.project, "relativizePath").and.returnValue(expected);
     const newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(expected[0]);
+    expect(newModel.cwd).toBe(expected[0]);
   });
 
   it("handles a previous active item which exists in the project path and has selectedPath", async () => {
@@ -118,7 +118,7 @@ describe("TerminalModel", () => {
     spyOn(atom.project, "relativizePath").and.returnValue(expected);
     const newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(expected[0]);
+    expect(newModel.cwd).toBe(expected[0]);
   });
 
   it("handles being constructed with a target cwd", async () => {
@@ -127,7 +127,7 @@ describe("TerminalModel", () => {
     url.searchParams.set("cwd", __filename);
     let newModel = new TerminalModel({ uri: url.href, terminals });
     await newModel.ready();
-    expect(newModel.getPath()).toBe(expected);
+    expect(newModel.cwd).toBe(expected);
   });
 
   it("serializes", () => {
@@ -195,12 +195,37 @@ describe("TerminalModel", () => {
     });
   });
 
-  describe("getPath()", () => {
-    it("represents cwd correctly", () => {
-      let expected = "/some/dir";
-      model.cwd = expected;
-      expect(model.getPath()).toBe(expected);
+  describe("the path contract", () => {
+    // `getPath` names the document an item displays, and everything reading it
+    // treats the answer as one — the tab bar shows it on hover and colours the
+    // tab by its git status. A terminal displays no document, so a terminal
+    // opened from an editor's context menu claimed that editor's file as its
+    // own, tooltip and orange tab included.
+    it("implements no ::getPath", () => {
+      expect(model.getPath).toBeUndefined();
     });
+
+    it("keeps its working directory to itself", async () => {
+      let url = new URL(uri);
+      url.searchParams.set("cwd", __filename);
+      let newModel = new TerminalModel({ uri: url.href, terminals });
+      await newModel.ready();
+
+      expect(newModel.cwd).toBe(__dirname);
+      expect(newModel.getPath).toBeUndefined();
+    });
+  });
+
+  it("starts a terminal opened from a terminal in that terminal's directory", async () => {
+    let previousActiveItem = new TerminalModel({ uri, terminals });
+    await previousActiveItem.ready();
+    previousActiveItem.cwd = tmpdir;
+    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+
+    let newModel = new TerminalModel({ uri, terminals });
+    await newModel.ready();
+
+    expect(newModel.cwd).toBe(tmpdir);
   });
 
   describe("the modified-state contract", () => {
