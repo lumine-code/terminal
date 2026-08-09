@@ -89,7 +89,7 @@ describe("TerminalElement", () => {
     spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "kill").and.returnValue(undefined);
-    spyOn(atom, "openExternal");
+    spyOn(atom.shell, "openExternal");
     element = await createElement();
     tmpdir = await temp.mkdir();
 
