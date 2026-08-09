@@ -3,6 +3,7 @@ const { TerminalElement } = require("../lib/element");
 const { TerminalModel } = require("../lib/model");
 const { Terminal } = require("@xterm/xterm");
 const { Pty, PtyHost } = require("../lib/pty");
+const { getConfigSchema } = require("../lib/config");
 
 const { activatePackage, wait } = require("./helpers");
 
@@ -70,7 +71,7 @@ describe("TerminalElement", () => {
   beforeEach(async () => {
     jasmine.useRealClock();
     await activatePackage();
-    await atom.updateProcessEnvAndTriggerHooks();
+    await lumine.updateProcessEnvAndTriggerHooks();
 
     let ptyProcess = jasmine.createSpyObj("ptyProcess", [
       "kill",
@@ -89,7 +90,7 @@ describe("TerminalElement", () => {
     spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "kill").and.returnValue(undefined);
-    spyOn(atom.shell, "openExternal");
+    spyOn(lumine.shell, "openExternal");
     element = await createElement();
     tmpdir = await temp.mkdir();
 
@@ -196,15 +197,15 @@ describe("TerminalElement", () => {
 
   describe("getExtraXTermOptions()", () => {
     it("passes along values defined in the package config", () => {
-      atom.config.set("terminal.xterm.additionalOptions", `{ "foo": false }`);
+      lumine.config.set("terminal.xterm.additionalOptions", `{ "foo": false }`);
       expect(element.getExtraXTermOptions()).toEqual({ foo: false });
     });
 
     it("notifies the user when the config field is invalid JSON", () => {
-      spyOn(atom.notifications, "addError").and.callThrough();
-      atom.config.set("terminal.xterm.additionalOptions", `{ "foo": false`);
+      spyOn(lumine.notifications, "addError").and.callThrough();
+      lumine.config.set("terminal.xterm.additionalOptions", `{ "foo": false`);
       expect(element.getExtraXTermOptions()).toEqual({});
-      expect(atom.notifications.addError).toHaveBeenCalled();
+      expect(lumine.notifications.addError).toHaveBeenCalled();
     });
   });
 
@@ -237,53 +238,61 @@ describe("TerminalElement", () => {
     });
 
     it("lets the delete list remove COLORTERM", () => {
-      atom.config.set("terminal.terminal.env.deleteEnv", ["COLORTERM"]);
+      lumine.config.set("terminal.terminal.env.deleteEnv", ["COLORTERM"]);
       expect(element.getEnv().COLORTERM).toBe(undefined);
     });
   });
 
   describe("getXtermOptions()", () => {
     it("applies the configured scrollback", () => {
-      atom.config.set("terminal.xterm.scrollback", 4321);
+      lumine.config.set("terminal.xterm.scrollback", 4321);
       expect(element.getXtermOptions().scrollback).toBe(4321);
     });
 
     it("lets additionalOptions override scrollback", () => {
-      atom.config.set("terminal.xterm.additionalOptions", `{ "scrollback": 99 }`);
+      lumine.config.set("terminal.xterm.additionalOptions", `{ "scrollback": 99 }`);
       expect(element.getXtermOptions().scrollback).toBe(99);
     });
   });
 
   describe("showNotification()", () => {
     it("is gated by behavior.showNotifications, except when forced", () => {
-      spyOn(atom.notifications, "addInfo");
+      spyOn(lumine.notifications, "addInfo");
       element.showNotification("hello", "info");
-      expect(atom.notifications.addInfo).toHaveBeenCalled();
+      expect(lumine.notifications.addInfo).toHaveBeenCalled();
 
-      atom.notifications.addInfo.calls.reset();
-      atom.config.set("terminal.behavior.showNotifications", false);
+      lumine.notifications.addInfo.calls.reset();
+      lumine.config.set("terminal.behavior.showNotifications", false);
       element.showNotification("hello", "info");
-      expect(atom.notifications.addInfo).not.toHaveBeenCalled();
+      expect(lumine.notifications.addInfo).not.toHaveBeenCalled();
 
       element.showNotification("hello", "info", { force: true });
-      expect(atom.notifications.addInfo).toHaveBeenCalled();
+      expect(lumine.notifications.addInfo).toHaveBeenCalled();
     });
   });
 
   describe("updateTheme()", () => {
+    it("does not offer the retired Atom presets", () => {
+      const values = getConfigSchema().appearance.properties.theme.enum.map((entry) =>
+        typeof entry === "string" ? entry : entry.value,
+      );
+      expect(values).not.toContain("Atom Dark");
+      expect(values).not.toContain("Atom Light");
+    });
+
     it("repaints when the resolved colors change", () => {
-      atom.config.set("terminal.appearance.theme", "Atom Dark");
+      lumine.config.set("terminal.appearance.theme", "Base16 Tomorrow Dark");
       element.updateTheme();
       expect(element.terminal.options.theme.background).toBe("#1d1f21");
 
-      atom.config.set("terminal.appearance.theme", "Atom Light");
+      lumine.config.set("terminal.appearance.theme", "Base16 Tomorrow Light");
       element.updateTheme();
       expect(element.terminal.options.theme.background).toBe("#ffffff");
       expect(element.style.backgroundColor).toBe("rgb(255, 255, 255)");
     });
 
     it("leaves the glyph atlas alone when nothing moved", () => {
-      atom.config.set("terminal.appearance.theme", "Atom Dark");
+      lumine.config.set("terminal.appearance.theme", "Base16 Tomorrow Dark");
       element.updateTheme();
 
       spyOn(element, "setMainBackgroundColor").and.callThrough();
@@ -308,7 +317,7 @@ describe("TerminalElement", () => {
 
     describe("web-links", () => {
       it("is enabled if configured as such", async () => {
-        atom.config.set("terminal.xterm.webLinks", true);
+        lumine.config.set("terminal.xterm.webLinks", true);
         await createElement();
         let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebLinksAddon;
@@ -317,7 +326,7 @@ describe("TerminalElement", () => {
       });
 
       it("is disabled if configured as such", async () => {
-        atom.config.set("terminal.xterm.webLinks", false);
+        lumine.config.set("terminal.xterm.webLinks", false);
         await createElement();
         let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebLinksAddon;
@@ -328,7 +337,7 @@ describe("TerminalElement", () => {
 
     describe("webgl", () => {
       it("is enabled if configured as such", async () => {
-        atom.config.set("terminal.xterm.webgl", true);
+        lumine.config.set("terminal.xterm.webgl", true);
         await createElement();
         let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebglAddon;
@@ -337,7 +346,7 @@ describe("TerminalElement", () => {
       });
 
       it("is disabled if configured as such", async () => {
-        atom.config.set("terminal.xterm.webgl", false);
+        lumine.config.set("terminal.xterm.webgl", false);
         await createElement();
         let wasAdded = Terminal.prototype.loadAddon.calls.all().some((call) => {
           return call.args[0] instanceof WebglAddon;
@@ -384,8 +393,8 @@ describe("TerminalElement", () => {
     // any sort of error with a nonexistent command. Putting this aside for
     // now.
     xit("handles a nonexistent command", async () => {
-      spyOn(atom.notifications, "addError");
-      atom.config.set("terminal.terminal.shell", "somecommand");
+      spyOn(lumine.notifications, "addError");
+      lumine.config.set("terminal.terminal.shell", "somecommand");
       let restartPromise = element.restartPtyProcess();
       await wait(10);
       try {
@@ -396,7 +405,7 @@ describe("TerminalElement", () => {
         // Give the element time to act.
         await wait(10);
         expect(element.pty).toBe(undefined);
-        expect(atom.notifications.addError).toHaveBeenCalled();
+        expect(lumine.notifications.addError).toHaveBeenCalled();
       }
     });
   });

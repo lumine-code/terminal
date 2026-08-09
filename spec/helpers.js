@@ -2,16 +2,16 @@ const path = require("path");
 
 async function activatePackage() {
   addToPackagePaths();
-  let promise = atom.packages.activatePackage("terminal");
-  atom.packages.triggerActivationHook("core:loaded-shell-environment");
-  atom.packages.triggerDeferredActivationHooks();
+  let promise = lumine.packages.activatePackage("terminal");
+  lumine.packages.triggerActivationHook("core:loaded-shell-environment");
+  lumine.packages.triggerDeferredActivationHooks();
   await promise;
 }
 
 function addToPackagePaths() {
   let packagePath = path.resolve(__dirname, "..", "..");
-  if (!atom.packages.packageDirPaths.includes(packagePath)) {
-    atom.packages.packageDirPaths.push(packagePath);
+  if (!lumine.packages.packageDirPaths.includes(packagePath)) {
+    lumine.packages.packageDirPaths.push(packagePath);
   }
 }
 

@@ -3,7 +3,7 @@
   // Focus and unfocus are two commands rather than one toggle-focus because
   // focus also creates a terminal when none is open; the pair reads as a
   // toggle because the `terminal-view` binding below is on a deeper element.
-  "atom-workspace": {
+  "lumine-workspace": {
     "ctrl-`": "terminal:focus",
     "ctrl-~ n": "terminal:open",
     "ctrl-~ up": "terminal:open-split-up",
@@ -16,7 +16,7 @@
   },
   // These two read the active editor's selection rather than acting on a
   // terminal, so they belong where that selection is.
-  "atom-text-editor:not([mini])": {
+  "lumine-text-editor:not([mini])": {
     "ctrl-~ x": "terminal:run-selected-text",
     "ctrl-~ i": "terminal:insert-selected-text"
   },
@@ -40,12 +40,12 @@
     "f3": "terminal:find-next",
     "shift-f3": "terminal:find-previous"
   },
-  ".terminal-find-palette atom-text-editor": {
+  ".terminal-find-palette lumine-text-editor": {
     "cmdorctrl-f": "terminal:find",
     "cmdorctrl-g": "terminal:find-next",
     "cmdorctrl-shift-g": "terminal:find-previous"
   },
-  ".platform-win32 .terminal-find-palette atom-text-editor, .platform-linux .terminal-find-palette atom-text-editor": {
+  ".platform-win32 .terminal-find-palette lumine-text-editor, .platform-linux .terminal-find-palette lumine-text-editor": {
     "f3": "terminal:find-next",
     "shift-f3": "terminal:find-previous"
   }

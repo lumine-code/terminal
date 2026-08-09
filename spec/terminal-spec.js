@@ -11,15 +11,15 @@ describe("Terminal", () => {
     jasmine.useRealClock();
     document.getElementById("jasmine-content").style.height = "150px";
     activatePackage();
-    await atom.updateProcessEnvAndTriggerHooks();
+    await lumine.updateProcessEnvAndTriggerHooks();
   });
 
   describe("unfocus()", () => {
-    it("focuses atom-workspace", async () => {
+    it("focuses lumine-workspace", async () => {
       // Stub the PTY so this focus test doesn't wait on a real node-pty worker.
       stubPty();
-      jasmine.attachToDOM(atom.views.getView(atom.workspace));
-      let model = await Terminal.openInCenterOrDock(atom.workspace);
+      jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
+      let model = await Terminal.openInCenterOrDock(lumine.workspace);
       await model.ready();
       await model.element.createTerminal();
       // Give the terminal time to start up.
@@ -53,7 +53,7 @@ describe("Terminal", () => {
     });
 
     it("runs commands in a new terminal if configured to do so", async () => {
-      atom.config.set("terminal.behavior.runInActive", false);
+      lumine.config.set("terminal.behavior.runInActive", false);
       await Terminal.runCommands(commands);
       expect(Terminal.getActiveTerminal).not.toHaveBeenCalled();
       expect(newTerminal.run).toHaveBeenCalledWith("command 1");
@@ -61,7 +61,7 @@ describe("Terminal", () => {
     });
 
     it("runs commands in the active terminal if configured to do so", async () => {
-      atom.config.set("terminal.behavior.runInActive", true);
+      lumine.config.set("terminal.behavior.runInActive", true);
       await Terminal.runCommands(commands);
       expect(Terminal.open).not.toHaveBeenCalled();
       expect(activeTerminal.run).toHaveBeenCalledWith("command 1");
@@ -70,7 +70,7 @@ describe("Terminal", () => {
 
     it("creates a new terminal if need be, even if configured to reuse terminals", async () => {
       Terminal.getActiveTerminal.and.returnValue();
-      atom.config.set("terminal.behavior.runInActive", true);
+      lumine.config.set("terminal.behavior.runInActive", true);
       await Terminal.runCommands(commands);
 
       expect(Terminal.getActiveTerminal).toHaveBeenCalled();
@@ -111,15 +111,15 @@ describe("Terminal", () => {
 
     describe("copy()", () => {
       it("copies text from the active terminal", async () => {
-        spyOn(atom.clipboard, "write");
+        spyOn(lumine.clipboard, "write");
         await Terminal.copy();
-        expect(atom.clipboard.write).toHaveBeenCalledWith("copied");
+        expect(lumine.clipboard.write).toHaveBeenCalledWith("copied");
       });
     });
 
     describe("paste()", () => {
       it("pastes text into the active terminal", async () => {
-        spyOn(atom.clipboard, "read").and.returnValue("copied");
+        spyOn(lumine.clipboard, "read").and.returnValue("copied");
         await Terminal.paste();
         expect(activeTerminal.paste).toHaveBeenCalledWith("copied");
       });
@@ -140,7 +140,7 @@ describe("Terminal", () => {
       // What a theme variant switch looks like: no style sheet is added or
       // removed and the active themes do not change, so this notification is
       // the terminal's only cue that the palette moved.
-      await atom.themes.updateAppearance(() => {});
+      await lumine.themes.updateAppearance(() => {});
       // The update is coalesced onto a microtask so it lands in the same task,
       // and so within the cross-fade.
       await null;
@@ -153,12 +153,12 @@ describe("Terminal", () => {
     let uri;
     beforeEach(() => {
       uri = Terminal.generateUri();
-      spyOn(atom.workspace, "open");
+      spyOn(lumine.workspace, "open");
     });
 
     it("handles a simple case", async () => {
       await Terminal.open(uri);
-      expect(atom.workspace.open).toHaveBeenCalledWith(uri, { location: "center" });
+      expect(lumine.workspace.open).toHaveBeenCalledWith(uri, { location: "center" });
     });
 
     it("specifies a cwd if a target is given", async () => {
@@ -168,7 +168,7 @@ describe("Terminal", () => {
       // TODO: Does what I just said make any sense?
       await Terminal.open(uri, { target: DIV });
 
-      let url = new URL(atom.workspace.open.calls.argsFor(0)[0]);
+      let url = new URL(lumine.workspace.open.calls.argsFor(0)[0]);
       expect(url.searchParams.get("cwd")).toBe(testPath);
     });
   });
@@ -183,7 +183,7 @@ describe("Terminal", () => {
     // package would otherwise activate, so this path only ever calls core APIs
     // that exist on a loaded-but-not-activated package.
     it("activates the package with APIs the editor still has", () => {
-      let pack = atom.packages.getLoadedPackage("terminal");
+      let pack = lumine.packages.getLoadedPackage("terminal");
       spyOn(pack, "activateNow").and.callThrough();
       Terminal.deserializeTerminalModel(serialized);
       expect(pack.activateNow).toHaveBeenCalled();

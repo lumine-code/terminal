@@ -20,7 +20,7 @@ To install `terminal` search for _terminal_ in the Install pane of the Lumine se
 
 ## Commands
 
-Commands available in `atom-workspace`:
+Commands available in `lumine-workspace`:
 
 - `terminal:focus`: focus the active terminal, or create one in the default location if none is open,
 - `terminal:open`: open a new terminal in the default location,

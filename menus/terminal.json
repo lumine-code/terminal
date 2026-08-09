@@ -30,7 +30,7 @@
       },
       { "type": "separator" }
     ],
-    "atom-text-editor:not([mini]), .tree-view, .tab-bar": [
+    "lumine-text-editor:not([mini]), .tree-view, .tab-bar": [
       { "type": "separator" },
       {
         "label": "Terminal",

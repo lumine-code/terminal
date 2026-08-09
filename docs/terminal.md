@@ -42,7 +42,7 @@ type Terminal = {
 ## Minimal example
 
 ```js
-const { Disposable } = require("atom");
+const { Disposable } = require("lumine");
 
 module.exports = {
   consumeTerminal(terminal) {
@@ -52,7 +52,7 @@ module.exports = {
 
   async runBuild(target) {
     const ran = await this.terminal?.run([`make ${target}`]);
-    if (!ran) atom.notifications.addWarning("The build command was not run.");
+    if (!ran) lumine.notifications.addWarning("The build command was not run.");
   },
 };
 ```

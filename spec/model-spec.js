@@ -31,57 +31,57 @@ describe("TerminalModel", () => {
   afterEach(async () => await temp.cleanup());
 
   it("handles a previous active item that has no getPath() method", async () => {
-    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
-    atom.project.setPaths([tmpdir]);
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue({});
+    lumine.config.set("terminal.terminal.useProjectRootAsCwd", true);
+    lumine.project.setPaths([tmpdir]);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue({});
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(tmpdir);
   });
 
   it("handles a previous active item whose getPath() method returns a directory", async () => {
-    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
+    lumine.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
-    atom.project.setPaths([someOtherTmpDir, tmpdir]);
+    lumine.project.setPaths([someOtherTmpDir, tmpdir]);
     previousActiveItem.getPath.and.returnValue(tmpdir);
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(tmpdir);
   });
 
   it("handles a previous active item whose getPath() method returns a file", async () => {
-    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
+    lumine.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
-    atom.project.setPaths([someOtherTmpDir, tmpdir]);
+    lumine.project.setPaths([someOtherTmpDir, tmpdir]);
     previousActiveItem.getPath.and.returnValue(`${tmpdir}${path.sep}foo.txt`);
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(tmpdir);
   });
 
   it('handles a previous active item that has a "selectedPath" property that returns a directory', async () => {
-    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
+    lumine.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
-    atom.project.setPaths([someOtherTmpDir, tmpdir]);
+    lumine.project.setPaths([someOtherTmpDir, tmpdir]);
     let previousActiveItem = {};
     previousActiveItem.selectedPath = tmpdir;
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(tmpdir);
   });
 
   it('handles a previous active item that has a "selectedPath" property that returns a file', async () => {
-    atom.config.set("terminal.terminal.useProjectRootAsCwd", true);
+    lumine.config.set("terminal.terminal.useProjectRootAsCwd", true);
     let someOtherTmpDir = await temp.mkdir();
-    atom.project.setPaths([someOtherTmpDir, tmpdir]);
+    lumine.project.setPaths([someOtherTmpDir, tmpdir]);
     let previousActiveItem = {};
     previousActiveItem.selectedPath = `${tmpdir}${path.sep}foo.txt`;
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(tmpdir);
@@ -90,10 +90,10 @@ describe("TerminalModel", () => {
   it("handles a previous active item whose getPath() returns an invalid path", async () => {
     let dirPath = path.join(tmpdir, "dir");
     await fs.mkdir(dirPath);
-    atom.project.setPaths([dirPath]);
+    lumine.project.setPaths([dirPath]);
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
     previousActiveItem.getPath.and.returnValue(path.join(tmpdir, "non-existent-dir"));
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(dirPath);
@@ -102,9 +102,9 @@ describe("TerminalModel", () => {
   it("handles a previous active item which exists in the project path and has getPath()", async () => {
     let previousActiveItem = jasmine.createSpyObj("somemodel", ["getPath"]);
     previousActiveItem.getPath.and.returnValue("/some/dir/file");
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     const expected = ["/some/dir", null];
-    spyOn(atom.project, "relativizePath").and.returnValue(expected);
+    spyOn(lumine.project, "relativizePath").and.returnValue(expected);
     const newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(expected[0]);
@@ -113,9 +113,9 @@ describe("TerminalModel", () => {
   it("handles a previous active item which exists in the project path and has selectedPath", async () => {
     let previousActiveItem = {};
     previousActiveItem.selectedPath = "/some/dir/file";
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
     const expected = ["/some/dir", null];
-    spyOn(atom.project, "relativizePath").and.returnValue(expected);
+    spyOn(lumine.project, "relativizePath").and.returnValue(expected);
     const newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
     expect(newModel.cwd).toBe(expected[0]);
@@ -220,7 +220,7 @@ describe("TerminalModel", () => {
     let previousActiveItem = new TerminalModel({ uri, terminals });
     await previousActiveItem.ready();
     previousActiveItem.cwd = tmpdir;
-    spyOn(atom.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
+    spyOn(lumine.workspace, "getActivePaneItem").and.returnValue(previousActiveItem);
 
     let newModel = new TerminalModel({ uri, terminals });
     await newModel.ready();
@@ -246,9 +246,9 @@ describe("TerminalModel", () => {
   describe("handleNewData()", () => {
     it("functions as expected when the model initially has no pane set", () => {
       pane.getActiveItem.and.returnValue({});
-      spyOn(atom.workspace, "paneForItem").and.returnValue(pane);
+      spyOn(lumine.workspace, "paneForItem").and.returnValue(pane);
       model.handleNewData();
-      expect(atom.workspace.paneForItem).toHaveBeenCalled();
+      expect(lumine.workspace.paneForItem).toHaveBeenCalled();
     });
 
     it("emits a title change only when the title actually changed", () => {
@@ -376,7 +376,7 @@ describe("TerminalModel", () => {
 
   describe("setActive()", () => {
     it("manages the active terminal correctly", async () => {
-      let activePane = atom.workspace.getCenter().getActivePane();
+      let activePane = lumine.workspace.getCenter().getActivePane();
       let newTerminals = new Set();
       let model1 = new TerminalModel({ uri, terminals: newTerminals });
       await model1.ready();
@@ -406,14 +406,14 @@ describe("TerminalModel", () => {
     });
 
     it("(center)", async () => {
-      const activePane = atom.workspace.getCenter().getActivePane();
+      const activePane = lumine.workspace.getCenter().getActivePane();
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
       expect(model.dock).toBe(undefined);
     });
 
     it("(left)", async () => {
-      const dock = atom.workspace.getLeftDock();
+      const dock = lumine.workspace.getLeftDock();
       const activePane = dock.getActivePane();
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
@@ -421,7 +421,7 @@ describe("TerminalModel", () => {
     });
 
     it("(right)", async () => {
-      const dock = atom.workspace.getRightDock();
+      const dock = lumine.workspace.getRightDock();
       const activePane = dock.getActivePane();
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
@@ -429,7 +429,7 @@ describe("TerminalModel", () => {
     });
 
     it("(bottom)", async () => {
-      const dock = atom.workspace.getBottomDock();
+      const dock = lumine.workspace.getBottomDock();
       const activePane = dock.getActivePane();
       model.moveToPane(activePane);
       expect(model.pane).toBe(activePane);
@@ -439,7 +439,7 @@ describe("TerminalModel", () => {
 
   describe("isVisible()", () => {
     it("works within a pane", () => {
-      let activePane = atom.workspace.getCenter().getActivePane();
+      let activePane = lumine.workspace.getCenter().getActivePane();
       model.moveToPane(activePane);
       expect(model.isVisible()).toBe(false);
       activePane.setActiveItem(model);
@@ -447,7 +447,7 @@ describe("TerminalModel", () => {
     });
 
     it("works within a dock", () => {
-      let dock = atom.workspace.getBottomDock();
+      let dock = lumine.workspace.getBottomDock();
       let activePane = dock.getActivePane();
       model.moveToPane(activePane);
       activePane.setActiveItem(model);
@@ -459,7 +459,7 @@ describe("TerminalModel", () => {
 
   describe("isActive()", () => {
     beforeEach(() => {
-      atom.config.set("terminal.behavior.activeTerminalLogic", "visible");
+      lumine.config.set("terminal.behavior.activeTerminalLogic", "visible");
     });
 
     it("works when the terminal is visible and active", () => {
@@ -481,7 +481,7 @@ describe("TerminalModel", () => {
     });
 
     it("works when the terminal is invisible and active (and we have opted into it via config)", () => {
-      atom.config.set("terminal.behavior.activeTerminalLogic", "all");
+      lumine.config.set("terminal.behavior.activeTerminalLogic", "all");
       model.activeIndex = 0;
       spyOn(model, "isVisible").and.returnValue(false);
       expect(model.isActive()).toBe(true);
@@ -535,7 +535,7 @@ describe("TerminalModel", () => {
     });
 
     it("activeTerminalLogic = 'all'", () => {
-      atom.config.set("terminal.behavior.activeTerminalLogic", "all");
+      lumine.config.set("terminal.behavior.activeTerminalLogic", "all");
       const terminals = createTerminals(2);
       spyOn(terminals[0], "isVisible").and.returnValue(false);
       spyOn(terminals[1], "isVisible").and.returnValue(true);

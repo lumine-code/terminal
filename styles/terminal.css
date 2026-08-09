@@ -37,7 +37,7 @@ terminal-view {
   display: none;
 }
 
-.terminal-find-palette atom-text-editor[mini] {
+.terminal-find-palette lumine-text-editor[mini] {
   width: 200px;
   font-size: 1em;
   margin-right: 10px;
