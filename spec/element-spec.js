@@ -1,6 +1,4 @@
 // const nodePty = require('node-pty');
-const { shell } = require("@electron/remote");
-
 const { TerminalElement } = require("../lib/element");
 const { TerminalModel } = require("../lib/model");
 const { Terminal } = require("@xterm/xterm");
@@ -91,7 +89,7 @@ describe("TerminalElement", () => {
     spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "kill").and.returnValue(undefined);
-    spyOn(shell, "openExternal");
+    spyOn(atom, "openExternal");
     element = await createElement();
     tmpdir = await temp.mkdir();
 

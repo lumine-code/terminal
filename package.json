@@ -50,7 +50,6 @@
     "TerminalModel": "deserializeTerminalModel"
   },
   "dependencies": {
-    "@electron/remote": "^2.1.3",
     "@lumine-code/etch": "github:lumine-code/etch#994b3e9e6cc2e570574d18aa2d2288d70ece9e25",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-ligatures": "^0.10.0",
