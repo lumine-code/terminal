@@ -50,7 +50,7 @@
     "TerminalModel": "deserializeTerminalModel"
   },
   "dependencies": {
-    "@lumine-code/etch": "github:lumine-code/etch#994b3e9e6cc2e570574d18aa2d2288d70ece9e25",
+    "@lumine-code/etch": "github:lumine-code/etch#b909c0977987b956083ae462487183fda4323ab4",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-ligatures": "^0.10.0",
     "@xterm/addon-search": "^0.16.0",
