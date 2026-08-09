@@ -244,6 +244,10 @@ describe("TerminalElement", () => {
   });
 
   describe("getXtermOptions()", () => {
+    it("keeps text readable against application-defined cell backgrounds", () => {
+      expect(element.getXtermOptions().minimumContrastRatio).toBe(7);
+    });
+
     it("applies the configured scrollback", () => {
       lumine.config.set("terminal.xterm.scrollback", 4321);
       expect(element.getXtermOptions().scrollback).toBe(4321);
@@ -252,6 +256,11 @@ describe("TerminalElement", () => {
     it("lets additionalOptions override scrollback", () => {
       lumine.config.set("terminal.xterm.additionalOptions", `{ "scrollback": 99 }`);
       expect(element.getXtermOptions().scrollback).toBe(99);
+    });
+
+    it("lets additionalOptions override the minimum contrast ratio", () => {
+      lumine.config.set("terminal.xterm.additionalOptions", `{ "minimumContrastRatio": 1 }`);
+      expect(element.getXtermOptions().minimumContrastRatio).toBe(1);
     });
   });
 
