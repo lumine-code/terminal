@@ -450,6 +450,48 @@ describe("TerminalElement", () => {
     // there is nothing for the element to notice and nothing to notify about.
     // Restoring this needs the failure surfaced by node-pty first.
   });
+
+  // ConPTY repaints the whole screen after every resize, and that repaint
+  // reaches the element as several worker messages: the erase arrives ahead of
+  // the redrawn content, so writing each chunk as it landed made the text
+  // blink out and back on every reflow. The element instead holds the output
+  // that follows a resize and writes it as one batch wrapped in DEC mode 2026
+  // (synchronized output), which xterm paints in a single frame.
+  describe("resize repaint hold", () => {
+    // Shrinks the terminal's geometry so `refitTerminal()` sends a genuine PTY
+    // resize. The refit's guards (visibility, a measured content rect) settle
+    // asynchronously via observers, so keep trying briefly.
+    async function triggerPtyResize() {
+      let resize = spyOn(element.pty, "resize");
+      element.terminal.options.fontSize += 6;
+      for (let i = 0; i < 40 && !resize.calls.count(); i++) {
+        element.refitTerminal();
+        if (!resize.calls.count()) await wait(25);
+      }
+      expect(resize).toHaveBeenCalled();
+    }
+
+    it("writes output straight through when no resize is pending", () => {
+      let write = spyOn(element.terminal, "write");
+      element.pty.emitter.emit("data", "plain output");
+      expect(write).toHaveBeenCalledWith("plain output");
+    });
+
+    it("batches the output that follows a resize into one synchronized write", async () => {
+      await triggerPtyResize();
+      let write = spyOn(element.terminal, "write");
+
+      // The repaint arrives as separate messages: erase first, content later.
+      element.pty.emitter.emit("data", "\x1b[2J");
+      element.pty.emitter.emit("data", "repainted screen");
+      expect(write).not.toHaveBeenCalled();
+
+      // The batch closes on the first quiet gap in the stream.
+      for (let i = 0; i < 40 && !write.calls.count(); i++) await wait(25);
+      expect(write).toHaveBeenCalledTimes(1);
+      expect(write.calls.argsFor(0)[0]).toBe("\x1b[?2026h\x1b[2Jrepainted screen\x1b[?2026l");
+    });
+  });
 });
 
 describe("Pty", () => {
