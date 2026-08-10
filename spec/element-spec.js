@@ -15,6 +15,16 @@ let createdElements = [];
 
 function createMockStream(name) {
   let stream = jasmine.createSpyObj(name, ["on", "write", "end"]);
+  let events = new Map();
+  stream.on.and.callFake((event, handler) => {
+    let handlers = events.get(event) ?? [];
+    handlers.push(handler);
+    events.set(event, handlers);
+    return stream;
+  });
+  stream._trigger = (event, ...args) => {
+    for (let handler of events.get(event) ?? []) handler(...args);
+  };
   stream.pipe = () => {
     return stream;
   };
@@ -47,6 +57,11 @@ function createMockWorkerProcess() {
   workerProcess._reset = function () {
     this._events = {};
   };
+  // Match the real worker's startup handshake after PtyHost has attached its
+  // stdout listener. Leaving this unresolved creates a real five-second boot
+  // timeout even when a spec stubs `whenBooted`, polluting the test console
+  // with unhandled rejections after otherwise successful specs.
+  queueMicrotask(() => workerProcess.stdout._trigger("data", { type: "ready", payload: null }));
   return workerProcess;
 }
 
@@ -87,7 +102,6 @@ describe("TerminalElement", () => {
     spyOn(PtyHost.prototype, "spawn").and.callFake(() => {
       return createMockWorkerProcess();
     });
-    spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "kill").and.returnValue(undefined);
     spyOn(lumine.shell, "openExternal");
@@ -144,6 +158,21 @@ describe("TerminalElement", () => {
       spyOn(element.subscriptions, "dispose").and.callThrough();
       element.destroy();
       expect(element.subscriptions.dispose).toHaveBeenCalled();
+    });
+
+    it("does not refresh the renderer after disposal", async () => {
+      let errors = [];
+      let recordError = (event) => errors.push(event.error);
+      window.addEventListener("error", recordError);
+      try {
+        element.destroy();
+        // Ligature teardown schedules rendering through requestAnimationFrame.
+        // Let that frame and the one after it run before checking the result.
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      } finally {
+        window.removeEventListener("error", recordError);
+      }
+      expect(errors).toEqual([]);
     });
   });
 
@@ -457,7 +486,6 @@ describe("Pty", () => {
       workerProcesses.push(workerProcess);
       return workerProcess;
     });
-    spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
   });
 
