@@ -85,6 +85,18 @@ terminal-view {
   border-right-width: 0;
 }
 
+/* While a resize settle window is open (`lib/element.js` sets the class after
+   a PTY resize and clears it once the output stream goes quiet), pin the
+   thumb at its snapshot geometry. A full-screen application's post-resize
+   redraw erases the scrollback and reprints it, which would otherwise
+   balloon the thumb to full height and let it crawl back down; frozen, it
+   hops straight to its final size when the window closes. `!important`
+   outweighs the inline styles xterm keeps writing underneath. */
+terminal-view.terminal--resize-settling .xterm-scrollable-element .scrollbar.vertical > .slider {
+  height: var(--terminal-frozen-slider-height) !important;
+  top: var(--terminal-frozen-slider-top) !important;
+}
+
 /* xterm hard-codes its scrollbar to auto-hide (fade out after scrolling); the
    editor's scrollbars are permanently visible, so pin the terminal's visible
    too. `visibility` matters as much as `opacity`: xterm's rest-state class is
