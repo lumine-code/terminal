@@ -445,25 +445,10 @@ describe("TerminalElement", () => {
       expect(launched.options.useConptyDll).toBe(true);
     });
 
-    // This one is strange because I can't get `spawn` in `node-pty` to return
-    // any sort of error with a nonexistent command. Putting this aside for
-    // now.
-    xit("handles a nonexistent command", async () => {
-      spyOn(lumine.notifications, "addError");
-      lumine.config.set("terminal.terminal.shell", "somecommand");
-      let restartPromise = element.restartPtyProcess();
-      await wait(10);
-      try {
-        await restartPromise;
-      } catch {
-        // Expected: the command fails to launch.
-      } finally {
-        // Give the element time to act.
-        await wait(10);
-        expect(element.pty).toBe(undefined);
-        expect(lumine.notifications.addError).toHaveBeenCalled();
-      }
-    });
+    // No spec for a nonexistent shell: `node-pty`'s spawn resolves for a
+    // command that does not exist rather than reporting a launch failure, so
+    // there is nothing for the element to notice and nothing to notify about.
+    // Restoring this needs the failure surfaced by node-pty first.
   });
 });
 
