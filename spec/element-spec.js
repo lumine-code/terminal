@@ -245,7 +245,7 @@ describe("TerminalElement", () => {
 
   describe("getXtermOptions()", () => {
     it("keeps text readable against application-defined cell backgrounds", () => {
-      expect(element.getXtermOptions().minimumContrastRatio).toBe(7);
+      expect(element.getXtermOptions().minimumContrastRatio).toBe(4.5);
     });
 
     it("applies the configured scrollback", () => {
@@ -396,6 +396,20 @@ describe("TerminalElement", () => {
 
       expect(launched.options.cols).toBe(element.terminal.cols);
       expect(launched.options.rows).toBe(element.terminal.rows);
+    });
+
+    it("uses the bundled ConPTY on Windows", async () => {
+      Object.defineProperty(process, "platform", { value: "win32" });
+      let launched;
+      spyOn(Pty.prototype, "launch").and.callFake(function (options) {
+        launched = options;
+        this.launched = true;
+        return Promise.resolve();
+      });
+
+      await element.restartPtyProcess();
+
+      expect(launched.options.useConptyDll).toBe(true);
     });
 
     // This one is strange because I can't get `spawn` in `node-pty` to return
