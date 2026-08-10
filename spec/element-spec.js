@@ -471,7 +471,11 @@ describe("TerminalElement", () => {
       expect(resize).toHaveBeenCalled();
     }
 
-    it("writes output straight through when no resize is pending", () => {
+    it("writes output straight through when no resize is pending", async () => {
+      // Element creation leaves a debounced PTY resize — and so possibly a
+      // repaint hold — pending; let both settle before asserting on the
+      // direct path.
+      await wait(800);
       let write = spyOn(element.terminal, "write");
       element.pty.emitter.emit("data", "plain output");
       expect(write).toHaveBeenCalledWith("plain output");
