@@ -354,7 +354,7 @@ describe("TerminalElement", () => {
     });
 
     afterEach(() => {
-      Terminal.prototype.loadAddon.reset();
+      Terminal.prototype.loadAddon.calls.reset();
     });
 
     describe("web-links", () => {
