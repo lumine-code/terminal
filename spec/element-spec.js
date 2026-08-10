@@ -244,6 +244,10 @@ describe("TerminalElement", () => {
   });
 
   describe("getXtermOptions()", () => {
+    it("uses a steady cursor", () => {
+      expect(element.getXtermOptions().cursorBlink).toBe(false);
+    });
+
     it("keeps text readable against application-defined cell backgrounds", () => {
       expect(element.getXtermOptions().minimumContrastRatio).toBe(4.5);
     });
