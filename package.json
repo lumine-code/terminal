@@ -52,6 +52,7 @@
   "dependencies": {
     "@lumine-code/etch": "github:lumine-code/etch#ad65d4e2a81aa70839069309fa532635bc007b7e",
     "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-image": "^0.9.0",
     "@xterm/addon-ligatures": "^0.10.0",
     "@xterm/addon-search": "^0.16.0",
     "@xterm/addon-web-links": "^0.12.0",

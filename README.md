@@ -13,6 +13,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Find**: searches the scrollback with an in-terminal find palette.
 - **Theming**: derives its colors from the active UI theme, or from explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
+- **Inline images**: draws images written with SIXEL or iTerm's inline image protocol in place.
 
 ## Installation
 
@@ -55,6 +56,10 @@ Commands available in `terminal-view`:
 ## Usage
 
 When a terminal is focused it handles most keystrokes itself, so some Lumine commands may not fire until you move focus out of it with `terminal:unfocus`.
+
+### Inline images
+
+The terminal renders images written with SIXEL or iTerm's inline image protocol, so tools such as `imgcat`, `chafa` and matplotlib's sixel backend draw in place instead of opening a window. Decoded images are held per terminal up to **Inline Image Memory Limit**; once it is reached the oldest are dropped and leave a placeholder behind in the scrollback.
 
 ## Configuration
 

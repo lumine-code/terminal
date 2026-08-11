@@ -348,6 +348,7 @@ describe("TerminalElement", () => {
   describe("createTerminal() addon", () => {
     const { WebLinksAddon } = require("@xterm/addon-web-links");
     const { WebglAddon } = require("@xterm/addon-webgl");
+    const { ImageAddon } = require("@xterm/addon-image");
 
     beforeEach(() => {
       spyOn(Terminal.prototype, "loadAddon").and.callThrough();
@@ -394,6 +395,42 @@ describe("TerminalElement", () => {
           return call.args[0] instanceof WebglAddon;
         });
         expect(wasAdded).toBe(false);
+      });
+    });
+
+    describe("images", () => {
+      function loadedImageAddon() {
+        let call = Terminal.prototype.loadAddon.calls
+          .all()
+          .find((call) => call.args[0] instanceof ImageAddon);
+        return call?.args[0];
+      }
+
+      it("is enabled if configured as such", async () => {
+        lumine.config.set("terminal.xterm.images", true);
+        await createElement();
+        expect(loadedImageAddon()).not.toBeUndefined();
+      });
+
+      it("is disabled if configured as such", async () => {
+        lumine.config.set("terminal.xterm.images", false);
+        await createElement();
+        expect(loadedImageAddon()).toBeUndefined();
+      });
+
+      it("takes its storage limit from the config", async () => {
+        lumine.config.set("terminal.xterm.images", true);
+        lumine.config.set("terminal.xterm.imageStorageLimit", 42);
+        await createElement();
+        expect(loadedImageAddon().storageLimit).toBe(42);
+      });
+
+      it("follows the storage limit as it changes", async () => {
+        lumine.config.set("terminal.xterm.images", true);
+        lumine.config.set("terminal.xterm.imageStorageLimit", 42);
+        await createElement();
+        lumine.config.set("terminal.xterm.imageStorageLimit", 8);
+        expect(loadedImageAddon().storageLimit).toBe(8);
       });
     });
   });
