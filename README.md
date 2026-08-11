@@ -14,6 +14,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Theming**: derives its colors from the active UI theme, or from explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
 - **Inline images**: draws images written with SIXEL or iTerm's inline image protocol in place.
+- **Image paste**: hands a clipboard image to whichever package saves it and writes its path back.
 
 ## Installation
 
@@ -50,6 +51,7 @@ Commands available in `terminal-view`:
 - `terminal:send-sigint`: send an interrupt (SIGINT) to the running process,
 - `terminal:previous-command`: scroll to the previous command's prompt,
 - `terminal:next-command`: scroll to the next command's prompt,
+- `terminal:paste-image`: save the clipboard image and write its path into the terminal,
 - `terminal:restart`: restart the terminal's process,
 - `terminal:unfocus`: move focus from the terminal to its pane container.
 
@@ -60,6 +62,12 @@ When a terminal is focused it handles most keystrokes itself, so some Lumine com
 ### Inline images
 
 The terminal renders images written with SIXEL or iTerm's inline image protocol, so tools such as `imgcat`, `chafa` and matplotlib's sixel backend draw in place instead of opening a window. Decoded images are held per terminal up to **Inline Image Memory Limit**; once it is reached the oldest are dropped and leave a placeholder behind in the scrollback.
+
+### Pasting an image
+
+Pasting works the other way. A clipboard holding an image has no text to paste, so the terminal offers the paste to Lumine's paste providers rather than writing nothing: with the [`image-paste`](https://github.com/lumine-code/image-paste) package installed, the normal paste command — or `terminal:paste-image` — saves the image relative to the terminal's working directory and writes the saved file's absolute path onto the input line. Nothing is submitted for you, and the path is quoted only when it contains a space.
+
+That is how you hand a screenshot to a command-line program, including the coding agents that accept an image by path. A program that reads the clipboard itself is unaffected: the terminal claims no bare `alt-` letter, so an agent that binds one of them to its own image paste keeps working.
 
 ## Configuration
 

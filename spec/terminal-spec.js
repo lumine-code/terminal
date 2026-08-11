@@ -90,6 +90,7 @@ describe("Terminal", () => {
         restartPtyProcess: jasmine.createSpy("activeTerminal.restartPtyProcess"),
         getSelection: jasmine.createSpy("activeTerminal.copy").and.returnValue("copied"),
         paste: jasmine.createSpy("activeTerminal.paste"),
+        cwd: "some-working-directory",
         clear: jasmine.createSpy("activeTerminal.clear"),
       };
       spyOn(Terminal, "getActiveTerminal").and.returnValue(activeTerminal);
@@ -120,8 +121,48 @@ describe("Terminal", () => {
     describe("paste()", () => {
       it("pastes text into the active terminal", async () => {
         spyOn(lumine.clipboard, "read").and.returnValue("copied");
+        spyOn(lumine.pasteProviders, "handlePaste");
         await Terminal.paste();
         expect(activeTerminal.paste).toHaveBeenCalledWith("copied");
+        // Text is the terminal's own business; the providers exist for what it
+        // cannot write to a pty itself.
+        expect(lumine.pasteProviders.handlePaste).not.toHaveBeenCalled();
+      });
+
+      it("offers the paste to the providers when the clipboard holds no text", async () => {
+        spyOn(lumine.clipboard, "read").and.returnValue("");
+        spyOn(lumine.pasteProviders, "handlePaste").and.returnValue(true);
+
+        await Terminal.paste();
+
+        let [context] = lumine.pasteProviders.handlePaste.calls.argsFor(0);
+        expect(context.target.type).toBe("terminal");
+        expect(context.target.model).toBe(activeTerminal);
+        expect(context.target.path).toBe("some-working-directory");
+        expect(activeTerminal.paste).not.toHaveBeenCalled();
+      });
+
+      it("warns when an image on the clipboard goes unclaimed", async () => {
+        spyOn(lumine.clipboard, "read").and.returnValue("");
+        spyOn(lumine.clipboard, "readImage").and.returnValue({ isEmpty: () => false });
+        spyOn(lumine.pasteProviders, "handlePaste").and.returnValue(false);
+        spyOn(lumine.notifications, "addWarning");
+
+        await Terminal.paste();
+
+        expect(lumine.notifications.addWarning).toHaveBeenCalled();
+      });
+
+      it("stays silent when the clipboard is simply empty", async () => {
+        spyOn(lumine.clipboard, "read").and.returnValue("");
+        spyOn(lumine.clipboard, "readImage").and.returnValue({ isEmpty: () => true });
+        spyOn(lumine.pasteProviders, "handlePaste").and.returnValue(false);
+        spyOn(lumine.notifications, "addWarning");
+
+        await Terminal.paste();
+
+        expect(lumine.notifications.addWarning).not.toHaveBeenCalled();
+        expect(activeTerminal.paste).not.toHaveBeenCalled();
       });
     });
 

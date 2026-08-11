@@ -23,6 +23,10 @@
         "label": "Paste",
         "command": "core:paste"
       },
+      {
+        "label": "Paste Image",
+        "command": "terminal:paste-image"
+      },
       { "type": "separator" },
       {
         "label": "Close All Terminals",
