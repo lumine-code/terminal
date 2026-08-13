@@ -390,6 +390,33 @@ describe("Terminal", () => {
       lumine.commands.dispatch(entry, "terminal:open-context-menu");
       expect(lastOpen().options.location).toBe("center");
     });
+
+    // `lumine.workspace.getPaneContainers()` is heterogeneous: the docks are
+    // `Dock`s and answer `getElement()`, the center is a `WorkspaceCenter` and
+    // does not — and it comes first, so asking the list for an element threw
+    // on every dispatch that was not from the tree view.
+    describe("dispatched from an editor", () => {
+      let editor;
+
+      beforeEach(async () => {
+        jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
+        editor = await lumine.workspace.open();
+      });
+
+      it("opens in the center for an editor in the workspace center", () => {
+        lumine.commands.dispatch(editor.getElement(), "terminal:open-context-menu");
+        expect(lastOpen().options.location).toBe("center");
+      });
+
+      it("opens in the dock holding the editor it was dispatched from", async () => {
+        let dock = lumine.workspace.getBottomDock();
+        dock.getActivePane().addItem(editor);
+        dock.show();
+
+        lumine.commands.dispatch(editor.getElement(), "terminal:open-context-menu");
+        expect(lastOpen().options.location).toBe("bottom");
+      });
+    });
   });
 
   describe("deserializeTerminalModel()", () => {
