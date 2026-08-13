@@ -299,8 +299,25 @@ describe("Terminal", () => {
         .some((item) => item.label === "Terminal");
     }
 
+    function commandsIn(items) {
+      return items.flatMap((item) => (item.submenu ? commandsIn(item.submenu) : [item.command]));
+    }
+
     it("offers its items on a tree-view entry", () => {
       expect(offersTerminalItems(entry)).toBe(true);
+    });
+
+    // Everything here acts on whatever was right-clicked. A command that
+    // ignores the click — focusing the active terminal, closing every terminal
+    // — reads as if it applied to the entry under the cursor, and belongs in
+    // `Packages > Terminal` instead.
+    it("offers only commands that act on what was clicked", () => {
+      let terminal = lumine.contextMenu
+        .templateForElement(entry)
+        .find((item) => item.label === "Terminal");
+      expect(
+        commandsIn(terminal.submenu).every((command) => command.endsWith("-context-menu")),
+      ).toBe(true);
     });
 
     // The whole point of scoping to an entry: the tree view is a container, and

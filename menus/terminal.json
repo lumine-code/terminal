@@ -40,10 +40,6 @@
         "label": "Terminal",
         "submenu": [
           {
-            "label": "Focus",
-            "command": "terminal:focus"
-          },
-          {
             "label": "Open New",
             "command": "terminal:open-context-menu"
           },
@@ -83,10 +79,6 @@
                 "command": "terminal:open-split-right-dock-context-menu"
               }
             ]
-          },
-          {
-            "label": "Close All",
-            "command": "terminal:close-all"
           }
         ]
       },
