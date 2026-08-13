@@ -214,6 +214,184 @@ describe("Terminal", () => {
     });
   });
 
+  describe("getPath()", () => {
+    function buildTreeView() {
+      let treeView = document.createElement("div");
+      treeView.classList.add("tree-view");
+      let list = document.createElement("ol");
+      list.classList.add("tree-view-root", "full-menu", "list-tree");
+      treeView.appendChild(list);
+      return { treeView, list };
+    }
+
+    function buildEntry(list, entryPath, ...classNames) {
+      let entry = document.createElement("li");
+      entry.classList.add("tree-view-row", "entry", ...classNames);
+      entry.getPath = () => entryPath;
+      list.appendChild(entry);
+      return entry;
+    }
+
+    it("reads the clicked tree-view entry rather than the selection", () => {
+      let { list } = buildTreeView();
+      buildEntry(list, "/project/other.js", "file", "selected");
+      let clicked = buildEntry(list, "/project/src/main.js", "file");
+      expect(Terminal.getPath(clicked)).toBe("/project/src/main.js");
+    });
+
+    it("falls back to the selection when the click missed every row", () => {
+      let { treeView, list } = buildTreeView();
+      buildEntry(list, "/project/other.js", "file", "selected");
+      expect(Terminal.getPath(treeView)).toBe("/project/other.js");
+    });
+
+    // A special root's path is a synthetic `special-root://` URI, not a
+    // directory a shell can start in.
+    it("refuses a special-root section header", () => {
+      let { list } = buildTreeView();
+      let specialRoot = buildEntry(
+        list,
+        "special-root://favourites",
+        "directory",
+        "tree-view-special-root",
+      );
+      expect(Terminal.getPath(specialRoot)).toBe(null);
+    });
+
+    // Tabs are `li.tab`, and the path lives on the title element inside.
+    it("reads a tab's path off its title element", () => {
+      let tabBar = document.createElement("ul");
+      tabBar.classList.add("tab-bar");
+      let tab = document.createElement("li");
+      tab.classList.add("tab", "active");
+      let title = document.createElement("div");
+      title.classList.add("title");
+      title.dataset.path = "/project/README.md";
+      tab.appendChild(title);
+      tabBar.appendChild(tab);
+      expect(Terminal.getPath(title)).toBe("/project/README.md");
+    });
+
+    it("falls back to the first project path when given no target", () => {
+      spyOn(lumine.project, "getPaths").and.returnValue(["/project"]);
+      expect(Terminal.getPath(null)).toBe("/project");
+    });
+  });
+
+  describe("the context menu", () => {
+    let treeView, list, entry;
+
+    beforeEach(() => {
+      treeView = document.createElement("div");
+      treeView.classList.add("tree-view");
+      list = document.createElement("ol");
+      list.classList.add("tree-view-root", "full-menu", "list-tree");
+      treeView.appendChild(list);
+      entry = document.createElement("li");
+      entry.classList.add("tree-view-row", "entry", "file");
+      entry.getPath = () => "/project/src/main.js";
+      list.appendChild(entry);
+    });
+
+    function offersTerminalItems(element) {
+      return lumine.contextMenu
+        .templateForElement(element)
+        .some((item) => item.label === "Terminal");
+    }
+
+    it("offers its items on a tree-view entry", () => {
+      expect(offersTerminalItems(entry)).toBe(true);
+    });
+
+    // The whole point of scoping to an entry: the tree view is a container, and
+    // every click inside it walks past the container on its way up.
+    it("offers nothing on the empty area of the tree view", () => {
+      expect(offersTerminalItems(list)).toBe(false);
+      expect(offersTerminalItems(treeView)).toBe(false);
+    });
+
+    it("offers nothing on a special-root section header", () => {
+      let specialRoot = document.createElement("li");
+      specialRoot.classList.add("tree-view-row", "entry", "directory", "tree-view-special-root");
+      list.appendChild(specialRoot);
+      expect(offersTerminalItems(specialRoot)).toBe(false);
+    });
+
+    it("offers nothing while several entries are selected", () => {
+      list.classList.remove("full-menu");
+      list.classList.add("multi-select");
+      expect(offersTerminalItems(entry)).toBe(false);
+    });
+
+    it("offers its items on the active tab of a pane whose item has a path", () => {
+      // Never attached: `lumine-pane`'s `connectedCallback` wants a model.
+      let pane = document.createElement("lumine-pane");
+      pane.dataset.activeItemPath = "/project/src/main.js";
+      let tabBar = document.createElement("ul");
+      tabBar.classList.add("tab-bar");
+      pane.appendChild(tabBar);
+      let tab = document.createElement("li");
+      tab.classList.add("tab", "active");
+      tabBar.appendChild(tab);
+
+      expect(offersTerminalItems(tab)).toBe(true);
+      // The blank strip past the last tab names no file at all.
+      expect(offersTerminalItems(tabBar)).toBe(false);
+    });
+  });
+
+  describe("the context-menu commands", () => {
+    const ENTRY_PATH = "/project/src/main.js";
+    let entry;
+
+    beforeEach(() => {
+      spyOn(Terminal, "open");
+
+      let treeView = document.createElement("div");
+      treeView.classList.add("tree-view");
+      let list = document.createElement("ol");
+      list.classList.add("tree-view-root", "full-menu", "list-tree");
+      treeView.appendChild(list);
+      entry = document.createElement("li");
+      entry.classList.add("tree-view-row", "entry", "file");
+      entry.getPath = () => ENTRY_PATH;
+      list.appendChild(entry);
+      jasmine.attachToDOM(treeView);
+    });
+
+    function lastOpen() {
+      let [uri, options] = Terminal.open.calls.mostRecent().args;
+      return { cwd: new URL(uri).searchParams.get("cwd"), options };
+    }
+
+    // Every one of these must honor the entry that was clicked. Only
+    // `terminal:open-context-menu` ever did: the rest were handed the active
+    // editor's element and inferred the directory from that instead.
+    for (let command of [
+      "terminal:open-context-menu",
+      "terminal:open-center-context-menu",
+      "terminal:open-split-up-context-menu",
+      "terminal:open-split-down-context-menu",
+      "terminal:open-split-left-context-menu",
+      "terminal:open-split-right-context-menu",
+      "terminal:open-split-bottom-dock-context-menu",
+      "terminal:open-split-left-dock-context-menu",
+      "terminal:open-split-right-dock-context-menu",
+    ]) {
+      it(`opens \`${command}\` in the clicked entry's directory`, () => {
+        lumine.commands.dispatch(entry, command);
+        expect(lastOpen().cwd).toBe(ENTRY_PATH);
+      });
+    }
+
+    // The tree view is itself a dock item, so without this the terminal would
+    // be split into the sidebar beside the tree.
+    it("opens into the workspace center rather than the tree view's dock", () => {
+      lumine.commands.dispatch(entry, "terminal:open-context-menu");
+      expect(lastOpen().options.location).toBe("center");
+    });
+  });
+
   describe("deserializeTerminalModel()", () => {
     let serialized;
     beforeEach(() => {

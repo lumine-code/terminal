@@ -34,7 +34,7 @@
       },
       { "type": "separator" }
     ],
-    "lumine-text-editor:not([mini]), .tree-view, .tab-bar": [
+    "lumine-text-editor:not([mini]), .tree-view .full-menu .entry:not(.tree-view-special-root), lumine-pane[data-active-item-path] .tab.active": [
       { "type": "separator" },
       {
         "label": "Terminal",
