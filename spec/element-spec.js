@@ -752,4 +752,72 @@ describe("Pty", () => {
       expect(errors.length).toBe(0);
     });
   });
+
+  // `node-pty` leaves the shell's children running on Windows, so killing a
+  // session has to sweep them itself.
+  describe("killing a session on Windows", () => {
+    let savedPlatform = process.platform;
+
+    beforeEach(() => {
+      Object.defineProperty(process, "platform", { value: "win32" });
+    });
+
+    afterEach(() => {
+      Object.defineProperty(process, "platform", { value: savedPlatform });
+    });
+
+    async function launchedPty(pid = 4242) {
+      let pty = new Pty();
+      await pty.launch({ file: "cmd.exe" });
+      // What the shell reports once it is running, and the root of the tree
+      // the sweep is about.
+      pty.meta.pid = pid;
+      return pty;
+    }
+
+    // A program that spawns its own helpers leaves more than one level behind,
+    // which is as much as enumerating the shell's own children ever reached.
+    it("takes the whole tree beneath the shell", async () => {
+      let pty = await launchedPty();
+      spyOn(pty, "spawn").and.returnValue({ on: () => {} });
+
+      pty.kill();
+
+      let [command, args] = pty.spawn.calls.mostRecent().args;
+      expect(command).toBe("taskkill");
+      expect(args).toContain("/T");
+      expect(args).toContain("4242");
+    });
+
+    it("leaves the tree alone on every other platform", async () => {
+      let pty = await launchedPty();
+      Object.defineProperty(process, "platform", { value: "linux" });
+      spyOn(pty, "spawn");
+
+      pty.kill();
+
+      expect(pty.spawn).not.toHaveBeenCalled();
+    });
+
+    // Without a shell there is no tree, and a sweep with no root is a
+    // `taskkill` aimed at nothing.
+    it("sweeps nothing when the shell never reported a pid", async () => {
+      let pty = await launchedPty();
+      delete pty.meta.pid;
+      spyOn(pty, "spawn");
+
+      pty.kill();
+
+      expect(pty.spawn).not.toHaveBeenCalled();
+    });
+
+    // How the absence of `wmic` used to arrive, before it was replaced.
+    it("survives a sweep that cannot be spawned", async () => {
+      let pty = await launchedPty();
+      spyOn(pty, "spawn").and.throwError("ENOENT");
+
+      expect(() => pty.kill()).not.toThrow();
+      expect(pty.destroyed).toBe(true);
+    });
+  });
 });
