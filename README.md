@@ -18,7 +18,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 
 ## Installation
 
-To install `terminal` search for _terminal_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/terminal`.
+To install `terminal` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/terminal`.
 
 ## Commands
 
@@ -95,7 +95,7 @@ The terminal treats CSS custom properties on `:root` as the source of truth for 
 
 ## Services
 
-- **[terminal](docs/terminal.md)** (`1.0.0`): provided to let other packages open terminals and run commands in them.
+- [`terminal`](docs/terminal.md): provided to let other packages open terminals and run commands in them.
 
 ## Contributing
 
