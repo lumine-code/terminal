@@ -15,6 +15,9 @@ let createdElements = [];
 
 function createMockStream(name) {
   let stream = jasmine.createSpyObj(name, ["on", "write", "end"]);
+  // `PtyHost.send` refuses to write to a stream that has closed, which is how
+  // it declines to talk to a worker that has died.
+  stream.writable = true;
   let events = new Map();
   stream.on.and.callFake((event, handler) => {
     let handlers = events.get(event) ?? [];
@@ -136,6 +139,36 @@ describe("TerminalElement", () => {
 
   it("initializes", () => {
     expect(element.terminal).toBeTruthy();
+  });
+
+  // The worker process behind a running terminal can die on its own — a crash
+  // inside `node-pty`, or its own uncaught-exception handler. `onExit` cannot
+  // report that: it describes a shell that exited through the worker, which a
+  // worker that is gone can no longer do.
+  describe("when the worker process dies", () => {
+    it("says so and stops claiming to be running", async () => {
+      spyOn(lumine.notifications, "addError");
+      expect(element.isPtyProcessRunning()).toBeTruthy();
+
+      element.pty.process._trigger("exit", 1, null);
+      await wait(0);
+
+      expect(lumine.notifications.addError).toHaveBeenCalled();
+      let [message] = lumine.notifications.addError.calls.mostRecent().args;
+      expect(message).toContain("exited unexpectedly");
+      expect(element.isPtyProcessRunning()).toBeFalsy();
+    });
+
+    // A crash loop is invisible if each crash quietly starts another shell, and
+    // the scrollback of the session that died is worth keeping on screen.
+    it("does not restart the shell by itself", async () => {
+      spyOn(element, "restartPtyProcess");
+
+      element.pty.process._trigger("exit", 1, null);
+      await wait(0);
+
+      expect(element.restartPtyProcess).not.toHaveBeenCalled();
+    });
   });
 
   it("initializes with the correct session ID", () => {
@@ -651,6 +684,72 @@ describe("Pty", () => {
 
       expect(pty.host.destroyed).toBe(true);
       expect(workerProcesses[0].stdin.end).toHaveBeenCalled();
+    });
+  });
+
+  // A worker can die on its own; `error` on the child process covers only a
+  // spawn that never happened. A host that does not notice goes on reporting
+  // itself as booted, and every terminal opened afterwards writes its `spawn`
+  // into a closed stdin and waits out the readiness timeout instead.
+  describe("a worker that dies", () => {
+    it("stops being handed to new sessions", async () => {
+      let pty = new Pty();
+      await pty.booted();
+      expect(PtyHost.hasShared()).toBe(true);
+
+      pty.process._trigger("exit", 1, null);
+
+      expect(pty.host.destroyed).toBe(true);
+      expect(PtyHost.hasShared()).toBe(false);
+
+      let next = new Pty();
+      await next.booted();
+      expect(workerProcesses.length).toBe(2);
+      expect(next.host).not.toBe(pty.host);
+    });
+
+    it("tells every session running on it", async () => {
+      let first = new Pty();
+      let second = new Pty();
+      await Promise.all([first.booted(), second.booted()]);
+      let errors = [];
+      first.onError((error) => errors.push(error));
+      second.onError((error) => errors.push(error));
+
+      first.process._trigger("exit", 1, null);
+
+      expect(errors.length).toBe(2);
+      expect(errors[0].message).toContain("code 1");
+    });
+
+    // The worker's crash handler writes its diagnostic to stderr and exits at
+    // once, so this is the only account of what went wrong.
+    it("reports what the worker wrote before it died", async () => {
+      let pty = new Pty();
+      await pty.booted();
+      let error;
+      pty.onError((e) => (error = e));
+
+      pty.process.stderr._trigger("data", {
+        type: "stderr",
+        payload: '{"message":"read EIO"}',
+      });
+      pty.process._trigger("exit", 1, null);
+
+      expect(error.message).toContain("read EIO");
+    });
+
+    // Deliberate teardown ends the process too, and has nothing to report.
+    it("stays quiet when the host was ended on purpose", async () => {
+      let pty = new Pty();
+      await pty.booted();
+      let errors = [];
+      pty.onError((error) => errors.push(error));
+
+      PtyHost.releaseShared();
+      pty.process._trigger("exit", 0, null);
+
+      expect(errors.length).toBe(0);
     });
   });
 });

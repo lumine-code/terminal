@@ -29,6 +29,9 @@ function stubPty() {
   PtyHost.releaseShared();
   let makeStream = () => {
     let stream = {
+      // `PtyHost.send` refuses to write to a stream that has closed, which is
+      // how it declines to talk to a worker that has died.
+      writable: true,
       on: () => stream,
       once: () => stream,
       pipe: () => stream,
