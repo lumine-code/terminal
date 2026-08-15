@@ -2,6 +2,7 @@
 const { TerminalElement } = require("../lib/element");
 const { TerminalModel } = require("../lib/model");
 const { Terminal } = require("@xterm/xterm");
+const { FitAddon } = require("@xterm/addon-fit");
 const { Pty, PtyHost } = require("../lib/pty");
 const { getConfigSchema } = require("../lib/config");
 
@@ -519,6 +520,29 @@ describe("TerminalElement", () => {
     // command that does not exist rather than reporting a launch failure, so
     // there is nothing for the element to notice and nothing to notify about.
     // Restoring this needs the failure surfaced by node-pty first.
+  });
+
+  // `FitAddon#proposeDimensions` measures the container with `parseInt`, so a
+  // pane that is hidden or mid-collapse proposes `{ cols: NaN, rows: NaN }` —
+  // its 2×1 clamp is `Math.max`, which passes NaN through. NaN also escapes
+  // the changed-geometry guard, because it equals nothing, itself included.
+  // Forwarded anyway, JSON flattens it to null in transit, node-pty throws on
+  // the non-positive size, and the uncaught exception kills the worker that
+  // serves every terminal in the window.
+  describe("resizePtyToTerminal()", () => {
+    it("does not forward an unmeasurable geometry to the PTY", () => {
+      let resize = spyOn(element.pty, "resize");
+      spyOn(FitAddon.prototype, "proposeDimensions").and.returnValue({ cols: NaN, rows: NaN });
+      element.resizePtyToTerminal();
+      expect(resize).not.toHaveBeenCalled();
+    });
+
+    it("forwards a changed geometry", () => {
+      let resize = spyOn(element.pty, "resize");
+      spyOn(FitAddon.prototype, "proposeDimensions").and.returnValue({ cols: 123, rows: 45 });
+      element.resizePtyToTerminal();
+      expect(resize).toHaveBeenCalledWith(123, 45);
+    });
   });
 
   // ConPTY repaints the whole screen after every resize, and that repaint
