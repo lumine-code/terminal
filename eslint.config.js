@@ -4,10 +4,9 @@ const globals = require("globals");
 const prettier = require("eslint-config-prettier");
 
 // Modules provided by the Lumine/Electron runtime rather than this package's own
-// manifest, so they aren't resolvable by eslint-plugin-n.
-// Modules the editor provides at runtime rather than this package installing
-// them. `node-pty` is re-exported from Lumine's `exports/` folder, which is on
-// NODE_PATH, so it resolves at run time but not to static analysis.
+// manifest, so they aren't resolvable by eslint-plugin-n. `node-pty` is a
+// dependency here, but it is built by its own `prepare` into `lib/`, which the
+// lint job's `--ignore-scripts` install skips, so its `main` is absent there.
 const runtimeModules = ["lumine", "electron", "@lumine-code/node-pty"];
 
 module.exports = [
