@@ -379,6 +379,86 @@ describe("TerminalElement", () => {
     });
   });
 
+  describe("activateLink()", () => {
+    const { pathToFileURL, fileURLToPath } = require("url");
+    const fs = require("fs-extra");
+    const WEB_URI = "https://example.com/";
+
+    beforeEach(() => {
+      spyOn(lumine.workspace, "open");
+    });
+
+    it("warns and opens nothing when the modifier is not held", async () => {
+      spyOn(element, "optionallyWarnAboutModifierlessClick");
+      await element.activateLink({ ctrlKey: false, metaKey: false }, WEB_URI);
+      expect(element.optionallyWarnAboutModifierlessClick).toHaveBeenCalled();
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("requires the meta key on macOS", async () => {
+      Object.defineProperty(process, "platform", { value: "darwin" });
+      await element.activateLink({ ctrlKey: true, metaKey: false }, WEB_URI);
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      await element.activateLink({ ctrlKey: false, metaKey: true }, WEB_URI);
+      expect(lumine.shell.openExternal).toHaveBeenCalledWith(WEB_URI);
+    });
+
+    it("requires the ctrl key elsewhere", async () => {
+      Object.defineProperty(process, "platform", { value: "linux" });
+      await element.activateLink({ ctrlKey: false, metaKey: true }, WEB_URI);
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      await element.activateLink({ ctrlKey: true, metaKey: false }, WEB_URI);
+      expect(lumine.shell.openExternal).toHaveBeenCalledWith(WEB_URI);
+    });
+
+    it("opens on a plain click when the modifier requirement is disabled", async () => {
+      lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
+      await element.activateLink({ ctrlKey: false, metaKey: false }, WEB_URI);
+      expect(lumine.shell.openExternal).toHaveBeenCalledWith(WEB_URI);
+    });
+
+    it("opens a file link in the editor", async () => {
+      let filePath = path.join(tmpdir, "linked.txt");
+      await fs.writeFile(filePath, "hello");
+      let uri = pathToFileURL(filePath).href;
+      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      expect(lumine.workspace.open).toHaveBeenCalledWith(fileURLToPath(uri));
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+    });
+
+    it("opens a directory link in the system file explorer", async () => {
+      let uri = pathToFileURL(tmpdir).href;
+      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      expect(lumine.shell.openExternal).toHaveBeenCalledWith(uri);
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("ignores a file link whose path does not exist", async () => {
+      let uri = pathToFileURL(path.join(tmpdir, "no-such-file.txt")).href;
+      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("ignores a malformed file link", async () => {
+      // A hosted URI (`file://host/…`) is a UNC path on Windows, so the
+      // portable malformed case is a pathless one, which throws everywhere.
+      await element.activateLink({ ctrlKey: true, metaKey: true }, "file://");
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("is wired up as the terminal's OSC 8 link handler", async () => {
+      let handler = element.terminal.options.linkHandler;
+      expect(handler.allowNonHttpProtocols).toBe(true);
+      spyOn(element, "activateLink");
+      let event = { ctrlKey: true, metaKey: true };
+      handler.activate(event, WEB_URI, {});
+      expect(element.activateLink).toHaveBeenCalledWith(event, WEB_URI);
+    });
+  });
+
   describe("createTerminal() addon", () => {
     const { WebLinksAddon } = require("@xterm/addon-web-links");
     const { WebglAddon } = require("@xterm/addon-webgl");
