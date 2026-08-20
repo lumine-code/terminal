@@ -212,6 +212,24 @@ describe("Terminal", () => {
       let url = new URL(lumine.workspace.open.calls.argsFor(0)[0]);
       expect(url.searchParams.get("cwd")).toBe(testPath);
     });
+
+    it("leaves the caller's options object untouched", async () => {
+      let options = {};
+      await Terminal.open(uri, options);
+      expect(options).toEqual({});
+      expect(lumine.workspace.open.calls.argsFor(0)[1].location).toBe("center");
+    });
+  });
+
+  describe("addDefaultPosition()", () => {
+    it("returns a copy rather than mutating its argument", () => {
+      lumine.config.set("terminal.behavior.defaultContainer", "Split Down");
+      let options = {};
+      let result = Terminal.addDefaultPosition(options);
+      expect(result).not.toBe(options);
+      expect(result.split).toBe("down");
+      expect(options).toEqual({});
+    });
   });
 
   describe("getPath()", () => {
