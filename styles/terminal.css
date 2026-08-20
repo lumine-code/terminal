@@ -71,15 +71,27 @@ terminal-view {
    shows through, as it does on the editor), squaring off to the full width
    while dragged. The scrollbar *width* is matched to the editor's in
    `lib/element.js` via `overviewRuler.width`. `!important` beats the inline
-   slider background xterm sets from its own theme. */
-.xterm-scrollable-element > .scrollbar > .slider {
+   slider background xterm sets from its own theme.
+
+   Every scrollbar selector below is written twice: xterm 6.1 prefixes these
+   class names (`scrollbar` -> `xterm-scrollbar`, and likewise `slider`,
+   `vertical`, `active`), and our dependency range is a caret, so a 6.1
+   release lands here on the next install. An unmatched class selector is
+   inert, so both spellings can coexist until the floor moves past 6.1. The
+   same pair is mirrored in `#freezeScrollbar()` in `lib/element.js`. To
+   re-check the names on an upgrade:
+
+     curl -sL "$(npm view @xterm/xterm dist.tarball)"        | tar -xzO package/lib/xterm.js | grep -o "xterm-scroll[a-zA-Z-]*" | sort -u */
+.xterm-scrollable-element > .scrollbar > .slider,
+.xterm-scrollable-element > .xterm-scrollbar > .xterm-slider {
   background: var(--terminal-scrollbar-color) !important;
   background-clip: content-box !important;
   border: 3px solid transparent;
   border-radius: 5px;
 }
 
-.xterm-scrollable-element > .scrollbar > .slider.active {
+.xterm-scrollable-element > .scrollbar > .slider.active,
+.xterm-scrollable-element > .xterm-scrollbar > .xterm-slider.xterm-active {
   border-radius: 0;
   border-left-width: 0;
   border-right-width: 0;
@@ -92,7 +104,11 @@ terminal-view {
    balloon the thumb to full height and let it crawl back down; frozen, it
    hops straight to its final size when the window closes. `!important`
    outweighs the inline styles xterm keeps writing underneath. */
-terminal-view.terminal--resize-settling .xterm-scrollable-element .scrollbar.vertical > .slider {
+terminal-view.terminal--resize-settling .xterm-scrollable-element .scrollbar.vertical > .slider,
+terminal-view.terminal--resize-settling
+  .xterm-scrollable-element
+  .xterm-scrollbar.xterm-vertical
+  > .xterm-slider {
   height: var(--terminal-frozen-slider-height) !important;
   top: var(--terminal-frozen-slider-top) !important;
 }
@@ -102,7 +118,8 @@ terminal-view.terminal--resize-settling .xterm-scrollable-element .scrollbar.ver
    too. `visibility` matters as much as `opacity`: xterm's rest-state class is
    `invisible`, which historically collided with a global `.invisible`
    utility class hiding the scrollbar via `visibility: hidden`. */
-.xterm-scrollable-element > .scrollbar {
+.xterm-scrollable-element > .scrollbar,
+.xterm-scrollable-element > .xterm-scrollbar {
   opacity: 1 !important;
   pointer-events: auto !important;
   visibility: visible !important;
