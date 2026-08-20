@@ -434,6 +434,20 @@ describe("TerminalElement", () => {
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
+    it("opens a link to a symlinked directory in the system file explorer", async () => {
+      // macOS hands out a symlinked `$TMPDIR`, so this is the ordinary case
+      // there rather than an exotic one. `junction` is what lets the symlink
+      // be created on Windows without elevation; POSIX ignores the type.
+      let target = path.join(tmpdir, "target-dir");
+      let link = path.join(tmpdir, "link-to-dir");
+      await fs.mkdir(target);
+      await fs.symlink(target, link, "junction");
+      let uri = pathToFileURL(link).href;
+      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      expect(lumine.shell.openExternal).toHaveBeenCalledWith(uri);
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
     it("ignores a file link whose path does not exist", async () => {
       let uri = pathToFileURL(path.join(tmpdir, "no-such-file.txt")).href;
       await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
@@ -442,9 +456,12 @@ describe("TerminalElement", () => {
     });
 
     it("ignores a malformed file link", async () => {
-      // A hosted URI (`file://host/…`) is a UNC path on Windows, so the
-      // portable malformed case is a pathless one, which throws everywhere.
-      await element.activateLink({ ctrlKey: true, metaKey: true }, "file://");
+      // An encoded separator is the portable case: `fileURLToPath` rejects it
+      // on every platform. The other candidates are not portable — a hosted
+      // URI (`file://host/…`) is a valid UNC path on Windows, and a pathless
+      // one normalizes to the root directory everywhere but Windows, where
+      // there is no drive letter to resolve it against.
+      await element.activateLink({ ctrlKey: true, metaKey: true }, "file:///a%2Fb");
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
