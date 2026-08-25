@@ -82,5 +82,12 @@
         "1.0.0": "provideTerminal"
       }
     }
+  },
+  "consumedServices": {
+    "mcp.bridge": {
+      "versions": {
+        "^1.1.0": "consumeMcpBridge"
+      }
+    }
   }
 }

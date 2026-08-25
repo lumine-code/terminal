@@ -16,6 +16,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
 - **Inline images**: draws images written with SIXEL or iTerm's inline image protocol in place.
 - **Image paste**: hands a clipboard image to whichever package saves it and writes its path back.
+- **Window-aware agents**: when `lumine-mcp` is active, new and restarted shells receive this window's bridge port while every connection still requires your approval.
 
 ## Installation
 

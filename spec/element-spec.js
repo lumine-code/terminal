@@ -1,6 +1,7 @@
 // const nodePty = require('node-pty');
 const { TerminalElement } = require("../lib/element");
 const { TerminalModel } = require("../lib/model");
+const TerminalPackage = require("../lib/terminal");
 const { Terminal } = require("@xterm/xterm");
 const { FitAddon } = require("@xterm/addon-fit");
 const { Pty, PtyHost } = require("../lib/pty");
@@ -303,6 +304,44 @@ describe("TerminalElement", () => {
     it("lets the delete list remove COLORTERM", () => {
       lumine.config.set("terminal.terminal.env.deleteEnv", ["COLORTERM"]);
       expect(element.getEnv().COLORTERM).toBe(undefined);
+    });
+
+    it("removes inherited MCP connection details without changing process.env", () => {
+      let original = {
+        LUMINE_BRIDGE_HOST: process.env.LUMINE_BRIDGE_HOST,
+        LUMINE_BRIDGE_PORT: process.env.LUMINE_BRIDGE_PORT,
+        LUMINE_BRIDGE_TOKEN: process.env.LUMINE_BRIDGE_TOKEN,
+      };
+      try {
+        process.env.LUMINE_BRIDGE_HOST = "127.0.0.1";
+        process.env.LUMINE_BRIDGE_PORT = "3000";
+        process.env.LUMINE_BRIDGE_TOKEN = "secret";
+
+        let env = element.getEnv();
+
+        expect(env.LUMINE_BRIDGE_HOST).toBeUndefined();
+        expect(env.LUMINE_BRIDGE_PORT).toBeUndefined();
+        expect(env.LUMINE_BRIDGE_TOKEN).toBeUndefined();
+        expect(process.env.LUMINE_BRIDGE_HOST).toBe("127.0.0.1");
+        expect(process.env.LUMINE_BRIDGE_PORT).toBe("3000");
+        expect(process.env.LUMINE_BRIDGE_TOKEN).toBe("secret");
+      } finally {
+        for (let [key, value] of Object.entries(original)) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      }
+    });
+
+    it("applies the user's override and delete settings after the MCP port", () => {
+      lumine.config.set(
+        "terminal.terminal.env.overrideEnv",
+        JSON.stringify({ LUMINE_BRIDGE_PORT: "4321" }),
+      );
+      expect(element.getEnv(3000).LUMINE_BRIDGE_PORT).toBe("4321");
+
+      lumine.config.set("terminal.terminal.env.deleteEnv", ["LUMINE_BRIDGE_PORT"]);
+      expect(element.getEnv(3000).LUMINE_BRIDGE_PORT).toBeUndefined();
     });
   });
 
@@ -611,6 +650,61 @@ describe("TerminalElement", () => {
       await element.restartPtyProcess();
 
       expect(launched.options.useConptyDll).toBe(true);
+    });
+
+    it("reads the current MCP port for every new and restarted shell", async () => {
+      let ports = [3100, 3101];
+      let service = {
+        getBridgePortWhenReady: jasmine
+          .createSpy("getBridgePortWhenReady")
+          .and.callFake(async () => ports.shift()),
+      };
+      let serviceDisposable = TerminalPackage.consumeMcpBridge(service);
+      let launches = [];
+      spyOn(Pty.prototype, "launch").and.callFake(function (options) {
+        launches.push(options);
+        this.launched = true;
+        return Promise.resolve();
+      });
+
+      try {
+        let mcpElement = await createElement(`terminal://mcp-session/`);
+        await mcpElement.restartPtyProcess();
+      } finally {
+        serviceDisposable.dispose();
+      }
+
+      expect(service.getBridgePortWhenReady).toHaveBeenCalledTimes(2);
+      expect(launches[0].options.env.LUMINE_BRIDGE_PORT).toBe("3100");
+      expect(launches[1].options.env.LUMINE_BRIDGE_PORT).toBe("3101");
+      for (let launch of launches) {
+        expect(launch.options.env.LUMINE_BRIDGE_HOST).toBeUndefined();
+        expect(launch.options.env.LUMINE_BRIDGE_TOKEN).toBeUndefined();
+      }
+    });
+
+    it("still launches when the optional MCP bridge cannot provide a port", async () => {
+      let service = {
+        getBridgePortWhenReady: jasmine
+          .createSpy("getBridgePortWhenReady")
+          .and.rejectWith(new Error("bridge unavailable")),
+      };
+      let serviceDisposable = TerminalPackage.consumeMcpBridge(service);
+      let launched;
+      spyOn(Pty.prototype, "launch").and.callFake(function (options) {
+        launched = options;
+        this.launched = true;
+        return Promise.resolve();
+      });
+
+      try {
+        await element.restartPtyProcess();
+      } finally {
+        serviceDisposable.dispose();
+      }
+
+      expect(launched.options.env.LUMINE_BRIDGE_PORT).toBeUndefined();
+      expect(element.isPtyProcessRunning()).toBe(true);
     });
 
     // No spec for a nonexistent shell: `node-pty`'s spawn resolves for a
