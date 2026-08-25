@@ -120,7 +120,7 @@ describe("Terminal", () => {
 
     describe("paste()", () => {
       it("pastes text into the active terminal", async () => {
-        spyOn(lumine.clipboard, "read").and.returnValue("copied");
+        spyOn(lumine.clipboard, "read").and.returnValue(Promise.resolve("copied"));
         spyOn(lumine.pasteProviders, "handlePaste");
         await Terminal.paste();
         expect(activeTerminal.paste).toHaveBeenCalledWith("copied");
@@ -143,9 +143,11 @@ describe("Terminal", () => {
       });
 
       it("warns when an image on the clipboard goes unclaimed", async () => {
-        spyOn(lumine.clipboard, "read").and.returnValue("");
-        spyOn(lumine.clipboard, "readImage").and.returnValue({ isEmpty: () => false });
-        spyOn(lumine.pasteProviders, "handlePaste").and.returnValue(false);
+        spyOn(lumine.clipboard, "read").and.returnValue(Promise.resolve(""));
+        spyOn(lumine.clipboard, "readImage").and.returnValue(
+          Promise.resolve({ isEmpty: () => false }),
+        );
+        spyOn(lumine.pasteProviders, "handlePaste").and.returnValue(Promise.resolve(false));
         spyOn(lumine.notifications, "addWarning");
 
         await Terminal.paste();
