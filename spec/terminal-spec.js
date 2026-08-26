@@ -31,6 +31,49 @@ describe("Terminal", () => {
     });
   });
 
+  describe("terminal:open", () => {
+    let workspaceElement;
+
+    beforeEach(() => {
+      workspaceElement = lumine.views.getView(lumine.workspace);
+      jasmine.attachToDOM(workspaceElement);
+      spyOn(lumine.workspace, "open");
+    });
+
+    function openedCwd() {
+      const [uri] = lumine.workspace.open.calls.mostRecent().args;
+      return new URL(uri).searchParams.get("cwd");
+    }
+
+    it("opens for the editor that dispatched it", () => {
+      const editor = lumine.workspace.buildTextEditor({ autoHeight: false });
+      lumine.workspace.getActivePane().addItem(editor);
+      spyOn(editor, "getPath").and.returnValue(__filename);
+
+      lumine.commands.dispatch(editor.getElement(), "terminal:open");
+
+      expect(openedCwd()).toBe(__filename);
+    });
+
+    it("opens for the tree view's last selection", () => {
+      const treeView = document.createElement("div");
+      treeView.classList.add("tree-view");
+      const list = document.createElement("ol");
+      list.classList.add("full-menu");
+      const entry = document.createElement("li");
+      entry.classList.add("entry", "selected");
+      entry.getPath = () => __filename;
+      list.appendChild(entry);
+      treeView.appendChild(list);
+      workspaceElement.appendChild(treeView);
+
+      lumine.commands.dispatch(treeView, "terminal:open");
+
+      expect(openedCwd()).toBe(__filename);
+      expect(lumine.workspace.open.calls.mostRecent().args[1].location).toBe("center");
+    });
+  });
+
   describe("runCommands()", () => {
     let activeTerminal, newTerminal, commands;
     beforeEach(() => {
@@ -320,23 +363,49 @@ describe("Terminal", () => {
     }
 
     function commandsIn(items) {
-      return items.flatMap((item) => (item.submenu ? commandsIn(item.submenu) : [item.command]));
+      return items.flatMap((item) =>
+        item.submenu ? commandsIn(item.submenu) : item.command ? [item.command] : [],
+      );
     }
 
     it("offers its items on a tree-view entry", () => {
       expect(offersTerminalItems(entry)).toBe(true);
     });
 
+    it("shows the destinations flat and separates their groups", () => {
+      let terminal = lumine.contextMenu
+        .templateForElement(entry)
+        .find((item) => item.label === "Terminal");
+      expect(terminal.submenu.map((item) => item.label ?? item.type)).toEqual([
+        "Open New",
+        "separator",
+        "Center",
+        "Split Up",
+        "Split Down",
+        "Split Left",
+        "Split Right",
+        "separator",
+        "Bottom Dock",
+        "Left Dock",
+        "Right Dock",
+      ]);
+    });
+
     // Everything here acts on whatever was right-clicked. A command that
     // ignores the click — focusing the active terminal, closing every terminal
     // — reads as if it applied to the entry under the cursor, and belongs in
-    // `Packages > Terminal` instead.
+    // `Packages > Terminal` instead. `terminal:open` is shared with the keymap;
+    // every other command is private to the context menu.
     it("offers only commands that act on what was clicked", () => {
       let terminal = lumine.contextMenu
         .templateForElement(entry)
         .find((item) => item.label === "Terminal");
+      let commands = commandsIn(terminal.submenu);
+      expect(commands).toContain("terminal:open");
       expect(
-        commandsIn(terminal.submenu).every((command) => command.endsWith("-context-menu")),
+        commands.every(
+          (command) => command === "terminal:open" || command.endsWith("-context-menu"),
+        ),
       ).toBe(true);
     });
 
@@ -393,7 +462,9 @@ describe("Terminal", () => {
       entry.classList.add("tree-view-row", "entry", "file");
       entry.getPath = () => ENTRY_PATH;
       list.appendChild(entry);
-      jasmine.attachToDOM(treeView);
+      let workspaceElement = lumine.views.getView(lumine.workspace);
+      jasmine.attachToDOM(workspaceElement);
+      workspaceElement.appendChild(treeView);
     });
 
     function lastOpen() {
@@ -401,11 +472,11 @@ describe("Terminal", () => {
       return { cwd: new URL(uri).searchParams.get("cwd"), options };
     }
 
-    // Every one of these must honor the entry that was clicked. Only
-    // `terminal:open-context-menu` ever did: the rest were handed the active
-    // editor's element and inferred the directory from that instead.
+    // Every one of these must honor the entry that was clicked. The global
+    // `terminal:open` shares the context menu with destination-specific private
+    // commands, and all of them resolve the same entry.
     for (let command of [
-      "terminal:open-context-menu",
+      "terminal:open",
       "terminal:open-center-context-menu",
       "terminal:open-split-up-context-menu",
       "terminal:open-split-down-context-menu",
@@ -424,7 +495,7 @@ describe("Terminal", () => {
     // The tree view is itself a dock item, so without this the terminal would
     // be split into the sidebar beside the tree.
     it("opens into the workspace center rather than the tree view's dock", () => {
-      lumine.commands.dispatch(entry, "terminal:open-context-menu");
+      lumine.commands.dispatch(entry, "terminal:open");
       expect(lastOpen().options.location).toBe("center");
     });
 
@@ -441,7 +512,7 @@ describe("Terminal", () => {
       });
 
       it("opens in the center for an editor in the workspace center", () => {
-        lumine.commands.dispatch(editor.getElement(), "terminal:open-context-menu");
+        lumine.commands.dispatch(editor.getElement(), "terminal:open");
         expect(lastOpen().options.location).toBe("center");
       });
 
@@ -450,7 +521,7 @@ describe("Terminal", () => {
         dock.getActivePane().addItem(editor);
         dock.show();
 
-        lumine.commands.dispatch(editor.getElement(), "terminal:open-context-menu");
+        lumine.commands.dispatch(editor.getElement(), "terminal:open");
         expect(lastOpen().options.location).toBe("bottom");
       });
     });

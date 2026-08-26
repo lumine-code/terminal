@@ -41,44 +41,41 @@
         "submenu": [
           {
             "label": "Open New",
-            "command": "terminal:open-context-menu"
+            "command": "terminal:open"
+          },
+          { "type": "separator" },
+          {
+            "label": "Center",
+            "command": "terminal:open-center-context-menu"
           },
           {
-            "label": "Open New In…",
-            "submenu": [
-              {
-                "label": "Center",
-                "command": "terminal:open-center-context-menu"
-              },
-              {
-                "label": "Split Up",
-                "command": "terminal:open-split-up-context-menu"
-              },
-              {
-                "label": "Split Down",
-                "command": "terminal:open-split-down-context-menu"
-              },
-              {
-                "label": "Split Left",
-                "command": "terminal:open-split-left-context-menu"
-              },
-              {
-                "label": "Split Right",
-                "command": "terminal:open-split-right-context-menu"
-              },
-              {
-                "label": "Bottom Dock",
-                "command": "terminal:open-split-bottom-dock-context-menu"
-              },
-              {
-                "label": "Left Dock",
-                "command": "terminal:open-split-left-dock-context-menu"
-              },
-              {
-                "label": "Right Dock",
-                "command": "terminal:open-split-right-dock-context-menu"
-              }
-            ]
+            "label": "Split Up",
+            "command": "terminal:open-split-up-context-menu"
+          },
+          {
+            "label": "Split Down",
+            "command": "terminal:open-split-down-context-menu"
+          },
+          {
+            "label": "Split Left",
+            "command": "terminal:open-split-left-context-menu"
+          },
+          {
+            "label": "Split Right",
+            "command": "terminal:open-split-right-context-menu"
+          },
+          { "type": "separator" },
+          {
+            "label": "Bottom Dock",
+            "command": "terminal:open-split-bottom-dock-context-menu"
+          },
+          {
+            "label": "Left Dock",
+            "command": "terminal:open-split-left-dock-context-menu"
+          },
+          {
+            "label": "Right Dock",
+            "command": "terminal:open-split-right-dock-context-menu"
           }
         ]
       },
@@ -101,41 +98,45 @@
               "command": "terminal:open"
             },
             {
-              "label": "Open New In…",
-              "submenu": [
-                {
-                  "label": "Center",
-                  "command": "terminal:open-center"
-                },
-                {
-                  "label": "Split Up",
-                  "command": "terminal:open-split-up"
-                },
-                {
-                  "label": "Split Down",
-                  "command": "terminal:open-split-down"
-                },
-                {
-                  "label": "Split Left",
-                  "command": "terminal:open-split-left"
-                },
-                {
-                  "label": "Split Right",
-                  "command": "terminal:open-split-right"
-                },
-                {
-                  "label": "Bottom Dock",
-                  "command": "terminal:open-bottom-dock"
-                },
-                {
-                  "label": "Left Dock",
-                  "command": "terminal:open-left-dock"
-                },
-                {
-                  "label": "Right Dock",
-                  "command": "terminal:open-right-dock"
-                }
-              ]
+              "type": "separator"
+            },
+            {
+              "label": "Center",
+              "command": "terminal:open-center"
+            },
+            {
+              "label": "Split Up",
+              "command": "terminal:open-split-up"
+            },
+            {
+              "label": "Split Down",
+              "command": "terminal:open-split-down"
+            },
+            {
+              "label": "Split Left",
+              "command": "terminal:open-split-left"
+            },
+            {
+              "label": "Split Right",
+              "command": "terminal:open-split-right"
+            },
+            {
+              "type": "separator"
+            },
+            {
+              "label": "Bottom Dock",
+              "command": "terminal:open-bottom-dock"
+            },
+            {
+              "label": "Left Dock",
+              "command": "terminal:open-left-dock"
+            },
+            {
+              "label": "Right Dock",
+              "command": "terminal:open-right-dock"
+            },
+            {
+              "type": "separator"
             },
             {
               "label": "Close All",

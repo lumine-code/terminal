@@ -34,7 +34,7 @@
     "node": ">=24"
   },
   "backgroundTips": [
-    "You can open a terminal beside your code with {{ 'terminal:focus' | keystroke }}",
+    "You can open a terminal beside your code with {{ 'terminal:open' | keystroke }}",
     "You can run the selected text in a terminal with {{ 'terminal:run-selected-text' | keystroke }}"
   ],
   "scripts": {

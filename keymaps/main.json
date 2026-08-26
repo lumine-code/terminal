@@ -1,35 +1,37 @@
 {
-  // `ctrl-`` is a cross-editor convention, so it stays out of the alt- tier.
-  // Focus and unfocus are two commands rather than one toggle-focus because
-  // focus also creates a terminal when none is open; the pair reads as a
-  // toggle because the `terminal-view` binding below is on a deeper element.
+  // `ctrl-backquote` is a cross-editor convention, so it stays out of the alt-
+  // tier. `backquote` names the physical key, independent of keyboard layout.
+  // Opening from the workspace carries the focused editor or tree-view
+  // selection into the new terminal's working directory. The `terminal-view`
+  // binding below is on a deeper element, so the same key still unfocuses an
+  // existing terminal.
   "lumine-workspace": {
-    "ctrl-`": "terminal:focus",
-    "ctrl-~ n": "terminal:open",
-    "ctrl-~ up": "terminal:open-split-up",
-    "ctrl-~ down": "terminal:open-split-down",
-    "ctrl-~ left": "terminal:open-split-left",
-    "ctrl-~ right": "terminal:open-split-right",
-    "ctrl-~ b": "terminal:open-bottom-dock",
-    "ctrl-~ l": "terminal:open-left-dock",
-    "ctrl-~ r": "terminal:open-right-dock"
+    "ctrl-backquote": "terminal:focus",
+    "ctrl-shift-backquote n": "terminal:open",
+    "ctrl-shift-backquote up": "terminal:open-split-up",
+    "ctrl-shift-backquote down": "terminal:open-split-down",
+    "ctrl-shift-backquote left": "terminal:open-split-left",
+    "ctrl-shift-backquote right": "terminal:open-split-right",
+    "ctrl-shift-backquote b": "terminal:open-bottom-dock",
+    "ctrl-shift-backquote l": "terminal:open-left-dock",
+    "ctrl-shift-backquote r": "terminal:open-right-dock"
   },
   // These two read the active editor's selection rather than acting on a
   // terminal, so they belong where that selection is.
   "lumine-text-editor:not([mini])": {
-    "ctrl-~ x": "terminal:run-selected-text",
-    "ctrl-~ i": "terminal:insert-selected-text"
+    "ctrl-shift-backquote x": "terminal:run-selected-text",
+    "ctrl-shift-backquote i": "terminal:insert-selected-text"
   },
   "terminal-view": {
     // Ten chords opened a terminal and none closed or restarted one, so both
     // were reachable from the menu alone. They sit here rather than at
     // workspace scope because they act on the terminal that has focus.
-    "ctrl-~ w": "terminal:close",
-    "ctrl-~ s": "terminal:restart",
+    "ctrl-shift-backquote w": "terminal:close",
+    "ctrl-shift-backquote s": "terminal:restart",
     "ctrl-l": "terminal:clear",
     "cmdorctrl-f": "terminal:find",
     "cmdorctrl-e": "terminal:set-selection-as-find-pattern",
-    "ctrl-`": "terminal:unfocus",
+    "ctrl-backquote": "terminal:unfocus",
     "cmdorctrl-g": "terminal:find-next",
     "cmdorctrl-shift-g": "terminal:find-previous"
   },
