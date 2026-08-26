@@ -228,13 +228,13 @@ describe("TerminalModel", () => {
     expect(newModel.cwd).toBe(tmpdir);
   });
 
-  describe("the modified-state contract", () => {
+  describe("the file-state contract", () => {
     // A terminal has nothing to save, so it opts out of the save-state API
     // entirely. `tabs` and core both feature-detect these, and a terminal that
     // reported itself modified was skipped by `tabs:close-saved-tabs`.
-    it("implements neither ::isModified nor ::onDidChangeModified", () => {
-      expect(model.isModified).toBeUndefined();
-      expect(model.onDidChangeModified).toBeUndefined();
+    it("implements neither ::getFileState nor ::onDidChangeFileState", () => {
+      expect(model.getFileState).toBeUndefined();
+      expect(model.onDidChangeFileState).toBeUndefined();
     });
 
     it("implements neither ::shouldPromptToSave nor ::save", () => {
@@ -262,7 +262,7 @@ describe("TerminalModel", () => {
       ).toBe(1);
     });
 
-    it("never emits a modified change, whether or not it is the active item", () => {
+    it("never emits a file-state change, whether or not it is the active item", () => {
       pane.getActiveItem.and.returnValue({});
       model.pane = pane;
       spyOn(model.emitter, "emit");
@@ -270,7 +270,7 @@ describe("TerminalModel", () => {
       pane.getActiveItem.and.returnValue(model);
       model.handleNewData();
       expect(
-        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-file-state")
           .length,
       ).toBe(0);
     });
@@ -301,12 +301,12 @@ describe("TerminalModel", () => {
       expect(model.element.focusTerminal).toHaveBeenCalled();
     });
 
-    it("emits no modified change", () => {
+    it("emits no file-state change", () => {
       model.element = element;
       spyOn(model.emitter, "emit");
       model.focusTerminal();
       expect(
-        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-modified")
+        model.emitter.emit.calls.all().filter((call) => call.args[0] === "did-change-file-state")
           .length,
       ).toBe(0);
     });
