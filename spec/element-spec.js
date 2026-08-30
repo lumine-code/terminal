@@ -1026,7 +1026,9 @@ describe("TerminalElement", () => {
     // first output at a width the terminal does not have, and the refit that
     // follows makes conpty reflow what it just printed — visible as the text
     // flickering the moment it arrives.
-    it("spawns the shell at the size the terminal already is", async () => {
+    it("spawns the shell at the terminal's fitted container size", async () => {
+      const geometry = { cols: 123, rows: 45 };
+      spyOn(FitAddon.prototype, "proposeDimensions").and.returnValue(geometry);
       let launched;
       spyOn(Pty.prototype, "launch").and.callFake(function (options) {
         launched = options;
@@ -1036,8 +1038,8 @@ describe("TerminalElement", () => {
 
       await element.restartPtyProcess();
 
-      expect(launched.options.cols).toBe(element.terminal.cols);
-      expect(launched.options.rows).toBe(element.terminal.rows);
+      expect(launched.options.cols).toBe(geometry.cols);
+      expect(launched.options.rows).toBe(geometry.rows);
     });
 
     it("uses the bundled ConPTY on Windows", async () => {
