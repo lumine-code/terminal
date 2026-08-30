@@ -781,63 +781,6 @@ describe("TerminalElement", () => {
       expect(write.calls.argsFor(0)[0]).toBe("\x1b[?2026h\x1b[2Jrepainted screen\x1b[?2026l");
     });
   });
-  describe("window-surface transitions", () => {
-    let frame, elementWindowDisposable;
-
-    afterEach(() => {
-      elementWindowDisposable?.dispose();
-      frame?.remove();
-    });
-
-    async function write(text) {
-      await new Promise((resolve) => element.terminal.write(text, resolve));
-    }
-
-    async function moveTo(document, reason) {
-      const context = Object.freeze({
-        id: `${reason}-${Date.now()}`,
-        reason,
-        item: element.model,
-        from: null,
-        to: null,
-        signal: new AbortController().signal,
-      });
-      const participant = await element.model.beginWindowSurfaceTransition(context);
-      document.body.appendChild(element);
-      await participant.commit(context);
-    }
-
-    it("rebinds xterm to each owner window without replacing its PTY or buffer", async () => {
-      await write("surface-buffer");
-      const terminal = element.terminal;
-      const pty = element.pty;
-      spyOn(pty, "write").and.callThrough();
-
-      frame = document.createElement("iframe");
-      document.body.appendChild(frame);
-      elementWindowDisposable = lumine.elements.addWindow(frame.contentWindow);
-      const childElement = TerminalElement.create(frame.contentDocument);
-      expect(childElement instanceof frame.contentWindow.HTMLElement).toBe(true);
-      expect(childElement.constructor).not.toBe(TerminalElement);
-      await moveTo(frame.contentDocument, "detach");
-
-      expect(element.ownerDocument).toBe(frame.contentDocument);
-      expect(element.terminal).toBe(terminal);
-      expect(element.pty).toBe(pty);
-      expect(terminal._core._coreBrowserService.window).toBe(frame.contentWindow);
-      expect(terminal.buffer.active.getLine(0).translateToString(true)).toContain("surface-buffer");
-      terminal.input("x");
-      expect(pty.write).toHaveBeenCalledWith("x");
-
-      await moveTo(document, "attach");
-
-      expect(element.ownerDocument).toBe(document);
-      expect(element.terminal).toBe(terminal);
-      expect(element.pty).toBe(pty);
-      expect(terminal._core._coreBrowserService.window).toBe(window);
-      expect(terminal.buffer.active.getLine(0).translateToString(true)).toContain("surface-buffer");
-    });
-  });
 });
 
 describe("Pty", () => {

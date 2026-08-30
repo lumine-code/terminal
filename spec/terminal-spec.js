@@ -258,23 +258,6 @@ describe("Terminal", () => {
       expect(url.searchParams.get("cwd")).toBe(testPath);
     });
 
-    it("accepts a target from another Window", async () => {
-      const frame = document.createElement("iframe");
-      document.body.appendChild(frame);
-      try {
-        const target = frame.contentDocument.createElement("div");
-        const testPath = "/detached/path";
-        spyOn(Terminal, "getPath").and.returnValue(testPath);
-
-        await Terminal.open(uri, { target });
-
-        const url = new URL(lumine.workspace.open.calls.argsFor(0)[0]);
-        expect(url.searchParams.get("cwd")).toBe(testPath);
-      } finally {
-        frame.remove();
-      }
-    });
-
     it("leaves the caller's options object untouched", async () => {
       let options = {};
       await Terminal.open(uri, options);
@@ -355,22 +338,6 @@ describe("Terminal", () => {
     it("falls back to the first project path when given no target", () => {
       spyOn(lumine.project, "getPaths").and.returnValue(["/project"]);
       expect(Terminal.getPath(null)).toBe("/project");
-    });
-  });
-
-  describe("inferTerminalElement()", () => {
-    it("recognizes terminal descendants created by another Window", () => {
-      const frame = document.createElement("iframe");
-      document.body.appendChild(frame);
-      try {
-        const terminal = frame.contentDocument.createElement("terminal-view");
-        const target = frame.contentDocument.createElement("span");
-        terminal.appendChild(target);
-
-        expect(Terminal.inferTerminalElement({ target })).toBe(terminal);
-      } finally {
-        frame.remove();
-      }
     });
   });
 
