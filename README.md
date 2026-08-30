@@ -10,7 +10,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **xterm.js rendering**: draws output with xterm.js and an optional WebGL renderer that falls back to DOM rendering.
 - **Flexible placement**: opens terminals in the workspace center, any dock, or a split of the active pane.
 - **Editor integration**: runs or inserts the editor's selected text in the active terminal.
-- **Clickable links**: opens URLs in the browser, and OSC 8 file links in the editor or the file manager.
+- **Clickable links**: opens URLs, OSC 8 file links and detected filesystem paths, including compiler-style line and column suffixes.
 - **Find**: searches the scrollback with an in-terminal find palette.
 - **Theming**: derives its colors from the active UI theme, or from explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
@@ -55,11 +55,11 @@ Commands available in `terminal-view`:
 - `terminal:next-command`: scroll to the next command's prompt,
 - `terminal:paste-image`: save the clipboard image and write its path into the terminal,
 - `terminal:restart`: restart the terminal's process,
-- `terminal:unfocus`: move focus from the terminal to its pane container.
+- `terminal:unfocus`: return focus to what was active before the terminal.
 
 ## Usage
 
-When a terminal is focused it handles most keystrokes itself, so some Lumine commands may not fire until you move focus out of it with `terminal:unfocus`.
+When a terminal is focused it handles most keystrokes itself, so some Lumine commands may not fire until you move focus out of it with `terminal:unfocus`. On Windows and Linux, copy and paste use the conventional terminal shortcuts `Ctrl+Shift+C` and `Ctrl+Shift+V`.
 
 ### Inline images
 
@@ -73,15 +73,9 @@ That is how you hand a screenshot to a command-line program, including the codin
 
 ## Configuration
 
-The terminal recognizes OSC 133 shell-integration sequences. When your shell emits them, each command's prompt is marked in the left gutter — tinted red when the command exited non-zero — and you can jump between prompts with `terminal:previous-command` and `terminal:next-command`.
+The terminal automatically integrates with bash, zsh, fish and PowerShell when their configured startup arguments can be preserved safely. It tracks the current working directory after `cd`, carries that directory into restarts and copied terminals, marks each command's prompt in the left gutter — tinted red when the command exited non-zero — and enables navigation with `terminal:previous-command` and `terminal:next-command`. Unsupported shells or custom startup arguments fall back to the unmodified shell, and externally configured OSC 133 or OSC 633 integration remains recognized.
 
-This is off until your shell emits the sequences. Reference scripts live in this package's `shell-integration/` folder; source the one for your shell:
-
-- **bash** — in `~/.bashrc`: `source <package>/shell-integration/lumine.bash`
-- **zsh** — in `~/.zshrc`: `source <package>/shell-integration/lumine.zsh`
-- **PowerShell** — in your `$PROFILE`: `. <package>/shell-integration/lumine.ps1`
-
-The feature can be toggled under **Shell Integration** in the package settings.
+Local path detection recognizes absolute and relative paths in output, resolves relative paths against the live working directory, and understands common `path:line:column` forms. Files open in Lumine by default while directories open in the system file manager; both detection and opening behavior can be changed in the package settings.
 
 ## Customization
 

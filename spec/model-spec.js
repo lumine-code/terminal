@@ -139,6 +139,24 @@ describe("TerminalModel", () => {
     });
   });
 
+  describe("setCwd()", () => {
+    it("updates the live cwd and the serialized URI", () => {
+      expect(model.setCwd(tmpdir)).toBe(true);
+      expect(model.cwd).toBe(tmpdir);
+      expect(new URL(model.getURI()).searchParams.get("cwd")).toBe(tmpdir);
+      expect(new URL(model.copy().getURI()).searchParams.get("cwd")).toBe(tmpdir);
+    });
+
+    it("rejects relative paths and deletes the URI parameter when cleared", () => {
+      model.setCwd(tmpdir);
+      expect(model.setCwd("relative/path")).toBe(false);
+      expect(model.cwd).toBe(tmpdir);
+      expect(model.setCwd(undefined)).toBe(true);
+      expect(model.cwd).toBeUndefined();
+      expect(new URL(model.getURI()).searchParams.has("cwd")).toBe(false);
+    });
+  });
+
   describe("destroy()", () => {
     it("destroys the element", () => {
       model.element = element;
@@ -164,6 +182,20 @@ describe("TerminalModel", () => {
       let expected = { something: "something" };
       model.element = expected;
       expect(model.getElement()).toBe(expected);
+    });
+  });
+
+  describe("focusTerminal()", () => {
+    it("activates the pane item before focusing the terminal", async () => {
+      const order = [];
+      pane.activateItem.and.callFake(() => order.push("pane"));
+      model.pane = pane;
+      model.element = element;
+      element.focusTerminal.and.callFake(() => order.push("terminal"));
+
+      await model.focusTerminal();
+
+      expect(order).toEqual(["pane", "terminal"]);
     });
   });
 

@@ -1,5 +1,6 @@
 const Terminal = require("../lib/terminal");
 const { Config } = require("../lib/config");
+const { TerminalModel } = require("../lib/model");
 const { URL } = require("url");
 
 const { activatePackage, stubPty, wait } = require("./helpers");
@@ -15,16 +16,83 @@ describe("Terminal", () => {
   });
 
   describe("unfocus()", () => {
-    it("focuses lumine-workspace", async () => {
+    let workspaceElement;
+
+    beforeEach(() => {
+      workspaceElement = lumine.workspace.getElement();
+      jasmine.attachToDOM(workspaceElement);
+      Terminal.previousFocus = null;
+    });
+
+    it("restores the previously focused pane item", async () => {
+      const editor = await lumine.workspace.open();
+      const pane = lumine.workspace.paneForItem(editor);
+      spyOn(pane, "activateItem").and.callThrough();
+      spyOn(pane, "activate").and.callThrough();
+      Terminal.previousFocus = { type: "item", item: editor };
+
+      expect(Terminal.unfocus()).toBe(true);
+
+      expect(pane.activateItem).toHaveBeenCalledWith(editor);
+      expect(pane.activate).toHaveBeenCalled();
+    });
+
+    it("restores a connected element", () => {
+      const input = document.createElement("input");
+      workspaceElement.appendChild(input);
+      Terminal.previousFocus = { type: "element", element: input };
+
+      expect(Terminal.unfocus()).toBe(true);
+      expect(document.activeElement).toBe(input);
+    });
+
+    it("falls back to the workspace when the previous element disconnected", () => {
+      const input = document.createElement("input");
+      workspaceElement.appendChild(input);
+      Terminal.previousFocus = { type: "element", element: input };
+      input.remove();
+      spyOn(workspaceElement, "focus").and.callThrough();
+
+      expect(Terminal.unfocus()).toBe(false);
+      expect(workspaceElement.focus).toHaveBeenCalled();
+    });
+
+    it("ignores focus inside a terminal", () => {
+      const terminal = document.createElement("terminal-view");
+      const input = document.createElement("input");
+      terminal.appendChild(input);
+      expect(Terminal.describeFocus(input)).toBeNull();
+    });
+
+    it("does not overwrite history when a terminal's pane root receives focus", () => {
+      const model = new TerminalModel({
+        uri: Terminal.generateUri(),
+        terminals: Terminal.terminals,
+      });
+      const pane = document.createElement("lumine-pane");
+      pane.getModel = () => ({ getActiveItem: () => model });
+      const target = document.createElement("div");
+      pane.appendChild(target);
+      expect(Terminal.describeFocus(target)).toBeNull();
+      model.destroy();
+    });
+
+    it("describes focus inside a pane without materializing unrelated views", async () => {
+      const editor = await lumine.workspace.open();
+      const input = editor.getElement().querySelector("input") ?? editor.getElement();
+      expect(Terminal.describeFocus(input)).toEqual({ type: "item", item: editor });
+    });
+
+    it("moves focus out of a live terminal when no history exists", async () => {
       // Stub the PTY so this focus test doesn't wait on a real node-pty worker.
       stubPty();
-      jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
       let model = await Terminal.openInCenterOrDock(lumine.workspace);
       await model.ready();
       await model.element.createTerminal();
       // Give the terminal time to start up.
       await wait(500);
       expect(model.element.contains(document.activeElement)).toEqual(true);
+      Terminal.previousFocus = null;
       Terminal.unfocus();
       expect(model.element.contains(document.activeElement)).toEqual(false);
       model.destroy();
@@ -71,6 +139,49 @@ describe("Terminal", () => {
 
       expect(openedCwd()).toBe(__filename);
       expect(lumine.workspace.open.calls.mostRecent().args[1].location).toBe("center");
+    });
+  });
+
+  describe("clipboard keybindings", () => {
+    const platformClasses = ["platform-darwin", "platform-win32", "platform-linux"];
+    let originalClasses;
+    let target;
+
+    beforeEach(() => {
+      originalClasses = new Set(
+        platformClasses.filter((name) => document.body.classList.contains(name)),
+      );
+      for (const name of platformClasses) document.body.classList.remove(name);
+      target = document.createElement("terminal-view");
+      document.body.appendChild(target);
+    });
+
+    afterEach(() => {
+      target.remove();
+      for (const name of platformClasses) {
+        document.body.classList.toggle(name, originalClasses.has(name));
+      }
+    });
+
+    function ownKeystrokes(command) {
+      return lumine.keymaps
+        .findKeyBindings({ target, command })
+        .filter((binding) => binding.source.includes("terminal"))
+        .map((binding) => binding.keystrokes.toLowerCase());
+    }
+
+    for (const platform of ["win32", "linux"]) {
+      it(`binds copy and paste conventionally on ${platform}`, () => {
+        document.body.classList.add(`platform-${platform}`);
+        expect(ownKeystrokes("core:copy")).toContain("ctrl-shift-c");
+        expect(ownKeystrokes("core:paste")).toContain("ctrl-shift-v");
+      });
+    }
+
+    it("does not add the terminal clipboard bindings on macOS", () => {
+      document.body.classList.add("platform-darwin");
+      expect(ownKeystrokes("core:copy")).not.toContain("ctrl-shift-c");
+      expect(ownKeystrokes("core:paste")).not.toContain("ctrl-shift-v");
     });
   });
 

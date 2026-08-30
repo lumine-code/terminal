@@ -110,6 +110,8 @@ describe("TerminalElement", () => {
     spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
     spyOn(Pty.prototype, "kill").and.returnValue(undefined);
     spyOn(lumine.shell, "openExternal");
+    spyOn(lumine.shell, "openPath");
+    spyOn(lumine.shell, "showItemInFolder");
     element = await createElement();
     tmpdir = await temp.mkdir();
 
@@ -241,6 +243,20 @@ describe("TerminalElement", () => {
   });
 
   describe("createTerminal()", () => {
+    async function createUnstartedElement() {
+      let terminals = new Set();
+      let model = new TerminalModel({
+        uri: `terminal://pending-${Date.now()}-${Math.random()}/`,
+        terminals,
+      });
+      await model.ready();
+      model.pane = jasmine.createSpyObj("pane", ["removeItem", "getActiveItem", "destroyItem"]);
+      let candidate = TerminalElement.create();
+      await candidate.initialize(model);
+      createdElements.push(candidate);
+      return candidate;
+    }
+
     it("creates a terminal object", () => {
       expect(element.terminal).toBeTruthy();
     });
@@ -256,6 +272,70 @@ describe("TerminalElement", () => {
     it("boots exactly one worker for the terminal it creates", () => {
       expect(PtyHost.prototype.spawn.calls.count()).toBe(1);
       expect(element.pty.launched).toBe(true);
+    });
+
+    it("coalesces concurrent creation", async () => {
+      let resolveEnvironment;
+      let environment = new Promise((resolve) => (resolveEnvironment = resolve));
+      let candidate = await createUnstartedElement();
+      spyOn(candidate, "waitForShellEnvironment").and.returnValue(environment);
+
+      let first = candidate.createTerminal();
+      let second = candidate.createTerminal();
+      expect(second).toBe(first);
+
+      resolveEnvironment();
+      await first;
+      expect(candidate.terminal).toBeTruthy();
+      expect(candidate.pty.launched).toBe(true);
+    });
+
+    it("cleans up a booting worker after rejection and allows retry", async () => {
+      let candidate = await createUnstartedElement();
+      spyOn(candidate, "waitForShellEnvironment").and.returnValues(
+        Promise.reject(new Error("environment failed")),
+        Promise.resolve(),
+      );
+      let killsBefore = Pty.prototype.kill.calls.count();
+
+      await expectAsync(candidate.createTerminal()).toBeRejectedWithError("environment failed");
+      expect(Pty.prototype.kill.calls.count()).toBe(killsBefore + 1);
+
+      await candidate.createTerminal();
+      expect(candidate.terminal).toBeTruthy();
+      expect(candidate.pty.launched).toBe(true);
+    });
+
+    it("disposes a partially-created xterm and allows retry after a late rejection", async () => {
+      let candidate = await createUnstartedElement();
+      spyOn(candidate, "getEnvForLaunch").and.returnValues(
+        Promise.reject(new Error("environment launch failed")),
+        Promise.resolve(candidate.getEnv()),
+      );
+
+      await expectAsync(candidate.createTerminal()).toBeRejectedWithError(
+        "environment launch failed",
+      );
+      expect(candidate.terminal).toBeUndefined();
+
+      await candidate.createTerminal();
+      expect(candidate.terminal).toBeTruthy();
+      expect(candidate.pty.launched).toBe(true);
+    });
+
+    it("does not create resources after being destroyed while waiting", async () => {
+      let resolveEnvironment;
+      let environment = new Promise((resolve) => (resolveEnvironment = resolve));
+      let candidate = await createUnstartedElement();
+      spyOn(candidate, "waitForShellEnvironment").and.returnValue(environment);
+
+      let creating = candidate.createTerminal();
+      candidate.destroy();
+      resolveEnvironment();
+      await creating;
+
+      expect(candidate.terminal).toBeUndefined();
+      expect(candidate.pty).toBeUndefined();
     });
   });
 
@@ -299,6 +379,102 @@ describe("TerminalElement", () => {
   describe("getEnv()", () => {
     it("advertises truecolor support", () => {
       expect(element.getEnv().COLORTERM).toBe("truecolor");
+    });
+
+    it("identifies Lumine and its version", () => {
+      let env = element.getEnv();
+      expect(env.TERM_PROGRAM).toBe("lumine");
+      expect(env.TERM_PROGRAM_VERSION).toBe(lumine.application.getVersion());
+    });
+
+    it("removes inherited terminal, multiplexer, GUI launcher, and Electron metadata", () => {
+      let inherited = {
+        ALACRITTY_LOG: "1",
+        ELECTRON_RUN_AS_NODE: "1",
+        GHOSTTY_RESOURCES_DIR: "ghostty",
+        ITERM_SESSION_ID: "iterm",
+        KITTY_WINDOW_ID: "kitty",
+        KONSOLE_VERSION: "konsole",
+        TERM_SESSION_ID: "term",
+        VSCODE_INJECTION: "vscode",
+        VTE_VERSION: "vte",
+        WEZTERM_PANE: "wezterm",
+        WT_SESSION: "wt",
+        TMUX: "tmux",
+        TMUX_PANE: "pane",
+        STY: "screen",
+        SSH_TTY: "/dev/pts/1",
+        DESKTOP_STARTUP_ID: "desktop",
+        GIO_LAUNCHED_DESKTOP_FILE: "lumine.desktop",
+        XDG_ACTIVATION_TOKEN: "token",
+      };
+      let original = Object.fromEntries(
+        Object.keys(inherited).map((key) => [key, process.env[key]]),
+      );
+      try {
+        Object.assign(process.env, inherited);
+        let env = element.getEnv();
+        for (let key of Object.keys(inherited)) expect(env[key]).toBeUndefined();
+      } finally {
+        for (let [key, value] of Object.entries(original)) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      }
+    });
+
+    it("removes AppImage launcher state even when APPIMAGE is empty", () => {
+      let keys = ["APPIMAGE", "LD_LIBRARY_PATH", "ARGV0", "OWD", "APPDIR"];
+      let original = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+      try {
+        process.env.APPIMAGE = "";
+        process.env.LD_LIBRARY_PATH = "app-libraries";
+        process.env.ARGV0 = "lumine";
+        process.env.OWD = "/old-working-directory";
+        process.env.APPDIR = "/mounted-appimage";
+
+        let env = element.getEnv();
+        for (let key of keys) expect(env[key]).toBeUndefined();
+      } finally {
+        for (let [key, value] of Object.entries(original)) {
+          if (value === undefined) delete process.env[key];
+          else process.env[key] = value;
+        }
+      }
+    });
+
+    it("applies fallback, inherited, sanitized, Lumine, override, and delete layers in order", () => {
+      let originalSafe = process.env.TERMINAL_TEST_SAFE;
+      try {
+        process.env.TERMINAL_TEST_SAFE = "inherited";
+        lumine.config.set(
+          "terminal.terminal.env.fallbackEnv",
+          JSON.stringify({ TERMINAL_TEST_SAFE: "fallback", TERM_PROGRAM: "foreign" }),
+        );
+        lumine.config.set(
+          "terminal.terminal.env.overrideEnv",
+          JSON.stringify({ TERMINAL_TEST_SAFE: "override", TERM_PROGRAM: "custom" }),
+        );
+        lumine.config.set("terminal.terminal.env.deleteEnv", ["COLORTERM"]);
+
+        let env = element.getEnv(3100);
+        expect(env.TERMINAL_TEST_SAFE).toBe("override");
+        expect(env.TERM_PROGRAM).toBe("custom");
+        expect(env.TERM_PROGRAM_VERSION).toBe(lumine.application.getVersion());
+        expect(env.LUMINE_BRIDGE_PORT).toBe("3100");
+        expect(env.COLORTERM).toBeUndefined();
+      } finally {
+        if (originalSafe === undefined) delete process.env.TERMINAL_TEST_SAFE;
+        else process.env.TERMINAL_TEST_SAFE = originalSafe;
+      }
+    });
+
+    it("deletes process launch variables by default", () => {
+      expect(getConfigSchema().terminal.properties.env.properties.deleteEnv.default).toEqual([
+        "NODE_ENV",
+        "NODE_OPTIONS",
+        "WINDOW",
+      ]);
     });
 
     it("lets the delete list remove COLORTERM", () => {
@@ -469,7 +645,7 @@ describe("TerminalElement", () => {
     it("opens a directory link in the system file explorer", async () => {
       let uri = pathToFileURL(tmpdir).href;
       await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
-      expect(lumine.shell.openExternal).toHaveBeenCalledWith(uri);
+      expect(lumine.shell.openPath).toHaveBeenCalledWith(tmpdir);
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
@@ -483,7 +659,7 @@ describe("TerminalElement", () => {
       await fs.symlink(target, link, "junction");
       let uri = pathToFileURL(link).href;
       await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
-      expect(lumine.shell.openExternal).toHaveBeenCalledWith(uri);
+      expect(lumine.shell.openPath).toHaveBeenCalledWith(link);
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
@@ -515,17 +691,145 @@ describe("TerminalElement", () => {
     });
   });
 
+  describe("activateLocalPathLink()", () => {
+    beforeEach(() => spyOn(lumine.workspace, "open"));
+
+    it("opens files in Lumine at a one-based line and column by default", async () => {
+      let filePath = path.join(tmpdir, "diagnostic.js");
+      await element.activateLocalPathLink({ ctrlKey: true, metaKey: true }, filePath, false, 12, 4);
+      expect(lumine.workspace.open).toHaveBeenCalledWith(filePath, {
+        initialLine: 11,
+        initialColumn: 3,
+      });
+    });
+
+    it("reveals files externally when configured", async () => {
+      lumine.config.set("terminal.behavior.localPathBehavior", "all-external");
+      let filePath = path.join(tmpdir, "diagnostic.js");
+      await element.activateLocalPathLink({ ctrlKey: true, metaKey: true }, filePath, false);
+      expect(lumine.shell.showItemInFolder).toHaveBeenCalledWith(filePath);
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("uses the same modifier guard as web and OSC 8 links", async () => {
+      let filePath = path.join(tmpdir, "diagnostic.js");
+      spyOn(element, "optionallyWarnAboutModifierlessClick");
+      await element.activateLocalPathLink({ ctrlKey: false, metaKey: false }, filePath, false);
+      expect(element.optionallyWarnAboutModifierlessClick).toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("clipboard keyboard conventions", () => {
+    it("leaves Ctrl+Shift+C for Lumine's keymap instead of writing a control character", () => {
+      let onKey = jasmine.createSpy("onKey");
+      element.terminal.onKey(onKey);
+      spyOn(lumine.clipboard, "write");
+      let event = new KeyboardEvent("keydown", {
+        key: "C",
+        code: "KeyC",
+        ctrlKey: true,
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
+      Object.defineProperties(event, {
+        keyCode: { value: 67 },
+        which: { value: 67 },
+      });
+
+      element.terminal.textarea.dispatchEvent(event);
+
+      expect(onKey).not.toHaveBeenCalled();
+      expect(event.defaultPrevented).toBe(true);
+      expect(lumine.clipboard.write).toHaveBeenCalled();
+    });
+  });
+
   describe("createTerminal() addon", () => {
     const { WebLinksAddon } = require("@xterm/addon-web-links");
     const { WebglAddon } = require("@xterm/addon-webgl");
     const { ImageAddon } = require("@xterm/addon-image");
+    const { ShellIntegrationAddon } = require("../lib/shell-integration");
+    const { LocalPathLinkProvider } = require("../lib/link-detection/provider");
 
     beforeEach(() => {
       spyOn(Terminal.prototype, "loadAddon").and.callThrough();
+      spyOn(Terminal.prototype, "registerLinkProvider").and.callThrough();
     });
 
     afterEach(() => {
       Terminal.prototype.loadAddon.calls.reset();
+      Terminal.prototype.registerLinkProvider.calls.reset();
+    });
+
+    describe("shell integration", () => {
+      it("loads the OSC 633 addon when enabled", async () => {
+        lumine.config.set("terminal.shellIntegration.enabled", true);
+        await createElement();
+        expect(
+          Terminal.prototype.loadAddon.calls
+            .all()
+            .some((call) => call.args[0] instanceof ShellIntegrationAddon),
+        ).toBe(true);
+      });
+
+      it("keeps the parser available when disabled so a restart can enable injection", async () => {
+        lumine.config.set("terminal.shellIntegration.enabled", false);
+        await createElement();
+        expect(
+          Terminal.prototype.loadAddon.calls
+            .all()
+            .some((call) => call.args[0] instanceof ShellIntegrationAddon),
+        ).toBe(true);
+      });
+
+      it("launches a supported shell with injected arguments and a nonce", async () => {
+        const shell = path.join(tmpdir, process.platform === "win32" ? "bash.exe" : "bash");
+        lumine.config.set("terminal.terminal.shell", shell);
+        lumine.config.set("terminal.terminal.args", []);
+        lumine.config.set("terminal.shellIntegration.enabled", true);
+        const terminalElement = await createElement();
+        expect(terminalElement.pty.options.file).toBe(shell);
+        expect(terminalElement.pty.options.args[0]).toBe("--init-file");
+        expect(terminalElement.pty.options.options.env.LUMINE_TERMINAL_INJECTION).toBe("1");
+        expect(terminalElement.pty.options.options.env.LUMINE_TERMINAL_NONCE).toMatch(
+          /^[0-9a-f-]{36}$/i,
+        );
+      });
+
+      it("preserves custom arguments by declining injection", async () => {
+        const shell = path.join(tmpdir, process.platform === "win32" ? "bash.exe" : "bash");
+        const args = ["-c", "echo hi"];
+        lumine.config.set("terminal.terminal.shell", shell);
+        lumine.config.set("terminal.terminal.args", args);
+        const terminalElement = await createElement();
+        expect(terminalElement.pty.options.args).toEqual(args);
+        expect(terminalElement.pty.options.options.env.LUMINE_TERMINAL_NONCE).toBeUndefined();
+      });
+    });
+
+    describe("local path detection", () => {
+      it("registers the provider when enabled", async () => {
+        lumine.config.set("terminal.xterm.localPathDetection", true);
+        await createElement();
+        expect(
+          Terminal.prototype.registerLinkProvider.calls
+            .all()
+            .some((call) => call.args[0] instanceof LocalPathLinkProvider),
+        ).toBe(true);
+      });
+
+      it("does not register the provider when disabled", async () => {
+        lumine.config.set("terminal.xterm.localPathDetection", false);
+        await createElement();
+        expect(
+          Terminal.prototype.registerLinkProvider.calls
+            .all()
+            .some((call) => call.args[0] instanceof LocalPathLinkProvider),
+        ).toBe(false);
+      });
     });
 
     describe("web-links", () => {
@@ -549,6 +853,25 @@ describe("TerminalElement", () => {
     });
 
     describe("webgl", () => {
+      function stubWebglContext() {
+        let loseContext = jasmine.createSpy("loseContext");
+        let context = {
+          getExtension: jasmine
+            .createSpy("getExtension")
+            .and.callFake((name) => (name === "WEBGL_lose_context" ? { loseContext } : null)),
+        };
+        spyOn(WebglAddon.prototype, "activate").and.callFake(function () {
+          this._renderer = { _gl: context };
+        });
+        return { context, loseContext };
+      }
+
+      function loadedWebglAddon() {
+        return Terminal.prototype.loadAddon.calls
+          .all()
+          .find((call) => call.args[0] instanceof WebglAddon)?.args[0];
+      }
+
       it("is enabled if configured as such", async () => {
         lumine.config.set("terminal.xterm.webgl", true);
         await createElement();
@@ -565,6 +888,45 @@ describe("TerminalElement", () => {
           return call.args[0] instanceof WebglAddon;
         });
         expect(wasAdded).toBe(false);
+      });
+
+      it("releases the WebGL context after terminal disposal", async () => {
+        let { loseContext } = stubWebglContext();
+        let terminalElement = await createElement();
+        let order = [];
+        let dispose = terminalElement.terminal.dispose;
+        spyOn(terminalElement.terminal, "dispose").and.callFake(function () {
+          order.push("dispose");
+          return dispose.call(this);
+        });
+        loseContext.and.callFake(() => order.push("lose-context"));
+
+        terminalElement.destroy();
+
+        expect(loseContext).toHaveBeenCalledTimes(1);
+        expect(order).toEqual(["dispose", "lose-context"]);
+      });
+
+      it("does not lose an already-lost context again", async () => {
+        let { context } = stubWebglContext();
+        await createElement();
+        let addon = loadedWebglAddon();
+
+        addon._onContextLoss.fire();
+
+        expect(context.getExtension).not.toHaveBeenCalled();
+      });
+
+      it("tolerates a missing private renderer or context-loss extension", async () => {
+        let renderers = [undefined, { _gl: { getExtension: () => null } }];
+        spyOn(WebglAddon.prototype, "activate").and.callFake(function () {
+          this._renderer = renderers.shift();
+        });
+        let withoutRenderer = await createElement();
+        expect(() => withoutRenderer.destroy()).not.toThrow();
+
+        let withoutExtension = await createElement();
+        expect(() => withoutExtension.destroy()).not.toThrow();
       });
     });
 
@@ -618,6 +980,46 @@ describe("TerminalElement", () => {
       expect(element.isPtyProcessRunning()).toBe(false);
       await promise;
       expect(element.isPtyProcessRunning()).toBe(true);
+    });
+
+    it("coalesces concurrent restarts", async () => {
+      let resolveCwd;
+      let cwd = new Promise((resolve) => (resolveCwd = resolve));
+      spyOn(element, "getCwd").and.returnValue(cwd);
+
+      let first = element.restartPtyProcess();
+      let second = element.restartPtyProcess();
+      expect(second).toBe(first);
+
+      resolveCwd(tmpdir);
+      await first;
+      expect(element.isPtyProcessRunning()).toBe(true);
+    });
+
+    it("allows retry after a rejected restart", async () => {
+      spyOn(element, "getCwd").and.returnValues(
+        Promise.reject(new Error("cwd failed")),
+        Promise.resolve(tmpdir),
+      );
+
+      await expectAsync(element.restartPtyProcess()).toBeRejectedWithError("cwd failed");
+      await element.restartPtyProcess();
+      expect(element.isPtyProcessRunning()).toBe(true);
+    });
+
+    it("does not launch another worker after destruction during an await", async () => {
+      let resolveCwd;
+      let cwd = new Promise((resolve) => (resolveCwd = resolve));
+      spyOn(element, "getCwd").and.returnValue(cwd);
+      spyOn(Pty.prototype, "launch").and.callThrough();
+
+      let restarting = element.restartPtyProcess();
+      element.destroy();
+      resolveCwd(tmpdir);
+      await restarting;
+
+      expect(Pty.prototype.launch).not.toHaveBeenCalled();
+      expect(element.isPtyProcessRunning()).toBe(false);
     });
 
     // Left unset, node-pty spawns the shell at 80x30. The shell then writes its

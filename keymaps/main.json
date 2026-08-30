@@ -39,6 +39,8 @@
     "cmd-alt-k": "terminal:clear"
   },
   ".platform-win32 terminal-view, .platform-linux terminal-view": {
+    "ctrl-shift-c": "core:copy",
+    "ctrl-shift-v": "core:paste",
     "f3": "terminal:find-next",
     "shift-f3": "terminal:find-previous"
   },
