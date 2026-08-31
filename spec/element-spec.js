@@ -722,15 +722,17 @@ describe("TerminalElement", () => {
   });
 
   describe("clipboard keyboard conventions", () => {
-    it("leaves Ctrl+Shift+C for Lumine's keymap instead of writing a control character", () => {
+    it("leaves the platform copy keystroke for Lumine instead of writing a control character", () => {
       let onKey = jasmine.createSpy("onKey");
       element.terminal.onKey(onKey);
       spyOn(lumine.clipboard, "write");
+      let isDarwin = process.platform === "darwin";
       let event = new KeyboardEvent("keydown", {
-        key: "C",
+        key: isDarwin ? "c" : "C",
         code: "KeyC",
-        ctrlKey: true,
-        shiftKey: true,
+        ctrlKey: !isDarwin,
+        metaKey: isDarwin,
+        shiftKey: !isDarwin,
         bubbles: true,
         cancelable: true,
       });
