@@ -185,20 +185,6 @@ describe("TerminalModel", () => {
     });
   });
 
-  describe("focusTerminal()", () => {
-    it("activates the pane item before focusing the terminal", async () => {
-      const order = [];
-      pane.activateItem.and.callFake(() => order.push("pane"));
-      model.pane = pane;
-      model.element = element;
-      element.focusTerminal.and.callFake(() => order.push("terminal"));
-
-      await model.focusTerminal();
-
-      expect(order).toEqual(["pane", "terminal"]);
-    });
-  });
-
   describe("getLongTitle()", () => {
     it("returns the correct long title when the title is the default", () => {
       expect(model.getLongTitle()).toBe("Terminal");
@@ -327,6 +313,18 @@ describe("TerminalModel", () => {
   });
 
   describe("focusTerminal()", () => {
+    it("activates the pane item before focusing the terminal", async () => {
+      const order = [];
+      pane.activateItem.and.callFake(() => order.push("pane"));
+      model.pane = pane;
+      model.element = element;
+      element.focusTerminal.and.callFake(() => order.push("terminal"));
+
+      await model.focusTerminal();
+
+      expect(order).toEqual(["pane", "terminal"]);
+    });
+
     it("calls through to the element", () => {
       model.element = element;
       model.focusTerminal();

@@ -65,12 +65,7 @@ describe("LocalPathLinkProvider", () => {
 
   it("follows a symlink when deciding that a target is a directory", async () => {
     let linkPath = path.join(fixtureDir, "linked-dir");
-    try {
-      await fs.symlink(dirPath, linkPath, process.platform === "win32" ? "junction" : "dir");
-    } catch (error) {
-      pending(`This platform cannot create directory symlinks: ${error.message}`);
-      return;
-    }
+    await fs.symlink(dirPath, linkPath, process.platform === "win32" ? "junction" : "dir");
     let activate = jasmine.createSpy("activate");
     let provider = new LocalPathLinkProvider(terminal, () => undefined, activate);
     await write(terminal, linkPath);
