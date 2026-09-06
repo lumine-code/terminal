@@ -572,6 +572,7 @@ describe("TerminalElement", () => {
     });
 
     it("repaints when the resolved colors change", () => {
+      spyOn(element, "flushXtermRender").and.callThrough();
       lumine.config.set("terminal.appearance.theme", "Base16 Tomorrow Dark");
       element.updateTheme();
       expect(element.terminal.options.theme.background).toBe("#1d1f21");
@@ -580,6 +581,10 @@ describe("TerminalElement", () => {
       element.updateTheme();
       expect(element.terminal.options.theme.background).toBe("#ffffff");
       expect(element.style.backgroundColor).toBe("rgb(255, 255, 255)");
+      expect(element.flushXtermRender).toHaveBeenCalled();
+      expect(
+        element.terminal._core._renderService._renderDebouncer._animationFrame,
+      ).toBeUndefined();
     });
 
     it("leaves the glyph atlas alone when nothing moved", () => {
