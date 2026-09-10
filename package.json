@@ -50,8 +50,8 @@
     "TerminalModel": "deserializeTerminalModel"
   },
   "dependencies": {
-    "@lumine-code/etch": "github:lumine-code/etch#11134792da8f7e3fc6ba3b23dca680046c162bf8",
-    "@lumine-code/node-pty": "github:lumine-code/node-pty#ebbf6d870be47178ab69c52f496a577f58481e73",
+    "@lumine-code/etch": "github:lumine-code/etch#e2736a828e195b7f4878224c03391244c7404ee6",
+    "@lumine-code/node-pty": "github:lumine-code/node-pty#f23a53bdc9aac16ff4779cda071699aca9146d2a",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-image": "^0.9.0",
     "@xterm/addon-ligatures": "^0.10.0",
@@ -73,7 +73,7 @@
     "prettier": "^3.9.6"
   },
   "allowScripts": {
-    "github:lumine-code/node-pty#ebbf6d870be47178ab69c52f496a577f58481e73": true
+    "github:lumine-code/node-pty#f23a53bdc9aac16ff4779cda071699aca9146d2a": true
   },
   "providedServices": {
     "terminal": {
