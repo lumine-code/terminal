@@ -139,6 +139,11 @@ describe("TerminalModel", () => {
     });
   });
 
+  it("allows every pane container with the center as its default", () => {
+    expect(model.getDefaultLocation()).toBe("center");
+    expect(model.getAllowedLocations()).toEqual(["center", "bottom", "left", "right"]);
+  });
+
   describe("setCwd()", () => {
     it("updates the live cwd and the serialized URI", () => {
       expect(model.setCwd(tmpdir)).toBe(true);
