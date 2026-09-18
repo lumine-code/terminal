@@ -39,6 +39,7 @@
   ],
   "scripts": {
     "test": "lumine --test spec",
+    "test:e2e": "playwright test",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -63,6 +64,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@lumine-code/temp": "github:lumine-code/node-temp#bbd9e24a78e835e7421c8acec360731eafa4d3f6",
+    "@playwright/test": "^1.62.1",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.3.0",
