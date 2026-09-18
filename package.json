@@ -43,9 +43,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "activationHooks": [
-    "core:loaded-shell-environment"
-  ],
   "deserializers": {
     "TerminalModel": "deserializeTerminalModel"
   },
@@ -89,5 +86,44 @@
         "^1.1.0": "consumeMcpBridge"
       }
     }
+  },
+  "activationCommands": {
+    "lumine-workspace": [
+      "terminal:clear",
+      "terminal:close",
+      "terminal:close-all",
+      "terminal:find",
+      "terminal:find-next",
+      "terminal:find-previous",
+      "terminal:focus",
+      "terminal:focus-next",
+      "terminal:focus-previous",
+      "terminal:insert-selected-text",
+      "terminal:next-command",
+      "terminal:open",
+      "terminal:open-bottom-dock",
+      "terminal:open-center",
+      "terminal:open-center-context-menu",
+      "terminal:open-left-dock",
+      "terminal:open-right-dock",
+      "terminal:open-split-bottom-dock-context-menu",
+      "terminal:open-split-down",
+      "terminal:open-split-down-context-menu",
+      "terminal:open-split-left",
+      "terminal:open-split-left-context-menu",
+      "terminal:open-split-left-dock-context-menu",
+      "terminal:open-split-right",
+      "terminal:open-split-right-context-menu",
+      "terminal:open-split-right-dock-context-menu",
+      "terminal:open-split-up",
+      "terminal:open-split-up-context-menu",
+      "terminal:paste-image",
+      "terminal:previous-command",
+      "terminal:restart",
+      "terminal:run-selected-text",
+      "terminal:send-sigint",
+      "terminal:set-selection-as-find-pattern",
+      "terminal:unfocus"
+    ]
   }
 }
