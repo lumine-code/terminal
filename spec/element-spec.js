@@ -638,6 +638,39 @@ describe("TerminalElement", () => {
       expect(lumine.shell.openExternal).toHaveBeenCalledWith(WEB_URI);
     });
 
+    it("opens mailto links through the constrained external shell API", async () => {
+      lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
+      const uri = "mailto:issues@example.com";
+
+      expect(await element.activateLink({}, uri)).toBe(true);
+      expect(lumine.shell.openExternal).toHaveBeenCalledWith(uri);
+    });
+
+    it("warns and rejects unsupported OSC 8 protocols", async () => {
+      lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
+      spyOn(lumine.notifications, "addWarning");
+
+      expect(await element.activateLink({}, "javascript:alert(1)")).toBe(false);
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      expect(lumine.notifications.addWarning).toHaveBeenCalledWith(
+        "Terminal cannot open this link protocol.",
+        { detail: "javascript:", dismissable: true },
+      );
+    });
+
+    it("warns when the operating system cannot open a web link", async () => {
+      lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
+      const error = new Error("no browser");
+      lumine.shell.openExternal.and.returnValue(Promise.reject(error));
+      spyOn(lumine.notifications, "addWarning");
+
+      expect(await element.activateLink({}, WEB_URI)).toBe(false);
+      expect(lumine.notifications.addWarning).toHaveBeenCalledWith(
+        "Terminal could not open the link.",
+        { detail: error.message, dismissable: true },
+      );
+    });
+
     it("opens a file link in the editor", async () => {
       let filePath = path.join(tmpdir, "linked.txt");
       await fs.writeFile(filePath, "hello");
