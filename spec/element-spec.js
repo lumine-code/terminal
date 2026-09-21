@@ -5,7 +5,7 @@ const TerminalPackage = require("../lib/terminal");
 const { Terminal } = require("@xterm/xterm");
 const { FitAddon } = require("@xterm/addon-fit");
 const { Pty, PtyHost } = require("../lib/pty");
-const { getConfigSchema } = require("../lib/config");
+const { configSchema } = require("../package.json");
 
 const { activatePackage, wait } = require("./helpers");
 
@@ -470,7 +470,7 @@ describe("TerminalElement", () => {
     });
 
     it("deletes process launch variables by default", () => {
-      expect(getConfigSchema().terminal.properties.env.properties.deleteEnv.default).toEqual([
+      expect(configSchema.terminal.properties.env.properties.deleteEnv.default).toEqual([
         "NODE_ENV",
         "NODE_OPTIONS",
         "WINDOW",
@@ -564,7 +564,7 @@ describe("TerminalElement", () => {
 
   describe("updateTheme()", () => {
     it("does not offer the retired Atom presets", () => {
-      const values = getConfigSchema().appearance.properties.theme.enum.map((entry) =>
+      const values = configSchema.appearance.properties.theme.enum.map((entry) =>
         typeof entry === "string" ? entry : entry.value,
       );
       expect(values).not.toContain("Atom Dark");

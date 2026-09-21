@@ -3,9 +3,8 @@ const path = require("path");
 async function activatePackage() {
   addToPackagePaths();
   let promise = lumine.packages.activatePackage("terminal");
-  lumine.packages.triggerActivationHook("core:loaded-shell-environment");
-  lumine.packages.triggerDeferredActivationHooks();
-  await promise;
+  lumine.hooks.trigger("core:loaded-shell-environment");
+  return promise;
 }
 
 function addToPackagePaths() {

@@ -40,11 +40,11 @@ Commands available in `lumine-workspace`:
 - `terminal:focus-previous`: focus the previous terminal,
 - `terminal:run-selected-text`: run the editor's selected text in the active terminal,
 - `terminal:insert-selected-text`: insert the editor's selected text into the active terminal,
-- `terminal:close`: close the active terminal,
 - `terminal:close-all`: close every open terminal.
 
 Commands available in `terminal-view`:
 
+- `terminal:close`: close this terminal,
 - `terminal:find`: open the find palette,
 - `terminal:find-next`: jump to the next find match,
 - `terminal:find-previous`: jump to the previous find match,

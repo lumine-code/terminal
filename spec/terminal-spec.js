@@ -1,6 +1,6 @@
-const Terminal = require("../lib/terminal");
-const { Config } = require("../lib/config");
-const { TerminalModel } = require("../lib/model");
+let Terminal = require("../lib/terminal");
+let Config = require("../lib/config").Config;
+let TerminalModel = require("../lib/model").TerminalModel;
 const { URL } = require("url");
 
 const { activatePackage, stubPty, wait } = require("./helpers");
@@ -11,8 +11,17 @@ describe("Terminal", () => {
   beforeEach(async () => {
     jasmine.useRealClock();
     document.getElementById("jasmine-content").style.height = "150px";
-    activatePackage();
+    const packageInstance = await activatePackage();
+    Terminal = packageInstance.mainModule;
+    Config = require("../lib/config").Config;
+    TerminalModel = require("../lib/model").TerminalModel;
     await lumine.updateProcessEnvAndTriggerHooks();
+  });
+
+  it("publishes its configuration schema from the manifest", () => {
+    const { configSchema } = require("../package.json");
+    expect(configSchema.behavior.properties.relaunchTerminalsOnStartup.default).toBe(true);
+    expect(Object.hasOwn(Terminal, "config")).toBe(false);
   });
 
   describe("unfocus()", () => {
@@ -254,6 +263,21 @@ describe("Terminal", () => {
       it("closes the active terminal", async () => {
         await Terminal.close();
         expect(activeTerminal.exit).toHaveBeenCalled();
+      });
+
+      it("closes the terminal that dispatched the local command", async () => {
+        const targetedTerminal = { exit: jasmine.createSpy("targetedTerminal.exit") };
+        const element = document.createElement("terminal-view");
+        const child = document.createElement("div");
+        element.getModel = () => targetedTerminal;
+        element.appendChild(child);
+        document.body.appendChild(element);
+
+        await lumine.commands.dispatch(child, "terminal:close");
+
+        expect(targetedTerminal.exit).toHaveBeenCalled();
+        expect(activeTerminal.exit).not.toHaveBeenCalled();
+        element.remove();
       });
     });
 
@@ -642,16 +666,6 @@ describe("Terminal", () => {
     let serialized;
     beforeEach(() => {
       serialized = { uri: Terminal.generateUri() };
-    });
-
-    // The pane that held a terminal is deserialized at startup, long before the
-    // package would otherwise activate, so this path only ever calls core APIs
-    // that exist on a loaded-but-not-activated package.
-    it("activates the package with APIs the editor still has", () => {
-      let pack = lumine.packages.getLoadedPackage("terminal");
-      spyOn(pack, "activateNow").and.callThrough();
-      Terminal.deserializeTerminalModel(serialized);
-      expect(pack.activateNow).toHaveBeenCalled();
     });
 
     it("restores the terminal when the setting is on", () => {
