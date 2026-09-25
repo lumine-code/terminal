@@ -33,10 +33,6 @@
     "lumine": "^1.0.0",
     "node": ">=24"
   },
-  "backgroundTips": [
-    "You can open a terminal beside your code with {{ 'terminal:open' | keystroke }}",
-    "You can run the selected text in a terminal with {{ 'terminal:run-selected-text' | keystroke }}"
-  ],
   "scripts": {
     "test": "lumine --test spec",
     "test:e2e": "playwright test",
@@ -46,6 +42,19 @@
   },
   "deserializers": {
     "TerminalModel": "deserializeTerminalModel"
+  },
+  "providedServices": {
+    "terminal": {
+      "description": "Run commands and open terminals.",
+      "versions": {
+        "1.0.0": "provideTerminal"
+      }
+    },
+    "background-tips.provider": {
+      "versions": {
+        "1.0.0": "provideBackgroundTips"
+      }
+    }
   },
   "dependencies": {
     "@lumine-code/etch": "github:lumine-code/etch#e2736a828e195b7f4878224c03391244c7404ee6",
@@ -73,14 +82,6 @@
   },
   "allowScripts": {
     "github:lumine-code/node-pty#f23a53bdc9aac16ff4779cda071699aca9146d2a": true
-  },
-  "providedServices": {
-    "terminal": {
-      "description": "Run commands and open terminals.",
-      "versions": {
-        "1.0.0": "provideTerminal"
-      }
-    }
   },
   "consumedServices": {
     "mcp.bridge": {
