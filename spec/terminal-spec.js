@@ -24,6 +24,27 @@ describe("Terminal", () => {
     expect(Object.hasOwn(Terminal, "config")).toBe(false);
   });
 
+  describe("package lifecycle", () => {
+    it("does not read active-terminal configuration while the terminal set is empty", async () => {
+      await lumine.packages.deactivatePackage("terminal");
+      spyOn(lumine.config, "get").and.callThrough();
+
+      const packageInstance = await activatePackage();
+      Terminal = packageInstance.mainModule;
+
+      const readKeys = lumine.config.get.calls.allArgs().map(([key]) => key);
+      expect(readKeys).not.toContain("terminal.behavior.activeTerminalLogic");
+    });
+
+    it("marks the module inactive during teardown", async () => {
+      expect(Terminal.activated).toBe(true);
+
+      await lumine.packages.deactivatePackage("terminal");
+
+      expect(Terminal.activated).toBe(false);
+    });
+  });
+
   describe("unfocus()", () => {
     let workspaceElement;
 
