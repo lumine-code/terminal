@@ -66,19 +66,19 @@
     "@xterm/addon-web-links": "^0.12.0",
     "@xterm/addon-webgl": "^0.19.0",
     "@xterm/xterm": "^6.0.0",
-    "fs-extra": "^11.4.0",
+    "fs-extra": "^11.4.1",
     "ndjson": "^2.0.0",
     "which": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@lumine-code/temp": "github:lumine-code/node-temp#bbd9e24a78e835e7421c8acec360731eafa4d3f6",
-    "@playwright/test": "^1.62.1",
-    "eslint": "^10.9.1",
+    "@playwright/test": "^1.63.0",
+    "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-n": "^18.3.0",
-    "globals": "^17.11.0",
-    "prettier": "^3.9.6"
+    "eslint-plugin-n": "^18.4.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9"
   },
   "allowScripts": {
     "github:lumine-code/node-pty#f23a53bdc9aac16ff4779cda071699aca9146d2a": true
