@@ -57,8 +57,8 @@
     }
   },
   "dependencies": {
-    "@lumine-code/etch": "github:lumine-code/etch#e2736a828e195b7f4878224c03391244c7404ee6",
-    "@lumine-code/node-pty": "github:lumine-code/node-pty#f23a53bdc9aac16ff4779cda071699aca9146d2a",
+    "@lumine-code/etch": "github:lumine-code/etch#27015c2cc9cfe68f8f036923badaaee86ffd08e9",
+    "@lumine-code/node-pty": "github:lumine-code/node-pty#0e23fccf66d17eede25e6061c5a8cf24d91a9a25",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-image": "^0.9.0",
     "@xterm/addon-ligatures": "^0.10.0",
@@ -72,7 +72,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@lumine-code/temp": "github:lumine-code/node-temp#bbd9e24a78e835e7421c8acec360731eafa4d3f6",
+    "@lumine-code/temp": "github:lumine-code/node-temp#d952dc119d4dda6918a37c414302e6eb1dc9789d",
     "@playwright/test": "^1.63.0",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
@@ -81,7 +81,7 @@
     "prettier": "^3.9.9"
   },
   "allowScripts": {
-    "github:lumine-code/node-pty#f23a53bdc9aac16ff4779cda071699aca9146d2a": true
+    "github:lumine-code/node-pty#0e23fccf66d17eede25e6061c5a8cf24d91a9a25": true
   },
   "consumedServices": {
     "mcp.bridge": {
