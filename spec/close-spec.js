@@ -1,6 +1,6 @@
 const { activatePackage, stubPty, wait } = require("./helpers");
 
-describe("closing a focused terminal", () => {
+describe("closing from a focused terminal", () => {
   let terminalPackage, terminal, centerEditor;
 
   beforeEach(async () => {
@@ -12,17 +12,8 @@ describe("closing a focused terminal", () => {
     await lumine.updateProcessEnvAndTriggerHooks();
     jasmine.attachToDOM(lumine.workspace.getElement());
     stubPty();
-    const { Terminal } = require("@xterm/xterm");
-    spyOn(Terminal.prototype, "attachCustomKeyEventHandler").and.callThrough();
+    spyOn(HTMLTextAreaElement.prototype, "addEventListener").and.callThrough();
     centerEditor = await lumine.workspace.open();
-    terminal = await terminalPackage.openInCenterOrDock(lumine.workspace.getRightDock());
-    await terminal.ready();
-    await terminal.element.createTerminal();
-    await wait(0);
-    if (!terminal.element.closest("lumine-dock.right")) {
-      throw new Error("The terminal view must be mounted in its right dock before dispatching");
-    }
-    spyOn(lumine.workspace, "closeActivePaneItemOrEmptyPaneOrWindow");
   });
 
   afterEach(async () => {
@@ -30,8 +21,15 @@ describe("closing a focused terminal", () => {
     if (remainingPane) await remainingPane.destroyItem(terminal);
   });
 
-  function closeKeystroke(target) {
-    const isDarwin = process.platform === "darwin";
+  async function openTerminal(container) {
+    terminal = await terminalPackage.openInCenterOrDock(container);
+    await terminal.ready();
+    await terminal.element.createTerminal();
+    await wait(0);
+  }
+
+  function closeKeystroke(target, { shell = false } = {}) {
+    const isDarwin = !shell && process.platform === "darwin";
     const event = new KeyboardEvent("keydown", {
       key: "w",
       code: "KeyW",
@@ -48,28 +46,72 @@ describe("closing a focused terminal", () => {
     return event;
   }
 
-  it("closes the terminal tab without sending a control character to the shell", async () => {
-    // Tab closing stays available even after the user's optional command
-    // priority list has been cleared.
-    lumine.config.set("terminal.behavior.prioritizedCommands", []);
-    const { Terminal } = require("@xterm/xterm");
-    const keyboardHandler =
-      Terminal.prototype.attachCustomKeyEventHandler.calls.mostRecent().args[0];
+  function deliverToXterm(event) {
+    // Invoke xterm's registered DOM handler directly because the test window
+    // captures native Ctrl+W to exit before it can reach the textarea.
+    const listener = HTMLTextAreaElement.prototype.addEventListener.calls
+      .all()
+      .find((call) => call.object === event.target && call.args[0] === "keydown").args[1];
+    return listener(event);
+  }
 
+  it("delivers Ctrl+W to the shell when its terminal is in a dock", async () => {
+    await openTerminal(lumine.workspace.getRightDock());
+    const textarea = terminal.element.terminal.textarea;
+    const onData = jasmine.createSpy("onData");
+    terminal.element.terminal.onData(onData);
+    const event = closeKeystroke(textarea, { shell: true });
+    deliverToXterm(event);
+
+    expect(onData).toHaveBeenCalledWith("\x17");
+    expect(lumine.workspace.paneForItem(terminal)).toBeDefined();
+    expect(centerEditor.isDestroyed()).toBe(false);
+  });
+
+  it("closes the terminal when it is an editor tab in the center", async () => {
+    await openTerminal(lumine.workspace.getCenter());
+    lumine.config.set("terminal.behavior.prioritizedCommands", []);
     const event = closeKeystroke(terminal.element.terminal.textarea);
-    expect(keyboardHandler(event)).toBe(false);
-    // The spec window reserves native Ctrl+W for exiting the runner, so send
-    // the accepted event straight to the editor's keymap manager.
+    const onData = jasmine.createSpy("onData");
+    terminal.element.terminal.onData(onData);
+    expect(deliverToXterm(event)).toBe(false);
+    expect(onData).not.toHaveBeenCalled();
+
     lumine.keymaps.handleKeyboardEvent(event);
     await wait(0);
 
     expect(event.defaultPrevented).toBe(true);
-    expect(lumine.workspace.closeActivePaneItemOrEmptyPaneOrWindow).not.toHaveBeenCalled();
     expect(lumine.workspace.paneForItem(terminal)).toBeUndefined();
     expect(centerEditor.isDestroyed()).toBe(false);
   });
 
-  it("closes its owning tab when the terminal search field has focus", async () => {
+  it("uses the terminal's current container after moving its tab", async () => {
+    await openTerminal(lumine.workspace.getRightDock());
+    const pane = lumine.workspace.paneForItem(terminal);
+    const centerPane = lumine.workspace.getCenter().getActivePane();
+    const event = closeKeystroke(terminal.element.terminal.textarea);
+    const onData = jasmine.createSpy("onData");
+    terminal.element.terminal.onData(onData);
+    deliverToXterm(event);
+    if (process.platform !== "darwin") expect(onData).toHaveBeenCalledWith("\x17");
+    onData.calls.reset();
+
+    pane.moveItemToPane(terminal, centerPane);
+    centerPane.activateItem(terminal);
+    await wait(0);
+    expect(deliverToXterm(event)).toBe(false);
+    expect(onData).not.toHaveBeenCalled();
+
+    const dockPane = lumine.workspace.getRightDock().getActivePane();
+    centerPane.moveItemToPane(terminal, dockPane);
+    dockPane.activateItem(terminal);
+    await wait(0);
+    deliverToXterm(event);
+    if (process.platform !== "darwin") expect(onData).toHaveBeenCalledWith("\x17");
+  });
+
+  it("closes the center editor from the dock terminal's search field", async () => {
+    await openTerminal(lumine.workspace.getRightDock());
     await terminal.element.findPalette.show();
     const searchEditor = terminal.element.findPalette.refs.search.getElement();
     expect(searchEditor.hasAttribute("mini")).toBe(true);
@@ -77,8 +119,7 @@ describe("closing a focused terminal", () => {
     lumine.keymaps.handleKeyboardEvent(closeKeystroke(searchEditor));
     await wait(0);
 
-    expect(lumine.workspace.closeActivePaneItemOrEmptyPaneOrWindow).not.toHaveBeenCalled();
-    expect(lumine.workspace.paneForItem(terminal)).toBeUndefined();
-    expect(centerEditor.isDestroyed()).toBe(false);
+    expect(lumine.workspace.paneForItem(terminal)).toBeDefined();
+    expect(centerEditor.isDestroyed()).toBe(true);
   });
 });
