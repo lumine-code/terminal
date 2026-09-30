@@ -9,6 +9,7 @@ describe("closing from a focused terminal", () => {
     lumine.keymaps.loadBundledKeymaps();
     const packageInstance = await activatePackage();
     terminalPackage = packageInstance.mainModule;
+    lumine.config.unset("terminal.behavior.prioritizedCommands");
     await lumine.updateProcessEnvAndTriggerHooks();
     jasmine.attachToDOM(lumine.workspace.getElement());
     stubPty();
@@ -85,6 +86,22 @@ describe("closing from a focused terminal", () => {
     expect(centerEditor.isDestroyed()).toBe(false);
   });
 
+  it("honors an explicit priority override for the editor close command in a dock", async () => {
+    await openTerminal(lumine.workspace.getRightDock());
+    lumine.config.set("terminal.behavior.prioritizedCommands", ["core:close"]);
+    const event = closeKeystroke(terminal.element.terminal.textarea);
+    const onData = jasmine.createSpy("onData");
+    terminal.element.terminal.onData(onData);
+
+    expect(deliverToXterm(event)).toBe(false);
+    expect(onData).not.toHaveBeenCalled();
+    lumine.keymaps.handleKeyboardEvent(event);
+    await wait(0);
+
+    expect(lumine.workspace.paneForItem(terminal)).toBeDefined();
+    expect(centerEditor.isDestroyed()).toBe(true);
+  });
+
   it("uses the terminal's current container after moving its tab", async () => {
     await openTerminal(lumine.workspace.getRightDock());
     const pane = lumine.workspace.paneForItem(terminal);
@@ -99,6 +116,7 @@ describe("closing from a focused terminal", () => {
     pane.moveItemToPane(terminal, centerPane);
     centerPane.activateItem(terminal);
     await wait(0);
+    onData.calls.reset();
     expect(deliverToXterm(event)).toBe(false);
     expect(onData).not.toHaveBeenCalled();
 
