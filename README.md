@@ -75,7 +75,7 @@ That is how you hand a screenshot to a command-line program, including the codin
 
 The terminal automatically integrates with bash, zsh, fish and PowerShell when their configured startup arguments can be preserved safely. It tracks the current working directory after `cd`, carries that directory into restarts and copied terminals, marks each command's prompt in the left gutter — tinted red when the command exited non-zero — and enables navigation with `terminal:previous-command` and `terminal:next-command`. Unsupported shells or custom startup arguments fall back to the unmodified shell, and externally configured OSC 133 or OSC 633 integration remains recognized.
 
-Local path detection recognizes absolute and relative paths in output, resolves relative paths against the live working directory, and understands common `path:line:column` forms. Files open in Lumine by default while directories open in the system file manager; both detection and opening behavior can be changed in the package settings.
+Local path detection recognizes absolute and relative paths in output, resolves relative paths against the live working directory, and understands common `path:line:column` forms. Files open in Lumine by default while directories open in the system file manager; both detection and opening behavior can be changed in the package settings. Opening directories and revealing files use the `open-external` service when available, honoring its registered handlers, and fall back to the system otherwise.
 
 ## Customization
 
@@ -92,6 +92,8 @@ The terminal treats CSS custom properties on `:root` as the source of truth for 
 ## Services
 
 - [`terminal`](docs/terminal.md): provided to let other packages open terminals and run commands in them.
+- `open-external`: consumed to open directories and reveal files through registered external handlers.
+- `mcp.bridge`: consumed to pass this window's bridge address to terminal processes.
 
 ## Contributing
 

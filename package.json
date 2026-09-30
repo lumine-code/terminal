@@ -84,6 +84,11 @@
     "github:lumine-code/node-pty#0e23fccf66d17eede25e6061c5a8cf24d91a9a25": true
   },
   "consumedServices": {
+    "open-external": {
+      "versions": {
+        "^1.0.0": "consumeOpenExternal"
+      }
+    },
     "mcp.bridge": {
       "versions": {
         "^1.1.0": "consumeMcpBridge"

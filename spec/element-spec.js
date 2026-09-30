@@ -772,6 +772,89 @@ describe("TerminalElement", () => {
     });
   });
 
+  describe("links with the open-external service", () => {
+    let service, serviceDisposable;
+
+    beforeEach(() => {
+      service = jasmine.createSpyObj("open-external", ["openExternal", "showInFolder"]);
+      service.openExternal.and.returnValue(Promise.resolve(""));
+      service.showInFolder.and.returnValue(Promise.resolve(""));
+      serviceDisposable = TerminalPackage.consumeOpenExternal(service);
+      spyOn(lumine.workspace, "open");
+    });
+
+    afterEach(() => serviceDisposable.dispose());
+
+    it("opens detected directories through registered external handlers", async () => {
+      expect(await element.activateLocalPathLink({ altKey: true, button: 0 }, tmpdir, true)).toBe(
+        true,
+      );
+      expect(service.openExternal).toHaveBeenCalledOnceWith(tmpdir);
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("routes OSC 8 directory links through the same external handlers", async () => {
+      const { pathToFileURL } = require("url");
+
+      await element.activateLink({ altKey: true, button: 0 }, pathToFileURL(tmpdir).href);
+
+      expect(service.openExternal).toHaveBeenCalledOnceWith(tmpdir);
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
+    });
+
+    it("reveals files through registered handlers in all-external mode", async () => {
+      lumine.config.set("terminal.behavior.localPathBehavior", "all-external");
+      const filePath = path.join(tmpdir, "diagnostic.js");
+
+      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false, 12, 4);
+
+      expect(service.showInFolder).toHaveBeenCalledOnceWith(filePath);
+      expect(service.openExternal).not.toHaveBeenCalled();
+      expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("uses the system fallback after the service is withdrawn", async () => {
+      serviceDisposable.dispose();
+      lumine.config.set("terminal.behavior.localPathBehavior", "all-external");
+      const filePath = path.join(tmpdir, "diagnostic.js");
+
+      await element.activateLocalPathLink({ altKey: true, button: 0 }, tmpdir, true);
+      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false);
+
+      expect(lumine.shell.openPath).toHaveBeenCalledOnceWith(tmpdir);
+      expect(lumine.shell.showItemInFolder).toHaveBeenCalledOnceWith(filePath);
+      expect(service.openExternal).not.toHaveBeenCalled();
+      expect(service.showInFolder).not.toHaveBeenCalled();
+    });
+
+    it("keeps editor navigation and web links independent of external path handlers", async () => {
+      const filePath = path.join(tmpdir, "diagnostic.js");
+      const webUri = "https://example.com/";
+
+      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false, 12, 4);
+      await element.activateLink({ altKey: true, button: 0 }, webUri);
+
+      expect(lumine.workspace.open).toHaveBeenCalledOnceWith(filePath, {
+        initialLine: 11,
+        initialColumn: 3,
+      });
+      expect(lumine.shell.openExternal).toHaveBeenCalledOnceWith(webUri);
+      expect(service.openExternal).not.toHaveBeenCalled();
+      expect(service.showInFolder).not.toHaveBeenCalled();
+    });
+
+    it("requires Alt and the primary button before calling external handlers", async () => {
+      for (const event of [{ button: 0 }, { altKey: true, button: 2 }]) {
+        expect(await element.activateLocalPathLink(event, tmpdir, true)).toBe(false);
+      }
+
+      expect(service.openExternal).not.toHaveBeenCalled();
+      expect(service.showInFolder).not.toHaveBeenCalled();
+    });
+  });
+
   describe("clipboard keyboard conventions", () => {
     it("leaves the platform copy keystroke for Lumine instead of writing a control character", () => {
       let onKey = jasmine.createSpy("onKey");

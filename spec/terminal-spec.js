@@ -45,6 +45,56 @@ describe("Terminal", () => {
     });
   });
 
+  describe("open-external service", () => {
+    let runtimeState, disposables;
+
+    beforeEach(() => {
+      runtimeState = require("../lib/runtime-state");
+      disposables = [];
+    });
+
+    afterEach(() => {
+      for (const disposable of disposables) disposable.dispose();
+    });
+
+    it("consumes and releases the service through the manifest registration", () => {
+      const service = jasmine.createSpyObj("open-external", ["openExternal", "showInFolder"]);
+      const provider = lumine.packages.serviceHub.provide("open-external", { "1.0.0": service });
+      disposables.push(provider);
+
+      expect(runtimeState.getOpenExternal()).toBe(service);
+
+      provider.dispose();
+
+      expect(runtimeState.getOpenExternal()).toBeNull();
+    });
+
+    it("keeps the replacement service when an older provider is removed", () => {
+      const first = jasmine.createSpyObj("first", ["openExternal", "showInFolder"]);
+      const second = jasmine.createSpyObj("second", ["openExternal", "showInFolder"]);
+      const firstEdge = Terminal.consumeOpenExternal(first);
+      const secondEdge = Terminal.consumeOpenExternal(second);
+      disposables.push(firstEdge, secondEdge);
+
+      firstEdge.dispose();
+
+      expect(runtimeState.getOpenExternal()).toBe(second);
+
+      secondEdge.dispose();
+
+      expect(runtimeState.getOpenExternal()).toBeNull();
+    });
+
+    it("drops the service reference when the package deactivates", async () => {
+      const service = jasmine.createSpyObj("open-external", ["openExternal", "showInFolder"]);
+      disposables.push(Terminal.consumeOpenExternal(service));
+
+      await lumine.packages.deactivatePackage("terminal");
+
+      expect(runtimeState.getOpenExternal()).toBeNull();
+    });
+  });
+
   describe("unfocus()", () => {
     let workspaceElement;
 
