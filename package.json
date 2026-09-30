@@ -167,7 +167,7 @@
         },
         "webLinks": {
           "title": "Web Links",
-          "description": "Enable [clickable web links](https://github.com/xtermjs/xterm.js/tree/master/addons/addon-web-links). (Note the **Require Modifier to Open URLs** setting below.)",
+          "description": "Enable web links that are underlined while Alt is held and opened with Alt and a left-click.",
           "type": "boolean",
           "default": true
         },
@@ -533,12 +533,6 @@
           "type": "boolean",
           "default": false
         },
-        "requireModifierToOpenUrls": {
-          "title": "Require Modifier to Open URLs",
-          "description": "When enabled, you must hold down `Cmd` or `Ctrl` while clicking on a URL or local path in order to open it.",
-          "type": "boolean",
-          "default": true
-        },
         "localPathBehavior": {
           "title": "Local Path Behavior",
           "description": "Choose whether detected filesystem paths open in Lumine or externally.",
@@ -583,12 +577,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "warnAboutModifierWhenOpeningUrls": {
-          "title": "Warn About Modifier When Opening URLs",
-          "description": "When enabled _and_ **Require Modifier to Open URLs** is enabled, a user’s initial click on a URL without a modifier key will show a notification explaining why no action was taken. This option is automatically switched to `false` after the first display of this notification.",
-          "type": "boolean",
-          "default": true
         }
       }
     },

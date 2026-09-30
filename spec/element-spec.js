@@ -608,49 +608,58 @@ describe("TerminalElement", () => {
       spyOn(lumine.workspace, "open");
     });
 
-    it("warns and opens nothing when the modifier is not held", async () => {
-      spyOn(element, "optionallyWarnAboutModifierlessClick");
+    it("opens nothing and shows no notification on a plain click", async () => {
+      spyOn(lumine.notifications, "addInfo");
       await element.activateLink({ ctrlKey: false, metaKey: false }, WEB_URI);
-      expect(element.optionallyWarnAboutModifierlessClick).toHaveBeenCalled();
+      expect(lumine.notifications.addInfo).not.toHaveBeenCalled();
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
-    it("requires the meta key on macOS", async () => {
-      Object.defineProperty(process, "platform", { value: "darwin" });
-      await element.activateLink({ ctrlKey: true, metaKey: false }, WEB_URI);
-      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
-      await element.activateLink({ ctrlKey: false, metaKey: true }, WEB_URI);
-      expect(lumine.shell.openExternal).toHaveBeenCalledWith(WEB_URI);
+    for (const platform of ["darwin", "linux", "win32"]) {
+      it(`requires Alt and the primary button on ${platform}`, async () => {
+        Object.defineProperty(process, "platform", { value: platform });
+        for (const event of [
+          { ctrlKey: true, button: 0 },
+          { metaKey: true, button: 0 },
+          { altKey: true, button: 1 },
+          { altKey: true, button: 2 },
+        ]) {
+          expect(await element.activateLink(event, WEB_URI)).toBe(false);
+        }
+        expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+        expect(await element.activateLink({ altKey: true, button: 0 }, WEB_URI)).toBe(true);
+        expect(lumine.shell.openExternal).toHaveBeenCalledOnceWith(WEB_URI);
+      });
+    }
+
+    it("does not declare the obsolete link modifier settings", () => {
+      expect(configSchema.behavior.properties.requireModifierToOpenUrls).toBeUndefined();
+      expect(configSchema.advanced.properties.warnAboutModifierWhenOpeningUrls).toBeUndefined();
     });
 
-    it("requires the ctrl key elsewhere", async () => {
-      Object.defineProperty(process, "platform", { value: "linux" });
-      await element.activateLink({ ctrlKey: false, metaKey: true }, WEB_URI);
-      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
-      await element.activateLink({ ctrlKey: true, metaKey: false }, WEB_URI);
-      expect(lumine.shell.openExternal).toHaveBeenCalledWith(WEB_URI);
-    });
-
-    it("opens on a plain click when the modifier requirement is disabled", async () => {
+    it("ignores saved settings that previously allowed plain clicks", async () => {
       lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
-      await element.activateLink({ ctrlKey: false, metaKey: false }, WEB_URI);
-      expect(lumine.shell.openExternal).toHaveBeenCalledWith(WEB_URI);
+      lumine.config.set("terminal.advanced.warnAboutModifierWhenOpeningUrls", false);
+      expect(await element.activateLink({ button: 0 }, WEB_URI)).toBe(false);
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      expect(await element.activateLink({ altKey: true, button: 0 }, WEB_URI)).toBe(true);
+      expect(lumine.shell.openExternal).toHaveBeenCalledOnceWith(WEB_URI);
     });
 
     it("opens mailto links through the constrained external shell API", async () => {
-      lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
       const uri = "mailto:issues@example.com";
 
-      expect(await element.activateLink({}, uri)).toBe(true);
+      expect(await element.activateLink({ altKey: true, button: 0 }, uri)).toBe(true);
       expect(lumine.shell.openExternal).toHaveBeenCalledWith(uri);
     });
 
     it("warns and rejects unsupported OSC 8 protocols", async () => {
-      lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
       spyOn(lumine.notifications, "addWarning");
 
-      expect(await element.activateLink({}, "javascript:alert(1)")).toBe(false);
+      expect(await element.activateLink({ altKey: true, button: 0 }, "javascript:alert(1)")).toBe(
+        false,
+      );
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
       expect(lumine.notifications.addWarning).toHaveBeenCalledWith(
         "Terminal cannot open this link protocol.",
@@ -659,12 +668,11 @@ describe("TerminalElement", () => {
     });
 
     it("warns when the operating system cannot open a web link", async () => {
-      lumine.config.set("terminal.behavior.requireModifierToOpenUrls", false);
       const error = new Error("no browser");
       lumine.shell.openExternal.and.returnValue(Promise.reject(error));
       spyOn(lumine.notifications, "addWarning");
 
-      expect(await element.activateLink({}, WEB_URI)).toBe(false);
+      expect(await element.activateLink({ altKey: true, button: 0 }, WEB_URI)).toBe(false);
       expect(lumine.notifications.addWarning).toHaveBeenCalledWith(
         "Terminal could not open the link.",
         { detail: error.message, dismissable: true },
@@ -675,14 +683,14 @@ describe("TerminalElement", () => {
       let filePath = path.join(tmpdir, "linked.txt");
       await fs.writeFile(filePath, "hello");
       let uri = pathToFileURL(filePath).href;
-      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      await element.activateLink({ altKey: true, button: 0 }, uri);
       expect(lumine.workspace.open).toHaveBeenCalledWith(fileURLToPath(uri));
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
     });
 
     it("opens a directory link in the system file explorer", async () => {
       let uri = pathToFileURL(tmpdir).href;
-      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      await element.activateLink({ altKey: true, button: 0 }, uri);
       expect(lumine.shell.openPath).toHaveBeenCalledWith(tmpdir);
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
@@ -696,14 +704,14 @@ describe("TerminalElement", () => {
       await fs.mkdir(target);
       await fs.symlink(target, link, "junction");
       let uri = pathToFileURL(link).href;
-      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      await element.activateLink({ altKey: true, button: 0 }, uri);
       expect(lumine.shell.openPath).toHaveBeenCalledWith(link);
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
     it("ignores a file link whose path does not exist", async () => {
       let uri = pathToFileURL(path.join(tmpdir, "no-such-file.txt")).href;
-      await element.activateLink({ ctrlKey: true, metaKey: true }, uri);
+      await element.activateLink({ altKey: true, button: 0 }, uri);
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
@@ -714,7 +722,7 @@ describe("TerminalElement", () => {
       // URI (`file://host/…`) is a valid UNC path on Windows, and a pathless
       // one normalizes to the root directory everywhere but Windows, where
       // there is no drive letter to resolve it against.
-      await element.activateLink({ ctrlKey: true, metaKey: true }, "file:///a%2Fb");
+      await element.activateLink({ altKey: true, button: 0 }, "file:///a%2Fb");
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
@@ -723,7 +731,7 @@ describe("TerminalElement", () => {
       let handler = element.terminal.options.linkHandler;
       expect(handler.allowNonHttpProtocols).toBe(true);
       spyOn(element, "activateLink");
-      let event = { ctrlKey: true, metaKey: true };
+      let event = { altKey: true, button: 0 };
       handler.activate(event, WEB_URI, {});
       expect(element.activateLink).toHaveBeenCalledWith(event, WEB_URI);
     });
@@ -734,7 +742,7 @@ describe("TerminalElement", () => {
 
     it("opens files in Lumine at a one-based line and column by default", async () => {
       let filePath = path.join(tmpdir, "diagnostic.js");
-      await element.activateLocalPathLink({ ctrlKey: true, metaKey: true }, filePath, false, 12, 4);
+      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false, 12, 4);
       expect(lumine.workspace.open).toHaveBeenCalledWith(filePath, {
         initialLine: 11,
         initialColumn: 3,
@@ -744,16 +752,21 @@ describe("TerminalElement", () => {
     it("reveals files externally when configured", async () => {
       lumine.config.set("terminal.behavior.localPathBehavior", "all-external");
       let filePath = path.join(tmpdir, "diagnostic.js");
-      await element.activateLocalPathLink({ ctrlKey: true, metaKey: true }, filePath, false);
+      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false);
       expect(lumine.shell.showItemInFolder).toHaveBeenCalledWith(filePath);
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
-    it("uses the same modifier guard as web and OSC 8 links", async () => {
+    it("uses the same Alt guard as web and OSC 8 links", async () => {
       let filePath = path.join(tmpdir, "diagnostic.js");
-      spyOn(element, "optionallyWarnAboutModifierlessClick");
-      await element.activateLocalPathLink({ ctrlKey: false, metaKey: false }, filePath, false);
-      expect(element.optionallyWarnAboutModifierlessClick).toHaveBeenCalled();
+      for (const event of [
+        { button: 0 },
+        { ctrlKey: true, button: 0 },
+        { metaKey: true, button: 0 },
+        { altKey: true, button: 2 },
+      ]) {
+        expect(await element.activateLocalPathLink(event, filePath, false)).toBe(false);
+      }
       expect(lumine.workspace.open).not.toHaveBeenCalled();
       expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
     });
