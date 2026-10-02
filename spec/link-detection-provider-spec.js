@@ -1,6 +1,6 @@
 const os = require("os");
 const path = require("path");
-const fs = require("fs-extra");
+const fs = require("node:fs");
 const { pathToFileURL } = require("url");
 
 const { Terminal } = require("@xterm/xterm");
@@ -25,20 +25,20 @@ describe("LocalPathLinkProvider", () => {
     jasmine.useRealClock();
     terminal = new Terminal({ allowProposedApi: true, cols: 200 });
 
-    fixtureDir = await fs.mkdtemp(
+    fixtureDir = await fs.promises.mkdtemp(
       path.join(fs.realpathSync(os.tmpdir()), "terminal-link-detection-"),
     );
     filePath = path.join(fixtureDir, "notes.txt");
     dirPath = path.join(fixtureDir, "subdir");
     spacedFilePath = path.join(fixtureDir, "a file with spaces.txt");
-    await fs.writeFile(filePath, "hello");
-    await fs.mkdir(dirPath);
-    await fs.writeFile(spacedFilePath, "hello");
+    await fs.promises.writeFile(filePath, "hello");
+    await fs.promises.mkdir(dirPath);
+    await fs.promises.writeFile(spacedFilePath, "hello");
   });
 
   afterEach(async () => {
     terminal.dispose();
-    await fs.remove(fixtureDir);
+    await fs.promises.rm(fixtureDir, { recursive: true, force: true });
   });
 
   it("resolves an absolute path to an existing file", async () => {
@@ -65,7 +65,7 @@ describe("LocalPathLinkProvider", () => {
 
   it("follows a symlink when deciding that a target is a directory", async () => {
     let linkPath = path.join(fixtureDir, "linked-dir");
-    await fs.symlink(dirPath, linkPath, process.platform === "win32" ? "junction" : "dir");
+    await fs.promises.symlink(dirPath, linkPath, process.platform === "win32" ? "junction" : "dir");
     let activate = jasmine.createSpy("activate");
     let provider = new LocalPathLinkProvider(terminal, () => undefined, activate);
     await write(terminal, linkPath);
@@ -173,7 +173,7 @@ describe("LocalPathLinkProvider", () => {
 
   it("prefers a full spaced diagnostic path over an existing shorter prefix", async () => {
     let prefixPath = path.join(fixtureDir, "a");
-    await fs.writeFile(prefixPath, "short");
+    await fs.promises.writeFile(prefixPath, "short");
     let diagnosticPath = path.join(fixtureDir, "a file with spaces.txt");
     let provider = new LocalPathLinkProvider(
       terminal,

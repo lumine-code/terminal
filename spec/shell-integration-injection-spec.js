@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("node:fs/promises");
 const path = require("path");
 const { getShellIntegrationInjection } = require("../lib/shell-integration");
 const utils = require("../lib/utils");
@@ -12,7 +12,8 @@ describe("getShellIntegrationInjection", () => {
   });
 
   afterAll(async () => {
-    for (const directory of createdZdotdirs) await fs.remove(directory);
+    for (const directory of createdZdotdirs)
+      await fs.rm(directory, { recursive: true, force: true });
   });
 
   it("declines when disabled or when the shell is unsupported", async () => {
@@ -89,8 +90,20 @@ describe("getShellIntegrationInjection", () => {
     expect(first.injection.env.USER_ZDOTDIR).toBe("/user/dotfiles");
     expect(second.injection.env.USER_ZDOTDIR).toBe("/other");
     createdZdotdirs.add(first.injection.env.ZDOTDIR);
-    for (const name of [".zshrc", ".zprofile", ".zshenv", ".zlogin"]) {
-      expect(await fs.pathExists(path.join(first.injection.env.ZDOTDIR, name))).toBe(true);
+    for (const [sourceName, destinationName] of [
+      ["shell-integration-rc.zsh", ".zshrc"],
+      ["shell-integration-profile.zsh", ".zprofile"],
+      ["shell-integration-env.zsh", ".zshenv"],
+      ["shell-integration-login.zsh", ".zlogin"],
+    ]) {
+      const source = path.join(SCRIPT_ROOT, sourceName);
+      const destination = path.join(first.injection.env.ZDOTDIR, destinationName);
+      expect(await fs.readFile(destination, "utf8")).toBe(await fs.readFile(source, "utf8"));
+      if (process.platform !== "win32") {
+        expect((await fs.stat(destination)).mode & 0o777).toBe(
+          (await fs.stat(source)).mode & 0o777,
+        );
+      }
     }
     if (process.platform !== "win32") {
       expect((await fs.stat(first.injection.env.ZDOTDIR)).mode & 0o777).toBe(0o700);

@@ -601,7 +601,7 @@ describe("TerminalElement", () => {
 
   describe("activateLink()", () => {
     const { pathToFileURL, fileURLToPath } = require("url");
-    const fs = require("fs-extra");
+    const fs = require("node:fs/promises");
     const WEB_URI = "https://example.com/";
 
     beforeEach(() => {

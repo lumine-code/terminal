@@ -1,4 +1,4 @@
-const fs = require("fs-extra");
+const fs = require("node:fs");
 const os = require("os");
 const path = require("path");
 const { Terminal } = require("@xterm/xterm");
@@ -21,8 +21,10 @@ describe("AltLinkController", () => {
 
   beforeEach(async () => {
     jasmine.useRealClock();
-    fixtureDir = await fs.mkdtemp(path.join(fs.realpathSync(os.tmpdir()), "terminal-alt-links-"));
-    await fs.writeFile(path.join(fixtureDir, "notes.txt"), "notes");
+    fixtureDir = await fs.promises.mkdtemp(
+      path.join(fs.realpathSync(os.tmpdir()), "terminal-alt-links-"),
+    );
+    await fs.promises.writeFile(path.join(fixtureDir, "notes.txt"), "notes");
     activate = jasmine.createSpy("activate");
     terminal = new Terminal({
       allowProposedApi: true,
@@ -63,7 +65,7 @@ describe("AltLinkController", () => {
     controller.dispose();
     terminal.dispose();
     container.remove();
-    await fs.remove(fixtureDir);
+    await fs.promises.rm(fixtureDir, { recursive: true, force: true });
   });
 
   function mouse(type, column, row, modifiers = {}) {
