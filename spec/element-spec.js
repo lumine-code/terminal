@@ -10,7 +10,7 @@ const { configSchema } = require("../package.json");
 const { activatePackage, wait } = require("./helpers");
 
 const path = require("path");
-const temp = require("@lumine-code/temp");
+const temp = require("@lumine-code/fs-temp");
 temp.track();
 
 let createdElements = [];
