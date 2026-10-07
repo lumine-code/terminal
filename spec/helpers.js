@@ -1,4 +1,12 @@
 const path = require("path");
+const rendererPtyModules = new WeakMap();
+
+// The native constructor survives a package module-cache teardown. Keep its
+// actual PTY dependencies together so a spec does not spy on a new module
+// generation while the document is still creating elements from the old one.
+function registerRendererPtyModule(Element, ptyModule) {
+  if (!rendererPtyModules.has(Element)) rendererPtyModules.set(Element, ptyModule);
+}
 
 async function activatePackage() {
   addToPackagePaths();
@@ -24,19 +32,29 @@ async function wait(ms) {
 // host left over from an earlier spec is released first, so each spec observes
 // its own.
 function stubPty() {
-  const { Pty, PtyHost } = require("../lib/pty");
+  const Element = customElements.get("terminal-view");
+  const { Pty, PtyHost } = rendererPtyModules.get(Element) || require("../lib/pty");
   PtyHost.releaseShared();
   let makeStream = () => {
+    const listeners = new Map();
     let stream = {
       // `PtyHost.send` refuses to write to a stream that has closed, which is
       // how it declines to talk to a worker that has died.
       writable: true,
-      on: () => stream,
+      on: (name, callback) => {
+        const callbacks = listeners.get(name) || [];
+        callbacks.push(callback);
+        listeners.set(name, callbacks);
+        return stream;
+      },
       once: () => stream,
       pipe: () => stream,
       write: () => {},
       end: () => {},
       removeAllListeners: () => stream,
+      trigger: (name, value) => {
+        for (const callback of listeners.get(name) || []) callback(value);
+      },
     };
     return stream;
   };
@@ -54,6 +72,9 @@ function stubPty() {
   spyOn(PtyHost.prototype, "whenBooted").and.returnValue(Promise.resolve());
   spyOn(Pty.prototype, "ready").and.returnValue(Promise.resolve());
   spyOn(Pty.prototype, "kill").and.returnValue(undefined);
+  // Stubbing whenBooted does not settle the host's underlying timeout promise.
+  // Deliver the real startup signal after its stdout listener is attached.
+  queueMicrotask(() => mockProcess.stdout.trigger("data", { type: "ready", payload: null }));
   return mockProcess;
 }
 
@@ -61,5 +82,6 @@ module.exports = {
   activatePackage,
   addToPackagePaths,
   stubPty,
+  registerRendererPtyModule,
   wait,
 };

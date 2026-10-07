@@ -7,7 +7,8 @@ const { FitAddon } = require("@xterm/addon-fit");
 const { Pty, PtyHost } = require("../lib/pty");
 const { configSchema } = require("../package.json");
 
-const { activatePackage, wait } = require("./helpers");
+const { activatePackage, wait, registerRendererPtyModule } = require("./helpers");
+registerRendererPtyModule(TerminalElement, { Pty, PtyHost });
 
 const path = require("path");
 const temp = require("@lumine-code/fs-temp");

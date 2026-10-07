@@ -12,7 +12,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Editor integration**: runs or inserts the editor's selected text in the active terminal.
 - **Clickable links**: hold Alt to underline URLs, OSC 8 links and detected filesystem paths, then left-click to open them, including compiler-style line and column suffixes.
 - **Find**: searches the scrollback with an in-terminal find palette.
-- **Theming**: derives its colors from the active UI theme, or from explicit color settings.
+- **Theming**: derives its canvas colors from the active syntax theme, with package-specific CSS overrides and explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
 - **Inline images**: draws images written with SIXEL or iTerm's inline image protocol in place.
 - **Image paste**: hands a clipboard image to whichever package saves it and writes its path back.
