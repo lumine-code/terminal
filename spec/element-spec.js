@@ -308,10 +308,11 @@ describe("TerminalElement", () => {
 
     it("disposes a partially-created xterm and allows retry after a late rejection", async () => {
       let candidate = await createUnstartedElement();
-      spyOn(candidate, "getEnvForLaunch").and.returnValues(
-        Promise.reject(new Error("environment launch failed")),
-        Promise.resolve(candidate.getEnv()),
-      );
+      let attempts = 0;
+      spyOn(candidate, "getEnvForLaunch").and.callFake(async () => {
+        if (attempts++ === 0) throw new Error("environment launch failed");
+        return candidate.getEnv();
+      });
 
       await expectAsync(candidate.createTerminal()).toBeRejectedWithError(
         "environment launch failed",

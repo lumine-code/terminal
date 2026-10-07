@@ -18,6 +18,7 @@ function write(terminal, text) {
 
 describe("AltLinkController", () => {
   let terminal, container, controller, fixtureDir, providers, originalMethods, links, activate;
+  let hoveredLink;
 
   beforeEach(async () => {
     jasmine.useRealClock();
@@ -37,14 +38,29 @@ describe("AltLinkController", () => {
     terminal.registerLinkProvider(new LocalPathLinkProvider(terminal, () => fixtureDir, activate));
     providers = getLinkProviders(terminal);
     links = new Map();
+    hoveredLink = undefined;
     // Record the public ILink objects received by Linkifier, before wrapping
     // providers. The controller and xterm receive exactly these same objects.
     for (const [index, provider] of providers.entries()) {
       const original = provider.provideLinks;
       provider.provideLinks = function (line, callback) {
         return original.call(this, line, (reply) => {
+          if (reply?.length) {
+            links.set(index, reply);
+            for (const link of reply) {
+              const hover = link.hover;
+              const leave = link.leave;
+              link.hover = function (...args) {
+                hoveredLink = this;
+                return hover?.apply(this, args);
+              };
+              link.leave = function (...args) {
+                if (hoveredLink === this) hoveredLink = undefined;
+                return leave?.apply(this, args);
+              };
+            }
+          }
           callback(reply);
-          if (reply?.length) links.set(index, reply);
         });
       };
     }
@@ -54,11 +70,17 @@ describe("AltLinkController", () => {
     document.getElementById("jasmine-content").appendChild(container);
     controller = new AltLinkController(terminal, container);
     terminal.open(container);
+    const rendered = new Promise((resolve) => {
+      const subscription = terminal.onRender(() => {
+        subscription.dispose();
+        resolve();
+      });
+    });
     await write(
       terminal,
       `${WEB_URI}    plain\r\n\x1b]8;;${WEB_URI}\x07OSC link\x1b]8;;\x07    plain\r\n./notes.txt    plain`,
     );
-    await wait(30);
+    await rendered;
   });
 
   afterEach(async () => {
@@ -94,6 +116,14 @@ describe("AltLinkController", () => {
       .classList.contains("xterm-cursor-pointer");
   }
 
+  async function waitForHover(providerIndex) {
+    const deadline = Date.now() + 2000;
+    while (!hoveredLink || hoveredLink !== links.get(providerIndex)?.[0]) {
+      if (Date.now() >= deadline) throw new Error(`Provider ${providerIndex} did not hover`);
+      await wait(0);
+    }
+  }
+
   function expectDecorations(link, visible) {
     expect(link.decorations.underline).toBe(visible);
     expect(link.decorations.pointerCursor).toBe(visible);
@@ -124,7 +154,7 @@ describe("AltLinkController", () => {
   ]) {
     it(`updates the stationary ${name} link immediately on Alt press, release and press again`, async () => {
       mouse("mousemove", 2, row);
-      await wait(30);
+      await waitForHover(providerIndex);
       const link = links.get(providerIndex)?.[0];
       expect(link).toBeDefined();
       expectDecorations(link, false);
@@ -140,7 +170,7 @@ describe("AltLinkController", () => {
       const data = jasmine.createSpy("data");
       terminal.onData(data);
       mouse("mousemove", 2, row, { altKey: true });
-      await wait(30);
+      await waitForHover(providerIndex);
       mouse("mousedown", 2, row, { altKey: true });
       expect(terminal.options.altClickMovesCursor).toBe(false);
       mouse("mouseup", 2, row, { altKey: true });
@@ -153,7 +183,7 @@ describe("AltLinkController", () => {
     it(`keeps ordinary and Ctrl/Cmd clicks on the ${name} inactive`, async () => {
       for (const modifiers of [{}, { ctrlKey: true }, { metaKey: true }]) {
         mouse("mousemove", 2, row, modifiers);
-        await wait(30);
+        await waitForHover(providerIndex);
         expectDecorations(links.get(providerIndex)[0], false);
         mouse("mousedown", 2, row, modifiers);
         mouse("mouseup", 2, row, modifiers);
@@ -165,7 +195,7 @@ describe("AltLinkController", () => {
 
   it("restores current Alt decorations when a cached link is entered again on the same row", async () => {
     mouse("mousemove", 2, 1, { altKey: true });
-    await wait(30);
+    await waitForHover(1);
     expect(pointerVisible()).toBe(true);
     mouse("mousemove", 30, 1, { altKey: true });
     expect(pointerVisible()).toBe(false);
@@ -181,10 +211,10 @@ describe("AltLinkController", () => {
 
   it("moves decorations between links and removes them over plain text", async () => {
     mouse("mousemove", 2, 1, { altKey: true });
-    await wait(30);
+    await waitForHover(1);
     expect(pointerVisible()).toBe(true);
     mouse("mousemove", 2, 2, { altKey: true });
-    await wait(30);
+    await waitForHover(0);
     expectDecorations(links.get(0)[0], true);
     mouse("mousemove", 30, 2, { altKey: true });
     expect(pointerVisible()).toBe(false);
@@ -192,7 +222,7 @@ describe("AltLinkController", () => {
 
   it("clears stationary decorations and restores cursor movement on window blur", async () => {
     mouse("mousemove", 2, 1, { altKey: true });
-    await wait(30);
+    await waitForHover(1);
     mouse("mousedown", 2, 1, { altKey: true });
     window.dispatchEvent(new Event("blur"));
     expectDecorations(links.get(1)[0], false);
@@ -201,7 +231,7 @@ describe("AltLinkController", () => {
 
   it("keeps the hovered link available when keyboard focus changes inside the window", async () => {
     mouse("mousemove", 2, 1);
-    await wait(30);
+    await waitForHover(1);
     terminal.textarea.dispatchEvent(new Event("blur"));
     key("keydown", { altKey: true });
     expectDecorations(links.get(1)[0], true);
@@ -221,7 +251,7 @@ describe("AltLinkController", () => {
 
   it("keeps cursor movement disabled after leaving during an Alt-link gesture", async () => {
     mouse("mousemove", 2, 1, { altKey: true });
-    await wait(30);
+    await waitForHover(1);
     mouse("mousedown", 2, 1, { altKey: true });
     container.dispatchEvent(new MouseEvent("mouseleave"));
     expect(pointerVisible()).toBe(false);
@@ -237,7 +267,7 @@ describe("AltLinkController", () => {
   it("preserves a disabled cursor-movement option after an Alt-link gesture", async () => {
     terminal.options.altClickMovesCursor = false;
     mouse("mousemove", 2, 1, { altKey: true });
-    await wait(30);
+    await waitForHover(1);
     mouse("mousedown", 2, 1, { altKey: true });
     mouse("mouseup", 2, 1, { altKey: true });
     await wait(0);
@@ -246,7 +276,7 @@ describe("AltLinkController", () => {
 
   it("leaves ordinary mouse selection available across a link", async () => {
     mouse("mousemove", 2, 1);
-    await wait(30);
+    await waitForHover(1);
     mouse("mousedown", 2, 1);
     mouse("mousemove", 10, 1, { buttons: 1 });
     mouse("mouseup", 10, 1);
@@ -256,7 +286,7 @@ describe("AltLinkController", () => {
 
   it("restores providers and removes key listeners when disposed, allowing recreation", async () => {
     mouse("mousemove", 2, 1, { altKey: true });
-    await wait(30);
+    await waitForHover(1);
     mouse("mousedown", 2, 1, { altKey: true });
     controller.dispose();
     expectDecorations(links.get(1)[0], false);
@@ -266,7 +296,7 @@ describe("AltLinkController", () => {
     expect(pointerVisible()).toBe(false);
     controller = new AltLinkController(terminal, container);
     mouse("mousemove", 2, 2);
-    await wait(30);
+    await waitForHover(0);
     key("keydown", { altKey: true });
     expectDecorations(links.get(0)[0], true);
   });
