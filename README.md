@@ -2,6 +2,8 @@
 
 An embedded terminal emulator.
 
+Fork of [pulsar-edit/terminal](https://github.com/pulsar-edit/terminal).
+
 Runs real system shells inside the workspace, rendered with [xterm.js](https://xtermjs.org/) and driven by [node-pty](https://github.com/lumine-code/node-pty), a native module this package installs and builds itself.
 
 ## Features
