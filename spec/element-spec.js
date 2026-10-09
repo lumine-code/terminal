@@ -1,7 +1,7 @@
 // const nodePty = require('node-pty');
 const { TerminalElement } = require("../lib/element");
 const { TerminalModel } = require("../lib/model");
-const TerminalPackage = require("../lib/terminal");
+let TerminalPackage = require("../lib/terminal");
 const { Terminal } = require("@xterm/xterm");
 const { FitAddon } = require("@xterm/addon-fit");
 const { Pty, PtyHost } = require("../lib/pty");
@@ -91,7 +91,7 @@ describe("TerminalElement", () => {
 
   beforeEach(async () => {
     jasmine.useRealClock();
-    await activatePackage();
+    TerminalPackage = (await activatePackage()).mainModule;
     await lumine.updateProcessEnvAndTriggerHooks();
 
     let ptyProcess = jasmine.createSpyObj("ptyProcess", [
