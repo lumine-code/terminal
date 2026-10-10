@@ -32,6 +32,16 @@ SOFTWARE.
 Source: https://github.com/pulsar-edit/terminal
 Revision: 36f2dc63986f45124b708629bdf2a20aafe3e8db
 
+Additional source: https://github.com/xtermjs/xterm.js/blob/6.0.0/css/xterm.css
+Additional revision: @xterm/xterm@6.0.0
+Additional file: css/xterm.css (vendored as styles/xterm.css)
+
+Additional notices from the base stylesheet, under the shared MIT text below:
+Copyright (c) 2014 The xterm.js authors. All rights reserved.
+Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
+Originally forked from (with the author's permission): Fabrice Bellard's javascript vt100 for jslinux, http://bellard.org/jslinux/
+Copyright (c) 2011 Fabrice Bellard
+
 Original file: LICENSE.md
 
 MIT License
