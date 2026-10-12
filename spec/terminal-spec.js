@@ -724,7 +724,8 @@ describe("Terminal", () => {
 
       it("opens in the dock holding the editor it was dispatched from", async () => {
         let dock = lumine.workspace.getBottomDock();
-        dock.getActivePane().addItem(editor);
+        editor.getAllowedLocations = () => ["center", "bottom"];
+        await lumine.workspace.movePaneItem(editor, { targetPane: dock.getActivePane() });
         dock.show();
 
         lumine.commands.dispatch(editor.getElement(), "terminal:open");
