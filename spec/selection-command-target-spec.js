@@ -13,7 +13,7 @@ describe("Terminal selection command origin", () => {
       [0, 0],
       [0, 12],
     ]);
-    lumine.workspace.getActivePane().splitRight({ copyActiveItem: false });
+    lumine.workspace.getActivePane().splitRight();
     focused = await lumine.workspace.open();
     focused.setText("owned focused\n");
     focused.setSelectedBufferRange([
