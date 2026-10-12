@@ -146,6 +146,42 @@ describe("TerminalElement", () => {
     expect(element.terminal).toBeTruthy();
   });
 
+  it("keeps the PTY, terminal buffer and selection alive across physical editor windows", async () => {
+    const workspace = lumine.workspace;
+    jasmine.attachToDOM(workspace.getElement());
+    const model = element.getModel();
+    await workspace.open(model);
+    const terminal = element.terminal;
+    const pty = element.pty;
+    await new Promise((resolve) => terminal.write("window transfer state\r\n", resolve));
+    terminal.select(0, 0, 6);
+    const selection = terminal.getSelection();
+    const spawnCount = PtyHost.prototype.spawn.calls.count();
+    const killed = pty.kill.calls.count();
+    const pane = workspace.paneForItem(model);
+    let extra;
+    try {
+      extra = await workspace.detachPane(pane);
+      expect(element.ownerDocument).toBe(extra.getDocument());
+      expect(element.terminal).toBe(terminal);
+      expect(element.pty).toBe(pty);
+      expect(terminal._core._coreBrowserService.window).toBe(extra.getDOMWindow());
+      expect(terminal._core._document).toBe(extra.getDocument());
+      expect(terminal.getSelection()).toBe(selection);
+      expect(PtyHost.prototype.spawn.calls.count()).toBe(spawnCount);
+      expect(pty.kill.calls.count()).toBe(killed);
+      await workspace.attachWindow(extra);
+      expect(element.ownerDocument).toBe(document);
+      expect(element.terminal).toBe(terminal);
+      expect(element.pty).toBe(pty);
+      expect(terminal._core._document).toBe(document);
+      expect(terminal.getSelection()).toBe(selection);
+      expect(pty.kill.calls.count()).toBe(killed);
+    } finally {
+      await workspace.discardEditorWindows();
+    }
+  });
+
   // The worker process behind a running terminal can die on its own — a crash
   // inside `node-pty`, or its own uncaught-exception handler. `onExit` cannot
   // report that: it describes a shell that exited through the worker, which a
