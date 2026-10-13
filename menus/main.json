@@ -34,10 +34,68 @@
       },
       { "type": "separator" }
     ],
-    ".tree-view .full-menu .entry:not(.tree-view-special-root), lumine-pane[data-active-item-path] .tab.active": [
+    ".tree-view .full-menu .entry:not(.tree-view-special-root)": [
       { "type": "separator" },
       {
         "label": "Terminal",
+        "submenu": [
+          {
+            "label": "Open New",
+            "command": "terminal:open"
+          },
+          { "type": "separator" },
+          {
+            "label": "Center",
+            "command": "terminal:open-center-context-menu"
+          },
+          {
+            "label": "Split Up",
+            "command": "terminal:open-split-up-context-menu"
+          },
+          {
+            "label": "Split Down",
+            "command": "terminal:open-split-down-context-menu"
+          },
+          {
+            "label": "Split Left",
+            "command": "terminal:open-split-left-context-menu"
+          },
+          {
+            "label": "Split Right",
+            "command": "terminal:open-split-right-context-menu"
+          },
+          { "type": "separator" },
+          {
+            "label": "Bottom Dock",
+            "command": "terminal:open-split-bottom-dock-context-menu"
+          },
+          {
+            "label": "Left Dock",
+            "command": "terminal:open-split-left-dock-context-menu"
+          },
+          {
+            "label": "Right Dock",
+            "command": "terminal:open-split-right-dock-context-menu"
+          }
+        ]
+      },
+      { "type": "separator" }
+    ],
+    "lumine-pane[data-active-item-path] .tab.active": [
+      { "type": "separator" },
+      {
+        "label": "Terminal",
+        "afterGroupContaining": [
+          "diff-view:enable",
+          "tree-view:rename",
+          "open-external:show",
+          "pane:detach",
+          "pane:close",
+          "tabs:detach-tab",
+          "tabs:open-in-new-window",
+          "tabs:split-up",
+          "tabs:close-tab"
+        ],
         "submenu": [
           {
             "label": "Open New",
