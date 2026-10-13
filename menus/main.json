@@ -38,6 +38,24 @@
       { "type": "separator" },
       {
         "label": "Terminal",
+        "id": "terminal:tree-context",
+        "afterGroupContaining": [
+          "tree-view-favourite:add",
+          "tree-view-favourite:remove",
+          "diff-view:enable",
+          "jupyter-cells:import-notebook",
+          "jupyter-view:open-source",
+          "graviss:open-source-on-right",
+          "markdown-preview:preview-file",
+          "image-editor:open-in-new-tab",
+          "search-panel:project-show-in-current-directory",
+          "open-external:show",
+          "tree-view:open-selected-entry-up",
+          "native-clip:paste",
+          "tree-view:paste",
+          "tree-view:remove",
+          "tree-view:add-file"
+        ],
         "submenu": [
           {
             "label": "Open New",
@@ -46,6 +64,7 @@
           { "type": "separator" },
           {
             "label": "Center",
+            "afterGroupContaining": ["terminal:open"],
             "command": "terminal:open-center-context-menu"
           },
           {
@@ -67,6 +86,7 @@
           { "type": "separator" },
           {
             "label": "Bottom Dock",
+            "afterGroupContaining": ["terminal:open-center-context-menu", "terminal:open"],
             "command": "terminal:open-split-bottom-dock-context-menu"
           },
           {
