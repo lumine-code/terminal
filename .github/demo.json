@@ -1,0 +1,17 @@
+{
+  "title": "terminal",
+  "description": "Execute the current script in an integrated terminal.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "c320ce4e1a61afd2bf59362679510a71d69b7272",
+  "mode": "normal",
+  "fontSettings": "default",
+  "themeSourceRevision": "6564a9e21899b5541e9c8f8006f9be6d6d72e6ad",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Execute the current script in an integrated terminal.",
+      "width": 1100,
+      "height": 730
+    }
+  ]
+}

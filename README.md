@@ -20,6 +20,8 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Image paste**: hands a clipboard image to whichever package saves it and writes its path back.
 - **Window-aware agents**: when `lumine-mcp` is active, new and restarted shells receive this window's bridge port while every connection still requires your approval.
 
+![Execute the current script in an integrated terminal.](.github/demo.png)
+
 ## Installation
 
 To install `terminal` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/terminal`.
