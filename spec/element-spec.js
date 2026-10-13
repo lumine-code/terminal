@@ -375,6 +375,75 @@ describe("TerminalElement", () => {
       expect(candidate.terminal).toBeUndefined();
       expect(candidate.pty).toBeUndefined();
     });
+
+    it("loads xterm while shell setup waits and creates nothing after import retirement", async () => {
+      const runtime = await TerminalElement.loadXtermRuntime();
+      let releaseRuntime;
+      const pendingRuntime = new Promise((resolve) => (releaseRuntime = resolve));
+      let releaseEnvironment;
+      const environment = new Promise((resolve) => (releaseEnvironment = resolve));
+      let entered;
+      const importing = new Promise((resolve) => (entered = resolve));
+      const load = spyOn(TerminalElement, "loadXtermRuntime").and.callFake(() => {
+        entered();
+        return pendingRuntime;
+      });
+      const candidate = await createUnstartedElement();
+      spyOn(candidate, "waitForShellEnvironment").and.returnValue(environment);
+      const kills = Pty.prototype.kill.calls.count();
+      const creating = candidate.createTerminal();
+      await importing;
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(candidate.waitForShellEnvironment).toHaveBeenCalledTimes(1);
+      candidate.destroy();
+      releaseEnvironment();
+      releaseRuntime(runtime);
+      await creating;
+      expect(candidate.terminal).toBeUndefined();
+      expect(candidate.pty).toBeUndefined();
+      expect(Pty.prototype.kill.calls.count()).toBe(kills + 1);
+    });
+
+    it("cleans its booting worker after an import error and retries creation", async () => {
+      const runtime = await TerminalElement.loadXtermRuntime();
+      const candidate = await createUnstartedElement();
+      spyOn(TerminalElement, "loadXtermRuntime").and.returnValues(
+        Promise.reject(new Error("xterm import failed")),
+        Promise.resolve(runtime),
+      );
+      const kills = Pty.prototype.kill.calls.count();
+      await expectAsync(candidate.createTerminal()).toBeRejectedWithError("xterm import failed");
+      expect(candidate.terminal).toBeUndefined();
+      expect(Pty.prototype.kill.calls.count()).toBe(kills + 1);
+      await candidate.createTerminal();
+      expect(candidate.terminal).toBeTruthy();
+      expect(candidate.pty.launched).toBe(true);
+    });
+
+    it("keeps another terminal's pending runtime usable after one terminal closes", async () => {
+      const runtime = await TerminalElement.loadXtermRuntime();
+      let release;
+      const pending = new Promise((resolve) => (release = resolve));
+      let entered;
+      const importing = new Promise((resolve) => (entered = resolve));
+      let callers = 0;
+      spyOn(TerminalElement, "loadXtermRuntime").and.callFake(() => {
+        if (++callers === 2) entered();
+        return pending;
+      });
+      const first = await createUnstartedElement();
+      const second = await createUnstartedElement();
+      const firstCreation = first.createTerminal();
+      const secondCreation = second.createTerminal();
+      await importing;
+      first.destroy();
+      release(runtime);
+      await Promise.all([firstCreation, secondCreation]);
+      expect(first.terminal).toBeUndefined();
+      expect(first.pty).toBeUndefined();
+      expect(second.terminal).toBeTruthy();
+      expect(second.pty.launched).toBe(true);
+    });
   });
 
   describe("getExtraXTermOptions()", () => {

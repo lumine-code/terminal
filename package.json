@@ -2,6 +2,7 @@
   "name": "terminal",
   "author": "lumine-code",
   "main": "./lib/terminal",
+  "requiresRestartOnUpdate": true,
   "files": [
     "docs",
     "keymaps",
