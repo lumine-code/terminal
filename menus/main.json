@@ -1,166 +1,28 @@
 {
-  "context-menu": {
-    "terminal-view": [
-      { "type": "separator" },
-      {
-        "label": "Close",
-        "command": "terminal:close"
-      },
-      {
-        "label": "Restart",
-        "command": "terminal:restart"
-      },
-      {
-        "label": "Clear",
-        "command": "terminal:clear"
-      },
-      { "type": "separator" },
-      {
-        "label": "Copy",
-        "command": "core:copy"
-      },
-      {
-        "label": "Paste",
-        "command": "core:paste"
-      },
-      {
-        "label": "Paste Image",
-        "command": "terminal:paste-image"
-      },
-      { "type": "separator" },
-      {
-        "label": "Close All Terminals",
-        "command": "terminal:close-all"
-      },
-      { "type": "separator" }
-    ],
-    ".tree-view .full-menu .entry:not(.tree-view-special-root)": [
-      { "type": "separator" },
-      {
-        "label": "Terminal",
-        "id": "terminal:tree-context",
-        "afterGroupContaining": [
-          "tree-view-favourite:add",
-          "tree-view-favourite:remove",
-          "diff-view:enable",
-          "jupyter-cells:import-notebook",
-          "jupyter-view:open-source",
-          "graviss:open-source-on-right",
-          "markdown-preview:preview-file",
-          "image-editor:open-in-new-tab",
-          "search-panel:project-show-in-current-directory",
-          "open-external:show",
-          "tree-view:open-selected-entry-up",
-          "native-clip:paste",
-          "tree-view:paste",
-          "tree-view:remove",
-          "tree-view:add-file"
-        ],
-        "submenu": [
-          {
-            "label": "Open New",
-            "command": "terminal:open"
-          },
-          { "type": "separator" },
-          {
-            "label": "Center",
-            "afterGroupContaining": ["terminal:open"],
-            "command": "terminal:open-center-context-menu"
-          },
-          {
-            "label": "Split Up",
-            "command": "terminal:open-split-up-context-menu"
-          },
-          {
-            "label": "Split Down",
-            "command": "terminal:open-split-down-context-menu"
-          },
-          {
-            "label": "Split Left",
-            "command": "terminal:open-split-left-context-menu"
-          },
-          {
-            "label": "Split Right",
-            "command": "terminal:open-split-right-context-menu"
-          },
-          { "type": "separator" },
-          {
-            "label": "Bottom Dock",
-            "afterGroupContaining": ["terminal:open-center-context-menu", "terminal:open"],
-            "command": "terminal:open-split-bottom-dock-context-menu"
-          },
-          {
-            "label": "Left Dock",
-            "command": "terminal:open-split-left-dock-context-menu"
-          },
-          {
-            "label": "Right Dock",
-            "command": "terminal:open-split-right-dock-context-menu"
-          }
-        ]
-      },
-      { "type": "separator" }
-    ],
-    "lumine-pane[data-active-item-path] .tab.active": [
-      { "type": "separator" },
-      {
-        "label": "Terminal",
-        "afterGroupContaining": [
-          "diff-view:enable",
-          "tree-view:rename",
-          "open-external:show",
-          "pane:detach",
-          "pane:close",
-          "tabs:detach-tab",
-          "tabs:open-in-new-window",
-          "tabs:split-up",
-          "tabs:close-tab"
-        ],
-        "submenu": [
-          {
-            "label": "Open New",
-            "command": "terminal:open"
-          },
-          { "type": "separator" },
-          {
-            "label": "Center",
-            "command": "terminal:open-center-context-menu"
-          },
-          {
-            "label": "Split Up",
-            "command": "terminal:open-split-up-context-menu"
-          },
-          {
-            "label": "Split Down",
-            "command": "terminal:open-split-down-context-menu"
-          },
-          {
-            "label": "Split Left",
-            "command": "terminal:open-split-left-context-menu"
-          },
-          {
-            "label": "Split Right",
-            "command": "terminal:open-split-right-context-menu"
-          },
-          { "type": "separator" },
-          {
-            "label": "Bottom Dock",
-            "command": "terminal:open-split-bottom-dock-context-menu"
-          },
-          {
-            "label": "Left Dock",
-            "command": "terminal:open-split-left-dock-context-menu"
-          },
-          {
-            "label": "Right Dock",
-            "command": "terminal:open-split-right-dock-context-menu"
-          }
-        ]
-      },
-      { "type": "separator" }
-    ]
-  },
   "menu": [
+    {
+      "label": "File",
+      "submenu": [
+        {
+          "label": "New Terminal",
+          "command": "terminal:open"
+        }
+      ]
+    },
+    {
+      "label": "View",
+      "submenu": [
+        {
+          "label": "Open View",
+          "submenu": [
+            {
+              "label": "Terminal",
+              "command": "terminal:focus"
+            }
+          ]
+        }
+      ]
+    },
     {
       "label": "Packages",
       "submenu": [
@@ -224,5 +86,190 @@
         }
       ]
     }
-  ]
+  ],
+  "context-menu": {
+    "terminal-view": [
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Close",
+        "command": "terminal:close"
+      },
+      {
+        "label": "Restart",
+        "command": "terminal:restart"
+      },
+      {
+        "label": "Clear",
+        "command": "terminal:clear"
+      },
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Copy",
+        "command": "core:copy"
+      },
+      {
+        "label": "Paste",
+        "command": "core:paste"
+      },
+      {
+        "label": "Paste Image",
+        "command": "terminal:paste-image"
+      },
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Close All Terminals",
+        "command": "terminal:close-all"
+      },
+      {
+        "type": "separator"
+      }
+    ],
+    ".tree-view .full-menu .entry:not(.tree-view-special-root)": [
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Terminal",
+        "id": "terminal:tree-context",
+        "afterGroupContaining": [
+          "tree-view-favourite:add",
+          "tree-view-favourite:remove",
+          "diff-view:enable",
+          "jupyter-cells:import-notebook",
+          "jupyter-view:open-source",
+          "graviss:open-source-on-right",
+          "markdown-preview:preview-file",
+          "image-editor:open-in-new-tab",
+          "search-panel:project-show-in-current-directory",
+          "open-external:show",
+          "tree-view:open-selected-entry-up",
+          "native-clip:paste",
+          "tree-view:paste",
+          "tree-view:remove",
+          "tree-view:add-file"
+        ],
+        "submenu": [
+          {
+            "label": "Open New",
+            "command": "terminal:open"
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "label": "Center",
+            "afterGroupContaining": ["terminal:open"],
+            "command": "terminal:open-center-context-menu"
+          },
+          {
+            "label": "Split Up",
+            "command": "terminal:open-split-up-context-menu"
+          },
+          {
+            "label": "Split Down",
+            "command": "terminal:open-split-down-context-menu"
+          },
+          {
+            "label": "Split Left",
+            "command": "terminal:open-split-left-context-menu"
+          },
+          {
+            "label": "Split Right",
+            "command": "terminal:open-split-right-context-menu"
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "label": "Bottom Dock",
+            "afterGroupContaining": ["terminal:open-center-context-menu", "terminal:open"],
+            "command": "terminal:open-split-bottom-dock-context-menu"
+          },
+          {
+            "label": "Left Dock",
+            "command": "terminal:open-split-left-dock-context-menu"
+          },
+          {
+            "label": "Right Dock",
+            "command": "terminal:open-split-right-dock-context-menu"
+          }
+        ]
+      },
+      {
+        "type": "separator"
+      }
+    ],
+    "lumine-pane[data-active-item-path] .tab.active": [
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Terminal",
+        "afterGroupContaining": [
+          "diff-view:enable",
+          "tree-view:rename",
+          "open-external:show",
+          "pane:detach",
+          "pane:close",
+          "tabs:detach-tab",
+          "tabs:open-in-new-window",
+          "tabs:split-up",
+          "tabs:close-tab"
+        ],
+        "submenu": [
+          {
+            "label": "Open New",
+            "command": "terminal:open"
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "label": "Center",
+            "command": "terminal:open-center-context-menu"
+          },
+          {
+            "label": "Split Up",
+            "command": "terminal:open-split-up-context-menu"
+          },
+          {
+            "label": "Split Down",
+            "command": "terminal:open-split-down-context-menu"
+          },
+          {
+            "label": "Split Left",
+            "command": "terminal:open-split-left-context-menu"
+          },
+          {
+            "label": "Split Right",
+            "command": "terminal:open-split-right-context-menu"
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "label": "Bottom Dock",
+            "command": "terminal:open-split-bottom-dock-context-menu"
+          },
+          {
+            "label": "Left Dock",
+            "command": "terminal:open-split-left-dock-context-menu"
+          },
+          {
+            "label": "Right Dock",
+            "command": "terminal:open-split-right-dock-context-menu"
+          }
+        ]
+      },
+      {
+        "type": "separator"
+      }
+    ]
+  }
 }
