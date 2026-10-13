@@ -14,7 +14,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **Editor integration**: runs or inserts the editor's selected text in the active terminal.
 - **Clickable links**: hold Alt to underline URLs, OSC 8 links and detected filesystem paths, then left-click to open them, including compiler-style line and column suffixes.
 - **Find**: searches the scrollback with an in-terminal find palette.
-- **Theming**: derives its canvas colors from the active syntax theme, with package-specific CSS overrides and explicit color settings.
+- **Theming**: derives its canvas colors from the active UI theme, with package-specific CSS overrides and explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
 - **Inline images**: draws images written with SIXEL or iTerm's inline image protocol in place.
 - **Image paste**: hands a clipboard image to whichever package saves it and writes its path back.
@@ -61,23 +61,7 @@ Commands available in `terminal-view`:
 
 ## Usage
 
-When a terminal is focused it handles most keystrokes itself, so some Lumine commands may not fire until you move focus out of it with `terminal:unfocus`. On Windows and Linux, copy and paste use the conventional terminal shortcuts `Ctrl+Shift+C` and `Ctrl+Shift+V`.
-
-### Inline images
-
-The terminal renders images written with SIXEL or iTerm's inline image protocol, so tools such as `imgcat`, `chafa` and matplotlib's sixel backend draw in place instead of opening a window. Decoded images are held per terminal up to **Inline Image Memory Limit**; once it is reached the oldest are dropped and leave a placeholder behind in the scrollback.
-
-### Pasting an image
-
-Pasting works the other way. A clipboard holding an image has no text to paste, so the terminal offers the paste to Lumine's paste providers rather than writing nothing: with the [`image-paste`](https://github.com/lumine-code/image-paste) package installed, the normal paste command — or `terminal:paste-image` — saves the image relative to the terminal's working directory and writes the saved file's absolute path onto the input line. Nothing is submitted for you, and the path is quoted only when it contains a space.
-
-That is how you hand a screenshot to a command-line program, including the coding agents that accept an image by path. A program that reads the clipboard itself is unaffected: the terminal claims no bare `alt-` letter, so an agent that binds one of them to its own image paste keeps working.
-
-## Configuration
-
-The terminal automatically integrates with bash, zsh, fish and PowerShell when their configured startup arguments can be preserved safely. It tracks the current working directory after `cd`, carries that directory into restarts and copied terminals, marks each command's prompt in the left gutter — tinted red when the command exited non-zero — and enables navigation with `terminal:previous-command` and `terminal:next-command`. Unsupported shells or custom startup arguments fall back to the unmodified shell, and externally configured OSC 133 or OSC 633 integration remains recognized.
-
-Local path detection recognizes absolute and relative paths in output, resolves relative paths against the live working directory, and understands common `path:line:column` forms. Files open in Lumine by default while directories open in the system file manager; both detection and opening behavior can be changed in the package settings. Opening directories and revealing files use the `open-external` service when available, honoring its registered handlers, and fall back to the system otherwise.
+See the [Terminal guide](docs/usage.md) for placement, editor text, links, scrollback search, images, shell integration and appearance.
 
 ## Customization
 
