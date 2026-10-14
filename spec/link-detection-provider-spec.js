@@ -60,10 +60,10 @@ describe("LocalPathLinkProvider", () => {
     let links = await provideLinks(provider, 1);
     expect(links.length).toBe(1);
     links[0].activate({}, links[0].text);
-    expect(activate).toHaveBeenCalledWith({}, dirPath, true, undefined, undefined);
+    expect(activate).toHaveBeenCalledWith({}, dirPath, undefined, undefined);
   });
 
-  it("follows a symlink when deciding that a target is a directory", async () => {
+  it("keeps a symlinked path as the activation target", async () => {
     let linkPath = path.join(fixtureDir, "linked-dir");
     await fs.promises.symlink(dirPath, linkPath, process.platform === "win32" ? "junction" : "dir");
     let activate = jasmine.createSpy("activate");
@@ -71,7 +71,7 @@ describe("LocalPathLinkProvider", () => {
     await write(terminal, linkPath);
     let links = await provideLinks(provider, 1);
     links[0].activate({}, links[0].text);
-    expect(activate).toHaveBeenCalledWith({}, linkPath, true, undefined, undefined);
+    expect(activate).toHaveBeenCalledWith({}, linkPath, undefined, undefined);
   });
 
   it("does not resolve a path that does not exist", async () => {
@@ -146,7 +146,7 @@ describe("LocalPathLinkProvider", () => {
     let links = await provideLinks(provider, 1);
     let event = {};
     links[0].activate(event, links[0].text);
-    expect(activate).toHaveBeenCalledWith(event, filePath, false, 12, 34);
+    expect(activate).toHaveBeenCalledWith(event, filePath, 12, 34);
   });
 
   it("preserves a leading path's complete location before trailing prose", async () => {
@@ -159,17 +159,17 @@ describe("LocalPathLinkProvider", () => {
     links[0].activate(event, links[0].text);
 
     expect(links[0].text).toBe(`${filePath}:12:34`);
-    expect(activate).toHaveBeenCalledOnceWith(event, filePath, false, 12, 34);
+    expect(activate).toHaveBeenCalledOnceWith(event, filePath, 12, 34);
   });
 
-  it("activates a resolved file link with the absolute path and isDirectory: false", async () => {
+  it("activates a resolved file link with its absolute path", async () => {
     let activate = jasmine.createSpy("activate");
     let provider = new LocalPathLinkProvider(terminal, () => undefined, activate);
     await write(terminal, filePath);
     let links = await provideLinks(provider, 1);
     let event = {};
     links[0].activate(event, links[0].text);
-    expect(activate).toHaveBeenCalledWith(event, filePath, false, undefined, undefined);
+    expect(activate).toHaveBeenCalledWith(event, filePath, undefined, undefined);
   });
 
   it("falls back to the space-tolerant matchers for a spaced path with no other candidates", async () => {

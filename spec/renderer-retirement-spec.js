@@ -94,11 +94,7 @@ describe("Terminal native renderer retirement", () => {
     const provider = lumine.packages.serviceHub.provide("open-external", { "1.0.0": service });
     try {
       const directory = path.join(process.env.LUMINE_HOME, "tmp");
-      await element.activateLocalPathLink(
-        { ctrlKey: true, altKey: true, button: 0 },
-        directory,
-        true,
-      );
+      await element.activateLocalPathLink({ ctrlKey: true, altKey: true, button: 0 }, directory);
       expect(service.openExternal).toHaveBeenCalledOnceWith(directory);
       expect(lumine.shell.openPath).not.toHaveBeenCalled();
     } finally {

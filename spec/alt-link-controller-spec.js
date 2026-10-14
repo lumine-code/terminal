@@ -210,20 +210,18 @@ describe("AltLinkController", () => {
   }
 
   for (const modifiers of [{ shiftKey: true }, { ctrlKey: true, shiftKey: true }]) {
-    it(`activates a detected path with ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"}`, async () => {
+    it(`keeps a detected path inactive with ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"}`, async () => {
       mouse("mousemove", 2, 3);
       await waitForHover(2);
       document.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Shift", bubbles: true, ...modifiers }),
       );
-      expectDecorations(links.get(2)[0], true);
+      expectDecorations(links.get(2)[0], false);
       mouse("mousedown", 2, 3, modifiers);
       mouse("mouseup", 2, 3, modifiers);
       await wait(0);
 
-      expect(activate).toHaveBeenCalledTimes(1);
-      expect(activate.calls.mostRecent().args[0].shiftKey).toBe(true);
-      expect(activate.calls.mostRecent().args[0].ctrlKey).toBe(Boolean(modifiers.ctrlKey));
+      expect(activate).not.toHaveBeenCalled();
     });
 
     it(`ignores ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"} on a browser link`, async () => {
@@ -237,20 +235,18 @@ describe("AltLinkController", () => {
       expect(activate).not.toHaveBeenCalled();
     });
 
-    it(`activates an OSC 8 file link with ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"}`, async () => {
+    it(`keeps an OSC 8 file link inactive with ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"}`, async () => {
       const { pathToFileURL } = require("url");
       const uri = pathToFileURL(path.join(fixtureDir, "notes.txt")).href;
       await write(terminal, `\r\n\x1b]8;;${uri}\x07local\x1b]8;;\x07`);
       mouse("mousemove", 2, 4, modifiers);
       await waitForHover(0);
-      expectDecorations(links.get(0)[0], true);
+      expectDecorations(links.get(0)[0], false);
       mouse("mousedown", 2, 4, modifiers);
       mouse("mouseup", 2, 4, modifiers);
       await wait(0);
 
-      expect(activate).toHaveBeenCalledTimes(1);
-      expect(activate.calls.mostRecent().args[0].shiftKey).toBe(true);
-      expect(activate.calls.mostRecent().args[1]).toBe(uri);
+      expect(activate).not.toHaveBeenCalled();
     });
   }
 

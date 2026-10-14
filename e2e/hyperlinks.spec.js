@@ -28,7 +28,6 @@ test.describe("Terminal link gestures", () => {
       element.pty.kill();
       window.linkTest = {
         opened: [],
-        openOptions: [],
         openWith: [],
         external: [],
         revealed: [],
@@ -45,24 +44,18 @@ test.describe("Terminal link gestures", () => {
       lumine.shell.showItemInFolder = async (target) => {
         window.linkTest.revealed.push(target);
       };
-      lumine.workspace.open = async (target, options = {}) => {
+      lumine.workspace.open = async (target) => {
         window.linkTest.opened.push(target);
-        window.linkTest.openOptions.push({
-          opener: options.opener ?? null,
-          pending: options.pending ?? null,
-          forcePending: options.forcePending ?? null,
-          activatePane: options.activatePane ?? null,
-          initialLine: options.initialLine ?? null,
-          initialColumn: options.initialColumn ?? null,
-          terminalPane:
-            options.pane ===
-            lumine.workspace.getWindowForElement(element).getEditorContainer().getActivePane(),
-        });
       };
       const dispatch = lumine.commands.dispatch.bind(lumine.commands);
       lumine.commands.dispatch = (target, command, detail) => {
         if (command === "open-with:toggle") {
-          window.linkTest.openWith.push({ path: detail.path, terminalTarget: target === element });
+          window.linkTest.openWith.push({
+            path: detail.path,
+            terminalTarget: target === element,
+            initialLine: detail.initialLine ?? null,
+            initialColumn: detail.initialColumn ?? null,
+          });
           return true;
         }
         return dispatch(target, command, detail);
@@ -140,7 +133,7 @@ test.describe("Terminal link gestures", () => {
           ? target
           : kind === "OSC 8"
             ? `\x1b]8;;${pathToFileURL(targetPath).href}\x07link\x1b]8;;\x07`
-            : targetPath;
+            : `${targetPath}:12:4`;
       await write(`${text}  ordinary text\r\n`);
       const point = await pointAt();
 
@@ -149,14 +142,21 @@ test.describe("Terminal link gestures", () => {
       expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
       expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
 
-      for (const modifier of ["Control", "Meta"]) {
-        await page.keyboard.down(modifier);
+      for (const modifiers of [["Control"], ["Meta"], ["Shift"], ["Control", "Shift"]]) {
+        for (const modifier of modifiers) await page.keyboard.down(modifier);
         await expect.poll(appearance).toEqual({ pointer: false, underline: false });
         await page.mouse.click(point.x, point.y);
-        await page.keyboard.up(modifier);
+        for (const modifier of [...modifiers].reverse()) await page.keyboard.up(modifier);
         expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
         expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.external)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.revealed)).toEqual([]);
       }
+
+      await page.evaluate(
+        (selector) => document.querySelector(selector).terminal.clearSelection(),
+        TERMINAL_ELEMENT_SELECTOR,
+      );
 
       // No mouse input between these assertions: modifier changes must update
       // the native cursor and rendered underline on their own.
@@ -176,7 +176,14 @@ test.describe("Terminal link gestures", () => {
       } else {
         await expect
           .poll(() => page.evaluate(() => window.linkTest.openWith))
-          .toEqual([{ path: targetPath, terminalTarget: true }]);
+          .toEqual([
+            {
+              path: targetPath,
+              terminalTarget: true,
+              initialLine: kind === "local path" ? 11 : null,
+              initialColumn: kind === "local path" ? 3 : null,
+            },
+          ]);
         expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
       }
       expect(await page.evaluate(() => window.linkTest.input)).toEqual([]);
@@ -192,19 +199,22 @@ test.describe("Terminal link gestures", () => {
     });
   }
 
-  for (const kind of ["OSC 8", "local path"]) {
+  for (const kind of ["web URL", "OSC 8", "local path"]) {
     for (const { name, modifiers, result } of [
       { name: "Ctrl-Alt", modifiers: ["Control", "Alt"], result: "external" },
-      { name: "Shift", modifiers: ["Shift"], result: "opened" },
-      { name: "Ctrl-Shift", modifiers: ["Control", "Shift"], result: "revealed" },
+      { name: "Alt-Shift", modifiers: ["Alt", "Shift"], result: "revealed" },
     ]) {
-      test(`${kind}: ${name} dispatches its path action once without PTY input`, async () => {
+      test(`${kind}: ${name} dispatches its action once without PTY input`, async () => {
         const targetPath = path.join(temporaryRoot, "link.txt");
         await fs.promises.writeFile(targetPath, "fixture");
+        const target = kind === "web URL" ? "https://link.example.com/" : targetPath;
+        const resultField = kind === "web URL" ? "opened" : result;
         const text =
-          kind === "OSC 8"
-            ? `\x1b]8;;${pathToFileURL(targetPath).href}\x07link\x1b]8;;\x07`
-            : `${targetPath}:12:4`;
+          kind === "web URL"
+            ? target
+            : kind === "OSC 8"
+              ? `\x1b]8;;${pathToFileURL(targetPath).href}\x07link\x1b]8;;\x07`
+              : `${targetPath}:12:4`;
         await write(`${text}  ordinary text\r\n`);
         const point = await pointAt();
         for (const modifier of modifiers) await page.keyboard.down(modifier);
@@ -215,25 +225,14 @@ test.describe("Terminal link gestures", () => {
         for (const modifier of [...modifiers].reverse()) await page.keyboard.up(modifier);
 
         await expect
-          .poll(() => page.evaluate((field) => window.linkTest[field], result))
-          .toEqual([targetPath]);
-        for (const field of ["opened", "external", "revealed"].filter((field) => field !== result))
+          .poll(() => page.evaluate((field) => window.linkTest[field], resultField))
+          .toEqual([target]);
+        for (const field of ["opened", "external", "revealed"].filter(
+          (field) => field !== resultField,
+        ))
           expect(await page.evaluate((field) => window.linkTest[field], field)).toEqual([]);
         expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
         expect(await page.evaluate(() => window.linkTest.input)).toEqual([]);
-        if (name === "Shift") {
-          expect(await page.evaluate(() => window.linkTest.openOptions)).toEqual([
-            {
-              opener: "text-editor",
-              pending: true,
-              forcePending: true,
-              activatePane: false,
-              initialLine: kind === "local path" ? 11 : null,
-              initialColumn: kind === "local path" ? 3 : null,
-              terminalPane: true,
-            },
-          ]);
-        }
         await expect.poll(appearance).toEqual({ pointer: false, underline: false });
       });
     }
