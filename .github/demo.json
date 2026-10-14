@@ -2,17 +2,17 @@
   "title": "terminal",
   "description": "Execute the current script in an integrated terminal.",
   "recordedOn": "2026-10-14",
-  "sourceRevision": "18de8557a6bac614d11ae62dfc090b459946b5f5",
-  "themeSourceRevision": "7fbd047a87ecf1367c896b19ff270cdc28d319f7",
+  "sourceRevision": "e415992526cf7cc70d49e302dfaaf64e0f2878bd",
+  "themeSourceRevision": "a673daf5882dc988419316d144a9bbe0aec9cb53",
   "mode": "normal",
   "fontSettings": "default",
   "scenario": "demo.js",
-  "recipeHash": "6d8c95a681e12125e4255c7e22d3d08c17978bf77050341216e02ff53fb4b2e8",
+  "recipeHash": "eea52d9880751895465da9a59dc618ec3c775ec20f33a88ced05a5e991b837b1",
   "environment": {
     "platform": "win32",
     "arch": "x64",
-    "electron": "44.7.0",
-    "chrome": "152.0.7977.130",
+    "electron": "44.7.1",
+    "chrome": "152.0.7977.149",
     "devicePixelRatio": 1,
     "locale": "en-GB",
     "fontFamily": "Fira Code, Menlo, DejaVu Sans Mono, Consolas, monospace",
@@ -21,29 +21,30 @@
   },
   "viewport": { "width": 1100, "height": 730 },
   "cornerRadius": 10,
+  "privacy": { "version": 1, "location": "neutral", "textChecked": true },
   "sources": {
     "editor": {
-      "revision": "ca7198ebc05410bb29a14259434e77c94a714b24",
+      "revision": "b3fcd05714f72e3aa88498c47334a04de2c51afa",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "package": {
-      "revision": "18de8557a6bac614d11ae62dfc090b459946b5f5",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "revision": "e415992526cf7cc70d49e302dfaaf64e0f2878bd",
+      "dirty": true,
+      "workingTreeHash": "4777fe96906df8784719384dfb528d6099e79dbcb8576ecdd856f2d35c01c765"
     },
     "terminal": {
-      "revision": "18de8557a6bac614d11ae62dfc090b459946b5f5",
-      "dirty": false,
-      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "revision": "e415992526cf7cc70d49e302dfaaf64e0f2878bd",
+      "dirty": true,
+      "workingTreeHash": "4777fe96906df8784719384dfb528d6099e79dbcb8576ecdd856f2d35c01c765"
     },
     "language-javascript": {
-      "revision": "ae2e6968e3a349fb4d09ce53e339a0f8cce903aa",
+      "revision": "7c60e9b041c23a0426c11a3e939883f8198cf528",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "one-theme": {
-      "revision": "7fbd047a87ecf1367c896b19ff270cdc28d319f7",
+      "revision": "a673daf5882dc988419316d144a9bbe0aec9cb53",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     }
@@ -60,7 +61,7 @@
       "label": "Execute the current script in an integrated terminal.",
       "width": 1100,
       "height": 730,
-      "sha256": "1682785d8eb6ea8ebf7005822ffa7fd1dbce457cefa6257e51afe2b2efce9cf1"
+      "sha256": "5dc33d8382bbe4e499b230228dc57f11d9795b5cb0eb29b308989a0c98b2336c"
     }
   ]
 }

@@ -64,4 +64,13 @@ module.exports = {
     lumine.config.unset("terminal.terminal.shell");
     lumine.config.unset("terminal.terminal.args");
   },
+  privacyText({ state }) {
+    const buffer = state.terminal?.element?.terminal?.buffer.active;
+    return buffer
+      ? Array.from(
+          { length: buffer.length },
+          (_, row) => buffer.getLine(row)?.translateToString() || "",
+        ).join("\n")
+      : "";
+  },
 };
