@@ -12,7 +12,10 @@ module.exports = {
       "terminal.terminal.shell",
       process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/sh",
     );
-    lumine.config.set("terminal.terminal.args", ["-NoLogo", "-NoProfile", "-NoExit"]);
+    lumine.config.set(
+      "terminal.terminal.args",
+      process.platform === "win32" ? ["-NoLogo", "-NoProfile", "-NoExit"] : [],
+    );
   },
   scenes: [
     {
