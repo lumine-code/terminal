@@ -15,7 +15,7 @@
       "label": "View",
       "submenu": [
         {
-          "label": "Open View",
+          "label": "Open or Focus View",
           "submenu": [
             {
               "label": "Terminal",
@@ -32,56 +32,57 @@
           "label": "Terminal",
           "submenu": [
             {
-              "label": "Focus",
-              "command": "terminal:focus"
-            },
-            {
-              "label": "Open New",
+              "label": "New Terminal",
               "command": "terminal:open"
             },
             {
-              "type": "separator"
+              "label": "Focus Terminal",
+              "command": "terminal:focus"
             },
             {
-              "label": "Center",
+              "label": "New Terminal in Editor Area",
               "command": "terminal:open-center"
             },
             {
-              "label": "Split Up",
-              "command": "terminal:open-split-up"
+              "label": "New Terminal in Split",
+              "submenu": [
+                {
+                  "label": "Above",
+                  "command": "terminal:open-split-up"
+                },
+                {
+                  "label": "Below",
+                  "command": "terminal:open-split-down"
+                },
+                {
+                  "label": "Left",
+                  "command": "terminal:open-split-left"
+                },
+                {
+                  "label": "Right",
+                  "command": "terminal:open-split-right"
+                }
+              ]
             },
             {
-              "label": "Split Down",
-              "command": "terminal:open-split-down"
+              "label": "New Terminal in Dock",
+              "submenu": [
+                {
+                  "label": "Bottom",
+                  "command": "terminal:open-bottom-dock"
+                },
+                {
+                  "label": "Left",
+                  "command": "terminal:open-left-dock"
+                },
+                {
+                  "label": "Right",
+                  "command": "terminal:open-right-dock"
+                }
+              ]
             },
             {
-              "label": "Split Left",
-              "command": "terminal:open-split-left"
-            },
-            {
-              "label": "Split Right",
-              "command": "terminal:open-split-right"
-            },
-            {
-              "type": "separator"
-            },
-            {
-              "label": "Bottom Dock",
-              "command": "terminal:open-bottom-dock"
-            },
-            {
-              "label": "Left Dock",
-              "command": "terminal:open-left-dock"
-            },
-            {
-              "label": "Right Dock",
-              "command": "terminal:open-right-dock"
-            },
-            {
-              "type": "separator"
-            },
-            {
-              "label": "Close All",
+              "label": "Close All Terminals",
               "command": "terminal:close-all"
             }
           ]
