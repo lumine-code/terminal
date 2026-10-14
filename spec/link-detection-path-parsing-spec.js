@@ -100,6 +100,17 @@ describe("fallbackPathMatchers", () => {
     expect(groups.col).toBe("12");
   });
 
+  for (const filePath of ["/foo/bar baz.c", "C:\\foo\\bar baz.c"]) {
+    it(`keeps the complete column before trailing prose for ${filePath}`, () => {
+      const groups = firstMatch(`${filePath}:339:12  ordinary text`);
+
+      expect(groups.path).toBe(filePath);
+      expect(groups.line).toBe("339");
+      expect(groups.col).toBe("12");
+      expect(groups.link).toBe(`${filePath}:339:12`);
+    });
+  }
+
   it("falls back to treating the whole line as a path", () => {
     let groups = firstMatch("/some/path with spaces/file.txt");
     expect(groups.path).toBe("/some/path with spaces/file.txt");

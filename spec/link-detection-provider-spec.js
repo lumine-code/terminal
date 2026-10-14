@@ -149,6 +149,19 @@ describe("LocalPathLinkProvider", () => {
     expect(activate).toHaveBeenCalledWith(event, filePath, false, 12, 34);
   });
 
+  it("preserves a leading path's complete location before trailing prose", async () => {
+    const activate = jasmine.createSpy("activate");
+    const provider = new LocalPathLinkProvider(terminal, () => undefined, activate);
+    await write(terminal, `${filePath}:12:34  ordinary text`);
+    const links = await provideLinks(provider, 1);
+    const event = {};
+
+    links[0].activate(event, links[0].text);
+
+    expect(links[0].text).toBe(`${filePath}:12:34`);
+    expect(activate).toHaveBeenCalledOnceWith(event, filePath, false, 12, 34);
+  });
+
   it("activates a resolved file link with the absolute path and isDirectory: false", async () => {
     let activate = jasmine.createSpy("activate");
     let provider = new LocalPathLinkProvider(terminal, () => undefined, activate);

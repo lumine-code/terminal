@@ -13,7 +13,7 @@ const {
 // Use actual keyboard and pointer input against the DOM renderer. Reading its
 // rendered underline and computed cursor checks the visible result, including
 // the xterm boundary that synthetic provider-only specs cannot exercise.
-test.describe("Alt-only terminal links", () => {
+test.describe("Terminal link gestures", () => {
   let app, page, temporaryRoot;
 
   test.beforeEach(async () => {
@@ -26,10 +26,47 @@ test.describe("Alt-only terminal links", () => {
       // Stop shell output before putting deterministic text into the terminal.
       // The xterm input observer still detects any unwanted Alt-click data.
       element.pty.kill();
-      window.linkTest = { opened: [], input: [] };
+      window.linkTest = {
+        opened: [],
+        openOptions: [],
+        openWith: [],
+        external: [],
+        revealed: [],
+        input: [],
+      };
       element.terminal.onData((data) => window.linkTest.input.push(data));
-      lumine.shell.openExternal = async (uri) => window.linkTest.opened.push(uri);
-      lumine.workspace.open = async (target) => window.linkTest.opened.push(target);
+      lumine.shell.openExternal = async (uri) => {
+        window.linkTest.opened.push(uri);
+      };
+      lumine.shell.openPath = async (target) => {
+        window.linkTest.external.push(target);
+        return "";
+      };
+      lumine.shell.showItemInFolder = async (target) => {
+        window.linkTest.revealed.push(target);
+      };
+      lumine.workspace.open = async (target, options = {}) => {
+        window.linkTest.opened.push(target);
+        window.linkTest.openOptions.push({
+          opener: options.opener ?? null,
+          pending: options.pending ?? null,
+          forcePending: options.forcePending ?? null,
+          activatePane: options.activatePane ?? null,
+          initialLine: options.initialLine ?? null,
+          initialColumn: options.initialColumn ?? null,
+          terminalPane:
+            options.pane ===
+            lumine.workspace.getWindowForElement(element).getEditorContainer().getActivePane(),
+        });
+      };
+      const dispatch = lumine.commands.dispatch.bind(lumine.commands);
+      lumine.commands.dispatch = (target, command, detail) => {
+        if (command === "open-with:toggle") {
+          window.linkTest.openWith.push({ path: detail.path, terminalTarget: target === element });
+          return true;
+        }
+        return dispatch(target, command, detail);
+      };
       element.terminal.reset();
       element.terminal.focus();
     }, TERMINAL_ELEMENT_SELECTOR);
@@ -110,6 +147,7 @@ test.describe("Alt-only terminal links", () => {
       await expect.poll(appearance).toEqual({ pointer: false, underline: false });
       await page.mouse.click(point.x, point.y);
       expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
+      expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
 
       for (const modifier of ["Control", "Meta"]) {
         await page.keyboard.down(modifier);
@@ -117,6 +155,7 @@ test.describe("Alt-only terminal links", () => {
         await page.mouse.click(point.x, point.y);
         await page.keyboard.up(modifier);
         expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
       }
 
       // No mouse input between these assertions: modifier changes must update
@@ -131,7 +170,15 @@ test.describe("Alt-only terminal links", () => {
       await page.evaluate(() => (window.linkTest.input = []));
       await page.mouse.click(point.x, point.y);
       await page.keyboard.up("Alt");
-      expect(await page.evaluate(() => window.linkTest.opened)).toEqual([target]);
+      if (kind === "web URL") {
+        await expect.poll(() => page.evaluate(() => window.linkTest.opened)).toEqual([target]);
+        expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
+      } else {
+        await expect
+          .poll(() => page.evaluate(() => window.linkTest.openWith))
+          .toEqual([{ path: targetPath, terminalTarget: true }]);
+        expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
+      }
       expect(await page.evaluate(() => window.linkTest.input)).toEqual([]);
       await expect
         .poll(() =>
@@ -143,5 +190,52 @@ test.describe("Alt-only terminal links", () => {
         .toBe(true);
       await expect.poll(appearance).toEqual({ pointer: false, underline: false });
     });
+  }
+
+  for (const kind of ["OSC 8", "local path"]) {
+    for (const { name, modifiers, result } of [
+      { name: "Ctrl-Alt", modifiers: ["Control", "Alt"], result: "external" },
+      { name: "Shift", modifiers: ["Shift"], result: "opened" },
+      { name: "Ctrl-Shift", modifiers: ["Control", "Shift"], result: "revealed" },
+    ]) {
+      test(`${kind}: ${name} dispatches its path action once without PTY input`, async () => {
+        const targetPath = path.join(temporaryRoot, "link.txt");
+        await fs.promises.writeFile(targetPath, "fixture");
+        const text =
+          kind === "OSC 8"
+            ? `\x1b]8;;${pathToFileURL(targetPath).href}\x07link\x1b]8;;\x07`
+            : `${targetPath}:12:4`;
+        await write(`${text}  ordinary text\r\n`);
+        const point = await pointAt();
+        for (const modifier of modifiers) await page.keyboard.down(modifier);
+        await expect.poll(appearance).toEqual({ pointer: true, underline: true });
+        await page.evaluate(() => (window.linkTest.input = []));
+
+        await page.mouse.click(point.x, point.y);
+        for (const modifier of [...modifiers].reverse()) await page.keyboard.up(modifier);
+
+        await expect
+          .poll(() => page.evaluate((field) => window.linkTest[field], result))
+          .toEqual([targetPath]);
+        for (const field of ["opened", "external", "revealed"].filter((field) => field !== result))
+          expect(await page.evaluate((field) => window.linkTest[field], field)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.input)).toEqual([]);
+        if (name === "Shift") {
+          expect(await page.evaluate(() => window.linkTest.openOptions)).toEqual([
+            {
+              opener: "text-editor",
+              pending: true,
+              forcePending: true,
+              activatePane: false,
+              initialLine: kind === "local path" ? 11 : null,
+              initialColumn: kind === "local path" ? 3 : null,
+              terminalPane: true,
+            },
+          ]);
+        }
+        await expect.poll(appearance).toEqual({ pointer: false, underline: false });
+      });
+    }
   }
 });
