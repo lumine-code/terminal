@@ -12,7 +12,7 @@ Runs real system shells inside the workspace, rendered with [xterm.js](https://x
 - **xterm.js rendering**: draws output with xterm.js and an optional WebGL renderer that falls back to DOM rendering.
 - **Flexible placement**: opens terminals in the workspace center, any dock, or a split of the active pane.
 - **Editor integration**: runs or inserts the editor's selected text in the active terminal.
-- **Clickable links**: hold Alt to underline URLs, OSC 8 links and detected filesystem paths, then left-click to open them, including compiler-style line and column suffixes.
+- **Clickable links**: choose how to open local paths, including compiler-style line and column suffixes, and open web or OSC 8 URLs in their system application.
 - **Find**: searches the scrollback with an in-terminal find palette.
 - **Theming**: derives its canvas colors from the active UI theme, with package-specific CSS overrides and explicit color settings.
 - **Ligatures**: optionally renders coding-font ligatures such as `==` and `>=`.
@@ -80,7 +80,7 @@ The terminal treats CSS custom properties on `:root` as the source of truth for 
 ## Services
 
 - [`terminal`](docs/terminal.md): provided to let other packages open terminals and run commands in them.
-- `open-external`: consumed to open directories and reveal files through registered external handlers.
+- `open-external`: consumed to open or reveal local paths through registered external handlers.
 - `mcp.bridge`: consumed to pass this window's bridge address to terminal processes.
 
 ## Contributing

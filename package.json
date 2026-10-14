@@ -537,22 +537,6 @@
           "description": "When enabled, terminal text will be copied to the clipboard immediately upon selection.",
           "type": "boolean",
           "default": false
-        },
-        "localPathBehavior": {
-          "title": "Local Path Behavior",
-          "description": "Choose whether detected filesystem paths open in Lumine or externally.",
-          "type": "string",
-          "enum": [
-            {
-              "value": "files-in-lumine",
-              "description": "Open files in Lumine and directories in the system file manager"
-            },
-            {
-              "value": "all-external",
-              "description": "Reveal files and open directories in the system file manager"
-            }
-          ],
-          "default": "files-in-lumine"
         }
       }
     },

@@ -180,6 +180,22 @@ describe("AltLinkController", () => {
       expect(terminal.options.altClickMovesCursor).toBe(true);
     });
 
+    it(`preserves Ctrl and Alt on the ${name} without emitting cursor movement`, async () => {
+      const data = jasmine.createSpy("data");
+      terminal.onData(data);
+      mouse("mousemove", 2, row, { ctrlKey: true, altKey: true });
+      await waitForHover(providerIndex);
+      mouse("mousedown", 2, row, { ctrlKey: true, altKey: true });
+      mouse("mouseup", 2, row, { ctrlKey: true, altKey: true });
+      await wait(0);
+
+      expect(activate).toHaveBeenCalledTimes(1);
+      expect(activate.calls.mostRecent().args[0].ctrlKey).toBe(true);
+      expect(activate.calls.mostRecent().args[0].altKey).toBe(true);
+      expect(data).not.toHaveBeenCalled();
+      expect(terminal.options.altClickMovesCursor).toBe(true);
+    });
+
     it(`keeps ordinary and Ctrl/Cmd clicks on the ${name} inactive`, async () => {
       for (const modifiers of [{}, { ctrlKey: true }, { metaKey: true }]) {
         mouse("mousemove", 2, row, modifiers);
@@ -190,6 +206,51 @@ describe("AltLinkController", () => {
       }
       expect(activate).not.toHaveBeenCalled();
       expect(terminal.options.altClickMovesCursor).toBe(true);
+    });
+  }
+
+  for (const modifiers of [{ shiftKey: true }, { ctrlKey: true, shiftKey: true }]) {
+    it(`activates a detected path with ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"}`, async () => {
+      mouse("mousemove", 2, 3);
+      await waitForHover(2);
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Shift", bubbles: true, ...modifiers }),
+      );
+      expectDecorations(links.get(2)[0], true);
+      mouse("mousedown", 2, 3, modifiers);
+      mouse("mouseup", 2, 3, modifiers);
+      await wait(0);
+
+      expect(activate).toHaveBeenCalledTimes(1);
+      expect(activate.calls.mostRecent().args[0].shiftKey).toBe(true);
+      expect(activate.calls.mostRecent().args[0].ctrlKey).toBe(Boolean(modifiers.ctrlKey));
+    });
+
+    it(`ignores ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"} on a browser link`, async () => {
+      mouse("mousemove", 2, 1, modifiers);
+      await waitForHover(1);
+      expectDecorations(links.get(1)[0], false);
+      mouse("mousedown", 2, 1, modifiers);
+      mouse("mouseup", 2, 1, modifiers);
+      await wait(0);
+
+      expect(activate).not.toHaveBeenCalled();
+    });
+
+    it(`activates an OSC 8 file link with ${modifiers.ctrlKey ? "Ctrl and Shift" : "Shift"}`, async () => {
+      const { pathToFileURL } = require("url");
+      const uri = pathToFileURL(path.join(fixtureDir, "notes.txt")).href;
+      await write(terminal, `\r\n\x1b]8;;${uri}\x07local\x1b]8;;\x07`);
+      mouse("mousemove", 2, 4, modifiers);
+      await waitForHover(0);
+      expectDecorations(links.get(0)[0], true);
+      mouse("mousedown", 2, 4, modifiers);
+      mouse("mouseup", 2, 4, modifiers);
+      await wait(0);
+
+      expect(activate).toHaveBeenCalledTimes(1);
+      expect(activate.calls.mostRecent().args[0].shiftKey).toBe(true);
+      expect(activate.calls.mostRecent().args[1]).toBe(uri);
     });
   }
 

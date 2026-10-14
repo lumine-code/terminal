@@ -713,6 +713,7 @@ describe("TerminalElement", () => {
 
     beforeEach(() => {
       spyOn(lumine.workspace, "open");
+      spyOn(lumine.commands, "dispatch").and.returnValue(true);
     });
 
     it("opens nothing and shows no notification on a plain click", async () => {
@@ -786,23 +787,29 @@ describe("TerminalElement", () => {
       );
     });
 
-    it("opens a file link in the editor", async () => {
+    it("chooses an opener for a file link", async () => {
       let filePath = path.join(tmpdir, "linked.txt");
       await fs.writeFile(filePath, "hello");
       let uri = pathToFileURL(filePath).href;
       await element.activateLink({ altKey: true, button: 0 }, uri);
-      expect(lumine.workspace.open).toHaveBeenCalledWith(fileURLToPath(uri));
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+        path: fileURLToPath(uri),
+      });
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
     });
 
-    it("opens a directory link in the system file explorer", async () => {
+    it("chooses an opener for a directory link", async () => {
       let uri = pathToFileURL(tmpdir).href;
       await element.activateLink({ altKey: true, button: 0 }, uri);
-      expect(lumine.shell.openPath).toHaveBeenCalledWith(tmpdir);
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+        path: tmpdir,
+      });
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
-    it("opens a link to a symlinked directory in the system file explorer", async () => {
+    it("chooses an opener for a symlinked directory without replacing its path", async () => {
       // macOS hands out a symlinked `$TMPDIR`, so this is the ordinary case
       // there rather than an exotic one. `junction` is what lets the symlink
       // be created on Windows without elevation; POSIX ignores the type.
@@ -812,7 +819,58 @@ describe("TerminalElement", () => {
       await fs.symlink(target, link, "junction");
       let uri = pathToFileURL(link).href;
       await element.activateLink({ altKey: true, button: 0 }, uri);
-      expect(lumine.shell.openPath).toHaveBeenCalledWith(link);
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+        path: link,
+      });
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("opens file links externally with Ctrl and Alt", async () => {
+      const filePath = path.join(tmpdir, "linked.txt");
+      await fs.writeFile(filePath, "hello");
+      const uri = pathToFileURL(filePath).href;
+
+      expect(await element.activateLink({ ctrlKey: true, altKey: true, button: 0 }, uri)).toBe(
+        true,
+      );
+
+      expect(lumine.shell.openPath).toHaveBeenCalledOnceWith(fileURLToPath(uri));
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("keeps Ctrl and Alt web links in the system browser", async () => {
+      expect(await element.activateLink({ ctrlKey: true, altKey: true, button: 0 }, WEB_URI)).toBe(
+        true,
+      );
+
+      expect(lumine.shell.openExternal).toHaveBeenCalledOnceWith(WEB_URI);
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
+    });
+
+    it("keeps Shift and Ctrl-Shift web links inactive", async () => {
+      for (const event of [
+        { shiftKey: true, button: 0 },
+        { ctrlKey: true, shiftKey: true, button: 0 },
+      ]) {
+        expect(await element.activateLink(event, WEB_URI)).toBe(false);
+      }
+      expect(lumine.shell.openExternal).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("reveals an OSC 8 directory link with Ctrl and Shift", async () => {
+      const uri = pathToFileURL(tmpdir).href;
+
+      expect(await element.activateLink({ ctrlKey: true, shiftKey: true, button: 0 }, uri)).toBe(
+        true,
+      );
+
+      expect(lumine.shell.showItemInFolder).toHaveBeenCalledOnceWith(tmpdir);
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
@@ -821,6 +879,7 @@ describe("TerminalElement", () => {
       await element.activateLink({ altKey: true, button: 0 }, uri);
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
     });
 
     it("ignores a malformed file link", async () => {
@@ -832,6 +891,7 @@ describe("TerminalElement", () => {
       await element.activateLink({ altKey: true, button: 0 }, "file:///a%2Fb");
       expect(lumine.shell.openExternal).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
     });
 
     it("is wired up as the terminal's OSC 8 link handler", async () => {
@@ -845,23 +905,114 @@ describe("TerminalElement", () => {
   });
 
   describe("activateLocalPathLink()", () => {
-    beforeEach(() => spyOn(lumine.workspace, "open"));
+    beforeEach(() => {
+      spyOn(lumine.workspace, "open");
+      spyOn(lumine.commands, "dispatch").and.returnValue(true);
+    });
 
-    it("opens files in Lumine at a one-based line and column by default", async () => {
+    it("passes one-based compiler locations to the chooser as zero-based positions", async () => {
       let filePath = path.join(tmpdir, "diagnostic.js");
       await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false, 12, 4);
-      expect(lumine.workspace.open).toHaveBeenCalledWith(filePath, {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+        path: filePath,
         initialLine: 11,
         initialColumn: 3,
       });
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
     });
 
-    it("reveals files externally when configured", async () => {
-      lumine.config.set("terminal.behavior.localPathBehavior", "all-external");
-      let filePath = path.join(tmpdir, "diagnostic.js");
-      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false);
-      expect(lumine.shell.showItemInFolder).toHaveBeenCalledWith(filePath);
+    it("uses the first column when the compiler supplies only a line", async () => {
+      const filePath = path.join(tmpdir, "diagnostic.js");
+      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false, 12);
+
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+        path: filePath,
+        initialLine: 11,
+        initialColumn: 0,
+      });
+    });
+
+    it("opens files externally with Ctrl and Alt without interpreting their locations", async () => {
+      const filePath = path.join(tmpdir, "diagnostic.js");
+      await element.activateLocalPathLink(
+        { ctrlKey: true, altKey: true, button: 0 },
+        filePath,
+        false,
+        12,
+        4,
+      );
+
+      expect(lumine.shell.openPath).toHaveBeenCalledOnceWith(filePath);
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
+    });
+
+    it("does not fall back to another action when the chooser is unavailable", async () => {
+      const filePath = path.join(tmpdir, "diagnostic.js");
+      lumine.commands.dispatch.and.returnValue(false);
+
+      expect(
+        await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false),
+      ).toBe(false);
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
+    });
+
+    it("forces a pending text preview in the terminal's physical window with Shift", async () => {
+      const filePath = path.join(tmpdir, "diagnostic.js");
+      const pane = {};
+      const window = {
+        isDestroyed: () => false,
+        getEditorContainer: () => ({ getActivePane: () => pane }),
+      };
+      spyOn(lumine.workspace, "getWindowForElement").and.returnValue(window);
+      lumine.config.set("core.allowPendingPaneItems", false);
+
+      expect(
+        await element.activateLocalPathLink({ shiftKey: true, button: 0 }, filePath, false, 12, 4),
+      ).toBe(true);
+
+      expect(lumine.workspace.getWindowForElement).toHaveBeenCalledOnceWith(element);
+      expect(lumine.workspace.open).toHaveBeenCalledOnceWith(filePath, {
+        initialLine: 11,
+        initialColumn: 3,
+        pane,
+        opener: "text-editor",
+        pending: true,
+        forcePending: true,
+        activatePane: false,
+      });
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
+    });
+
+    it("does not preview a folder as text with Shift", async () => {
+      spyOn(lumine.notifications, "addWarning");
+
+      expect(await element.activateLocalPathLink({ shiftKey: true, button: 0 }, tmpdir, true)).toBe(
+        false,
+      );
+
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.notifications.addWarning).toHaveBeenCalledOnceWith(
+        "Only files can open as pending text.",
+      );
+    });
+
+    it("reveals local paths with Ctrl and Shift without invoking an opener", async () => {
+      const filePath = path.join(tmpdir, "diagnostic.js");
+      const event = { ctrlKey: true, shiftKey: true, button: 0 };
+
+      await element.activateLocalPathLink(event, filePath, false, 12, 4);
+      await element.activateLocalPathLink(event, tmpdir, true);
+
+      expect(lumine.shell.showItemInFolder.calls.allArgs()).toEqual([[filePath], [tmpdir]]);
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.shell.openPath).not.toHaveBeenCalled();
     });
 
     it("uses the same Alt guard as web and OSC 8 links", async () => {
@@ -876,6 +1027,7 @@ describe("TerminalElement", () => {
       }
       expect(lumine.workspace.open).not.toHaveBeenCalled();
       expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
     });
   });
 
@@ -888,14 +1040,19 @@ describe("TerminalElement", () => {
       service.showInFolder.and.returnValue(Promise.resolve(""));
       serviceDisposable = TerminalPackage.consumeOpenExternal(service);
       spyOn(lumine.workspace, "open");
+      spyOn(lumine.commands, "dispatch").and.returnValue(true);
     });
 
     afterEach(() => serviceDisposable.dispose());
 
     it("opens detected directories through registered external handlers", async () => {
-      expect(await element.activateLocalPathLink({ altKey: true, button: 0 }, tmpdir, true)).toBe(
-        true,
-      );
+      expect(
+        await element.activateLocalPathLink(
+          { ctrlKey: true, altKey: true, button: 0 },
+          tmpdir,
+          true,
+        ),
+      ).toBe(true);
       expect(service.openExternal).toHaveBeenCalledOnceWith(tmpdir);
       expect(lumine.shell.openPath).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
@@ -904,36 +1061,61 @@ describe("TerminalElement", () => {
     it("routes OSC 8 directory links through the same external handlers", async () => {
       const { pathToFileURL } = require("url");
 
-      await element.activateLink({ altKey: true, button: 0 }, pathToFileURL(tmpdir).href);
+      await element.activateLink(
+        { ctrlKey: true, altKey: true, button: 0 },
+        pathToFileURL(tmpdir).href,
+      );
 
       expect(service.openExternal).toHaveBeenCalledOnceWith(tmpdir);
       expect(lumine.shell.openPath).not.toHaveBeenCalled();
     });
 
-    it("reveals files through registered handlers in all-external mode", async () => {
-      lumine.config.set("terminal.behavior.localPathBehavior", "all-external");
+    it("opens detected files through the external handlers with Ctrl and Alt", async () => {
       const filePath = path.join(tmpdir, "diagnostic.js");
 
-      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false, 12, 4);
+      await element.activateLocalPathLink(
+        { ctrlKey: true, altKey: true, button: 0 },
+        filePath,
+        false,
+        12,
+        4,
+      );
 
-      expect(service.showInFolder).toHaveBeenCalledOnceWith(filePath);
-      expect(service.openExternal).not.toHaveBeenCalled();
+      expect(service.openExternal).toHaveBeenCalledOnceWith(filePath);
+      expect(service.showInFolder).not.toHaveBeenCalled();
       expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
       expect(lumine.workspace.open).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
     });
 
     it("uses the system fallback after the service is withdrawn", async () => {
       serviceDisposable.dispose();
-      lumine.config.set("terminal.behavior.localPathBehavior", "all-external");
       const filePath = path.join(tmpdir, "diagnostic.js");
 
-      await element.activateLocalPathLink({ altKey: true, button: 0 }, tmpdir, true);
-      await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false);
+      const event = { ctrlKey: true, altKey: true, button: 0 };
+      await element.activateLocalPathLink(event, tmpdir, true);
+      await element.activateLocalPathLink(event, filePath, false);
 
-      expect(lumine.shell.openPath).toHaveBeenCalledOnceWith(tmpdir);
-      expect(lumine.shell.showItemInFolder).toHaveBeenCalledOnceWith(filePath);
+      expect(lumine.shell.openPath.calls.allArgs()).toEqual([[tmpdir], [filePath]]);
+      expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
       expect(service.openExternal).not.toHaveBeenCalled();
       expect(service.showInFolder).not.toHaveBeenCalled();
+    });
+
+    it("reveals files through the current external service with Ctrl and Shift", async () => {
+      const filePath = path.join(tmpdir, "diagnostic.js");
+
+      await element.activateLocalPathLink(
+        { ctrlKey: true, shiftKey: true, button: 0 },
+        filePath,
+        false,
+      );
+
+      expect(service.showInFolder).toHaveBeenCalledOnceWith(filePath);
+      expect(service.openExternal).not.toHaveBeenCalled();
+      expect(lumine.shell.showItemInFolder).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).not.toHaveBeenCalled();
+      expect(lumine.workspace.open).not.toHaveBeenCalled();
     });
 
     it("keeps editor navigation and web links independent of external path handlers", async () => {
@@ -943,7 +1125,8 @@ describe("TerminalElement", () => {
       await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, false, 12, 4);
       await element.activateLink({ altKey: true, button: 0 }, webUri);
 
-      expect(lumine.workspace.open).toHaveBeenCalledOnceWith(filePath, {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+        path: filePath,
         initialLine: 11,
         initialColumn: 3,
       });
@@ -952,13 +1135,24 @@ describe("TerminalElement", () => {
       expect(service.showInFolder).not.toHaveBeenCalled();
     });
 
-    it("requires Alt and the primary button before calling external handlers", async () => {
-      for (const event of [{ button: 0 }, { altKey: true, button: 2 }]) {
+    it("requires Ctrl, Alt and the primary button before calling external handlers", async () => {
+      for (const event of [
+        { button: 0 },
+        { ctrlKey: true, button: 0 },
+        { ctrlKey: true, altKey: true, button: 2 },
+      ]) {
         expect(await element.activateLocalPathLink(event, tmpdir, true)).toBe(false);
       }
 
+      expect(await element.activateLocalPathLink({ altKey: true, button: 0 }, tmpdir, true)).toBe(
+        true,
+      );
+
       expect(service.openExternal).not.toHaveBeenCalled();
       expect(service.showInFolder).not.toHaveBeenCalled();
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+        path: tmpdir,
+      });
     });
   });
 
