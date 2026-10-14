@@ -8,3 +8,4 @@ styles/xterm.css
 
 # Hand-tuned shell scripts — Prettier has no shell/PowerShell parser.
 /shell-integration/
+demo/

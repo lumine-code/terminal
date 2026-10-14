@@ -10,6 +10,7 @@ const prettier = require("eslint-config-prettier");
 const runtimeModules = ["lumine", "electron", "@lumine-code/node-pty"];
 
 module.exports = [
+  { ignores: ["demo/**"] },
   js.configs.recommended,
   n.configs["flat/recommended-script"],
   {
