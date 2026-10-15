@@ -217,6 +217,21 @@ describe("TerminalElement", () => {
   });
 
   describe("destroy()", () => {
+    it("does not focus a disposed renderer when readiness settles after retirement", async () => {
+      let release;
+      spyOn(element, "ready").and.returnValue(new Promise((resolve) => (release = resolve)));
+      const focus = spyOn(element.terminal, "focus").and.callThrough();
+      const setActive = spyOn(element.getModel(), "setActive").and.callThrough();
+      const pending = element.focusTerminal();
+
+      element.destroy();
+      release();
+      await pending;
+
+      expect(focus).not.toHaveBeenCalled();
+      expect(setActive).not.toHaveBeenCalled();
+    });
+
     it("kills the pty", () => {
       element.destroy();
       expect(element.pty.kill).toHaveBeenCalled();
@@ -1140,6 +1155,91 @@ describe("TerminalElement", () => {
       expect(onKey).not.toHaveBeenCalled();
       expect(event.defaultPrevented).toBe(true);
       expect(lumine.clipboard.write).toHaveBeenCalled();
+    });
+  });
+
+  describe("workspace picker keyboard conventions", () => {
+    let leases;
+
+    beforeEach(() => {
+      leases = [];
+      jasmine.attachToDOM(lumine.workspace.getElement());
+      lumine.workspace.getElement().appendChild(element);
+    });
+
+    afterEach(() => {
+      for (const lease of leases) lease.dispose();
+    });
+
+    function key({ key, code, keyCode, shiftKey = false, platformModifier = false }) {
+      const darwin = platformModifier && process.platform === "darwin";
+      const event = new KeyboardEvent("keydown", {
+        key,
+        code,
+        ctrlKey: !darwin,
+        metaKey: darwin,
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+      });
+      Object.defineProperties(event, {
+        keyCode: { value: keyCode },
+        which: { value: keyCode },
+      });
+      element.terminal.textarea.dispatchEvent(event);
+      return event;
+    }
+
+    for (const [command, shortcut, event] of [
+      ["launcher:open", "cmdorctrl-o", { key: "o", code: "KeyO", keyCode: 79 }],
+      [
+        "launcher:new",
+        "cmdorctrl-shift-n",
+        { key: "N", code: "KeyN", keyCode: 78, shiftKey: true },
+      ],
+    ]) {
+      it(`routes ${command} from the actual xterm textarea without sending it to the shell`, () => {
+        const handler = jasmine.createSpy(command);
+        const input = jasmine.createSpy("shell input");
+        leases.push(
+          lumine.commands.add("lumine-workspace", { [command]: handler }),
+          lumine.keymaps.add("terminal-picker-spec", {
+            "lumine-workspace": { [shortcut]: command },
+          }),
+          element.terminal.onData(input),
+        );
+
+        key({ ...event, platformModifier: true });
+
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(input).not.toHaveBeenCalled();
+      });
+    }
+
+    it("keeps configured terminal commands ahead of shell control characters", () => {
+      const handler = jasmine.createSpy("terminal command");
+      const input = jasmine.createSpy("shell input");
+      leases.push(
+        lumine.commands.add("terminal-view", { "terminal:spec": handler }),
+        lumine.keymaps.add("terminal-priority-spec", {
+          "terminal-view": { "ctrl-e": "terminal:spec" },
+        }),
+        element.terminal.onData(input),
+      );
+
+      key({ key: "e", code: "KeyE", keyCode: 69 });
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(input).not.toHaveBeenCalled();
+    });
+
+    it("keeps ordinary Ctrl+C available to the shell", () => {
+      const input = jasmine.createSpy("shell input");
+      leases.push(element.terminal.onData(input));
+
+      key({ key: "c", code: "KeyC", keyCode: 67 });
+
+      expect(input).toHaveBeenCalledWith("\u0003");
     });
   });
 
