@@ -80,48 +80,65 @@
     }
   ],
   "context-menu": {
-    "terminal-view": [
-      {
-        "type": "separator"
-      },
-      {
-        "label": "Close",
-        "command": "terminal:close"
-      },
-      {
-        "label": "Restart",
-        "command": "terminal:restart"
-      },
-      {
-        "label": "Clear",
-        "command": "terminal:clear"
-      },
-      {
-        "type": "separator"
-      },
-      {
-        "label": "Copy",
-        "command": "core:copy"
-      },
-      {
-        "label": "Paste",
-        "command": "core:paste"
-      },
-      {
-        "label": "Paste Image",
-        "command": "terminal:paste-image"
-      },
-      {
-        "type": "separator"
-      },
-      {
-        "label": "Close All Terminals",
-        "command": "terminal:close-all"
-      },
-      {
-        "type": "separator"
-      }
-    ],
+    "terminal-view": {
+      "groupOrder": ["clipboard", "session", "views", "layout", "extensions", "close"],
+      "items": [
+        {
+          "type": "separator"
+        },
+        {
+          "label": "Close Terminal",
+          "command": "terminal:close",
+          "group": "close",
+          "order": -20
+        },
+        {
+          "label": "Restart Terminal",
+          "command": "terminal:restart",
+          "group": "session",
+          "order": 10
+        },
+        {
+          "label": "Clear Terminal",
+          "command": "terminal:clear",
+          "group": "session",
+          "order": 20
+        },
+        {
+          "type": "separator"
+        },
+        {
+          "label": "Copy",
+          "command": "core:copy",
+          "group": "clipboard",
+          "order": 10
+        },
+        {
+          "label": "Paste",
+          "command": "core:paste",
+          "group": "clipboard",
+          "order": 20
+        },
+        {
+          "label": "Paste Image",
+          "command": "terminal:paste-image",
+          "group": "clipboard",
+          "order": 30
+        },
+        {
+          "type": "separator"
+        },
+        {
+          "label": "Close All Terminals",
+          "command": "terminal:close-all",
+          "group": "close",
+          "order": -10
+        },
+        {
+          "type": "separator"
+        }
+      ]
+    },
     ".tree-view .full-menu .entry:not(.tree-view-special-root)": [
       {
         "type": "separator"
@@ -143,50 +160,71 @@
         ],
         "submenu": [
           {
-            "label": "Open New",
-            "command": "terminal:open"
+            "label": "New Terminal",
+            "command": "terminal:open",
+            "group": "opening",
+            "order": 10
           },
           {
             "type": "separator"
           },
           {
-            "label": "Center",
+            "label": "New Terminal in Editor Area",
             "afterGroupContaining": ["terminal:open"],
-            "command": "terminal:open-center-context-menu"
+            "command": "terminal:open-center-context-menu",
+            "group": "opening",
+            "order": 20
           },
           {
             "label": "Split Up",
-            "command": "terminal:open-split-up-context-menu"
+            "command": "terminal:open-split-up-context-menu",
+            "group": "split",
+            "order": 10
           },
           {
             "label": "Split Down",
-            "command": "terminal:open-split-down-context-menu"
+            "command": "terminal:open-split-down-context-menu",
+            "group": "split",
+            "order": 20
           },
           {
             "label": "Split Left",
-            "command": "terminal:open-split-left-context-menu"
+            "command": "terminal:open-split-left-context-menu",
+            "group": "split",
+            "order": 30
           },
           {
             "label": "Split Right",
-            "command": "terminal:open-split-right-context-menu"
+            "command": "terminal:open-split-right-context-menu",
+            "group": "split",
+            "order": 40
           },
           {
             "type": "separator"
           },
           {
-            "label": "Bottom Dock",
+            "label": "New Terminal in Bottom Dock",
             "afterGroupContaining": ["terminal:open-center-context-menu", "terminal:open"],
-            "command": "terminal:open-split-bottom-dock-context-menu"
+            "command": "terminal:open-split-bottom-dock-context-menu",
+            "group": "docks",
+            "order": 10
           },
           {
-            "label": "Left Dock",
-            "command": "terminal:open-split-left-dock-context-menu"
+            "label": "New Terminal in Left Dock",
+            "command": "terminal:open-split-left-dock-context-menu",
+            "group": "docks",
+            "order": 20
           },
           {
-            "label": "Right Dock",
-            "command": "terminal:open-split-right-dock-context-menu"
+            "label": "New Terminal in Right Dock",
+            "command": "terminal:open-split-right-dock-context-menu",
+            "group": "docks",
+            "order": 30
           }
-        ]
+        ],
+        "group": "tools",
+        "order": 30,
+        "groupOrder": ["opening", "split", "docks", "system", "extensions"]
       },
       {
         "type": "separator"
@@ -211,48 +249,69 @@
         ],
         "submenu": [
           {
-            "label": "Open New",
-            "command": "terminal:open"
+            "label": "New Terminal",
+            "command": "terminal:open",
+            "group": "opening",
+            "order": 10
           },
           {
             "type": "separator"
           },
           {
-            "label": "Center",
-            "command": "terminal:open-center-context-menu"
+            "label": "New Terminal in Editor Area",
+            "command": "terminal:open-center-context-menu",
+            "group": "opening",
+            "order": 20
           },
           {
             "label": "Split Up",
-            "command": "terminal:open-split-up-context-menu"
+            "command": "terminal:open-split-up-context-menu",
+            "group": "split",
+            "order": 10
           },
           {
             "label": "Split Down",
-            "command": "terminal:open-split-down-context-menu"
+            "command": "terminal:open-split-down-context-menu",
+            "group": "split",
+            "order": 20
           },
           {
             "label": "Split Left",
-            "command": "terminal:open-split-left-context-menu"
+            "command": "terminal:open-split-left-context-menu",
+            "group": "split",
+            "order": 30
           },
           {
             "label": "Split Right",
-            "command": "terminal:open-split-right-context-menu"
+            "command": "terminal:open-split-right-context-menu",
+            "group": "split",
+            "order": 40
           },
           {
             "type": "separator"
           },
           {
-            "label": "Bottom Dock",
-            "command": "terminal:open-split-bottom-dock-context-menu"
+            "label": "New Terminal in Bottom Dock",
+            "command": "terminal:open-split-bottom-dock-context-menu",
+            "group": "docks",
+            "order": 10
           },
           {
-            "label": "Left Dock",
-            "command": "terminal:open-split-left-dock-context-menu"
+            "label": "New Terminal in Left Dock",
+            "command": "terminal:open-split-left-dock-context-menu",
+            "group": "docks",
+            "order": 20
           },
           {
-            "label": "Right Dock",
-            "command": "terminal:open-split-right-dock-context-menu"
+            "label": "New Terminal in Right Dock",
+            "command": "terminal:open-split-right-dock-context-menu",
+            "group": "docks",
+            "order": 30
           }
-        ]
+        ],
+        "group": "extensions",
+        "order": 30,
+        "groupOrder": ["opening", "split", "docks", "system", "extensions"]
       },
       {
         "type": "separator"

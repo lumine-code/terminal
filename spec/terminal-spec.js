@@ -583,17 +583,17 @@ describe("Terminal", () => {
         .templateForElement(entry)
         .find((item) => item.label === "Terminal");
       expect(terminal.submenu.map((item) => item.label ?? item.type)).toEqual([
-        "Open New",
+        "New Terminal",
+        "New Terminal in Editor Area",
         "separator",
-        "Center",
         "Split Up",
         "Split Down",
         "Split Left",
         "Split Right",
         "separator",
-        "Bottom Dock",
-        "Left Dock",
-        "Right Dock",
+        "New Terminal in Bottom Dock",
+        "New Terminal in Left Dock",
+        "New Terminal in Right Dock",
       ]);
     });
 
