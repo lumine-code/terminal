@@ -28,7 +28,7 @@ test.describe("Terminal link gestures", () => {
       element.pty.kill();
       window.linkTest = {
         opened: [],
-        openWith: [],
+        launcher: [],
         external: [],
         revealed: [],
         input: [],
@@ -49,8 +49,8 @@ test.describe("Terminal link gestures", () => {
       };
       const dispatch = lumine.commands.dispatch.bind(lumine.commands);
       lumine.commands.dispatch = (target, command, detail) => {
-        if (command === "open-with:toggle") {
-          window.linkTest.openWith.push({
+        if (command === "launcher:open") {
+          window.linkTest.launcher.push({
             path: detail.path,
             terminalTarget: target === element,
             initialLine: detail.initialLine ?? null,
@@ -140,7 +140,7 @@ test.describe("Terminal link gestures", () => {
       await expect.poll(appearance).toEqual({ pointer: false, underline: false });
       await page.mouse.click(point.x, point.y);
       expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
-      expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
+      expect(await page.evaluate(() => window.linkTest.launcher)).toEqual([]);
 
       for (const modifiers of [["Control"], ["Meta"], ["Shift"], ["Control", "Shift"]]) {
         for (const modifier of modifiers) await page.keyboard.down(modifier);
@@ -148,7 +148,7 @@ test.describe("Terminal link gestures", () => {
         await page.mouse.click(point.x, point.y);
         for (const modifier of [...modifiers].reverse()) await page.keyboard.up(modifier);
         expect(await page.evaluate(() => window.linkTest.opened)).toEqual([]);
-        expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.launcher)).toEqual([]);
         expect(await page.evaluate(() => window.linkTest.external)).toEqual([]);
         expect(await page.evaluate(() => window.linkTest.revealed)).toEqual([]);
       }
@@ -172,10 +172,10 @@ test.describe("Terminal link gestures", () => {
       await page.keyboard.up("Alt");
       if (kind === "web URL") {
         await expect.poll(() => page.evaluate(() => window.linkTest.opened)).toEqual([target]);
-        expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.launcher)).toEqual([]);
       } else {
         await expect
-          .poll(() => page.evaluate(() => window.linkTest.openWith))
+          .poll(() => page.evaluate(() => window.linkTest.launcher))
           .toEqual([
             {
               path: targetPath,
@@ -231,7 +231,7 @@ test.describe("Terminal link gestures", () => {
           (field) => field !== resultField,
         ))
           expect(await page.evaluate((field) => window.linkTest[field], field)).toEqual([]);
-        expect(await page.evaluate(() => window.linkTest.openWith)).toEqual([]);
+        expect(await page.evaluate(() => window.linkTest.launcher)).toEqual([]);
         expect(await page.evaluate(() => window.linkTest.input)).toEqual([]);
         await expect.poll(appearance).toEqual({ pointer: false, underline: false });
       });

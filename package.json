@@ -45,6 +45,11 @@
     "TerminalModel": "deserializeTerminalModel"
   },
   "providedServices": {
+    "launcher.provider": {
+      "versions": {
+        "1.0.0": "provideLauncher"
+      }
+    },
     "terminal": {
       "description": "Run commands and open terminals.",
       "versions": {

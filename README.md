@@ -79,6 +79,8 @@ The terminal treats CSS custom properties on `:root` as the source of truth for 
 
 ## Services
 
+- `launcher.provider`: provided to create new terminal items through Launcher.
+- `background-tips.provider`: provided to explain terminal actions in an empty workspace.
 - [`terminal`](docs/terminal.md): provided to let other packages open terminals and run commands in them.
 - `open-external`: consumed to open or reveal local paths through registered external handlers.
 - `mcp.bridge`: consumed to pass this window's bridge address to terminal processes.

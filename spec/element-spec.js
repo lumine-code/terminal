@@ -792,7 +792,7 @@ describe("TerminalElement", () => {
       await fs.writeFile(filePath, "hello");
       let uri = pathToFileURL(filePath).href;
       await element.activateLink({ altKey: true, button: 0 }, uri);
-      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "launcher:open", {
         path: fileURLToPath(uri),
       });
       expect(lumine.workspace.open).not.toHaveBeenCalled();
@@ -802,7 +802,7 @@ describe("TerminalElement", () => {
     it("chooses an opener for a directory link", async () => {
       let uri = pathToFileURL(tmpdir).href;
       await element.activateLink({ altKey: true, button: 0 }, uri);
-      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "launcher:open", {
         path: tmpdir,
       });
       expect(lumine.shell.openPath).not.toHaveBeenCalled();
@@ -819,7 +819,7 @@ describe("TerminalElement", () => {
       await fs.symlink(target, link, "junction");
       let uri = pathToFileURL(link).href;
       await element.activateLink({ altKey: true, button: 0 }, uri);
-      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "launcher:open", {
         path: link,
       });
       expect(lumine.shell.openPath).not.toHaveBeenCalled();
@@ -924,7 +924,7 @@ describe("TerminalElement", () => {
     it("passes one-based compiler locations to the chooser as zero-based positions", async () => {
       let filePath = path.join(tmpdir, "diagnostic.js");
       await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, 12, 4);
-      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "launcher:open", {
         path: filePath,
         initialLine: 11,
         initialColumn: 3,
@@ -937,7 +937,7 @@ describe("TerminalElement", () => {
       const filePath = path.join(tmpdir, "diagnostic.js");
       await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, 12);
 
-      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "launcher:open", {
         path: filePath,
         initialLine: 11,
         initialColumn: 0,
@@ -1086,7 +1086,7 @@ describe("TerminalElement", () => {
       await element.activateLocalPathLink({ altKey: true, button: 0 }, filePath, 12, 4);
       await element.activateLink({ altKey: true, button: 0 }, webUri);
 
-      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "launcher:open", {
         path: filePath,
         initialLine: 11,
         initialColumn: 3,
@@ -1109,7 +1109,7 @@ describe("TerminalElement", () => {
 
       expect(service.openExternal).not.toHaveBeenCalled();
       expect(service.showInFolder).not.toHaveBeenCalled();
-      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "open-with:toggle", {
+      expect(lumine.commands.dispatch).toHaveBeenCalledOnceWith(element, "launcher:open", {
         path: tmpdir,
       });
     });

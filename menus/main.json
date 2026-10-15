@@ -1,17 +1,6 @@
 {
   "menu": [
     {
-      "label": "File",
-      "submenu": [
-        {
-          "label": "New Terminal",
-          "command": "terminal:open",
-          "group": "new",
-          "order": 60
-        }
-      ]
-    },
-    {
       "label": "View",
       "submenu": [
         {

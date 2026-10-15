@@ -16,11 +16,11 @@ A focused terminal handles most other keystrokes itself, so use `terminal:unfocu
 
 ## Opening links
 
-Hold Alt and left-click a local filesystem path to choose its opener and window destination with Open With. File paths can include compiler-style line and column suffixes such as `file.js:42:7`; choosing an editor opener preserves that location. Hold Ctrl and Alt while left-clicking to open the path externally instead. External opening uses the `open-external` service when available, honoring handlers registered by other packages, and falls back to the system otherwise.
+Hold Alt and left-click a local filesystem path to choose its opener and window destination with Open…. File paths can include compiler-style line and column suffixes such as `file.js:42:7`; choosing an editor opener preserves that location. Hold Ctrl and Alt while left-clicking to open the path externally instead. External opening uses the `open-external` service when available, honoring handlers registered by other packages, and falls back to the system otherwise.
 
 Hold Alt and Shift while left-clicking a local path to reveal it in the system file manager. Shift and Ctrl-Shift clicks retain normal terminal selection.
 
-Web URLs and OSC 8 hyperlinks with web or mailto destinations open in their system application with Alt and a left-click. OSC 8 hyperlinks to local `file:` paths use the same Open With and external gestures as detected paths.
+Web URLs and OSC 8 hyperlinks with web or mailto destinations open in their system application with Alt and a left-click. OSC 8 hyperlinks to local `file:` paths use the same Open… and external gestures as detected paths.
 
 Alt reveals links on every platform. While it is held, a link under the mouse is underlined and the cursor becomes a pointer. Pressing or releasing Alt updates both indicators immediately, even while the mouse stays still. Ordinary mouse movement and clicking keep the terminal's normal behavior.
 
