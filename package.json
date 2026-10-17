@@ -10,7 +10,8 @@
     "menus",
     "shell-integration",
     "spec",
-    "styles"
+    "styles",
+    "THIRD_PARTY_NOTICES"
   ],
   "version": "1.0.0",
   "description": "An embedded terminal emulator.",
