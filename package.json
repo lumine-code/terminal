@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "@lumine-code/etch": "github:lumine-code/etch#c415f1685f7b913b137ffbd0b3e7fa983cb24f17",
-    "@lumine-code/node-pty": "github:lumine-code/node-pty#69a1d9a4d09db022872a02a5c98f90fcee49fd2e",
+    "@lumine-code/node-pty": "github:lumine-code/node-pty#daa6c08683c74fb6d86b02cd799742555c23963d",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-image": "^0.9.0",
     "@xterm/addon-ligatures": "^0.10.0",
@@ -87,7 +87,7 @@
     "prettier": "^3.9.10"
   },
   "allowScripts": {
-    "github:lumine-code/node-pty#69a1d9a4d09db022872a02a5c98f90fcee49fd2e": true
+    "github:lumine-code/node-pty#daa6c08683c74fb6d86b02cd799742555c23963d": true
   },
   "consumedServices": {
     "open-external": {
