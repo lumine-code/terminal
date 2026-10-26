@@ -65,6 +65,31 @@ describe("Terminal selection command origin", () => {
     expect(main.editorForSelection({ target: lumine.workspace.element, context: {} })).toBeNull();
   });
 
+  for (const selected of [true, false]) {
+    it(`rejects oversized ${selected ? "selection" : "line"} input before reads or terminal creation`, async () => {
+      lumine.config.set("terminal.maximumEditorInputLength", 1024);
+      origin.setText("x".repeat(2048));
+      if (selected) origin.selectAll();
+      else origin.setCursorBufferPosition([0, 0]);
+      const selectedRead = spyOn(origin, "getSelectedText").and.throwError("unbounded selection");
+      const lineRead = spyOn(origin, "lineTextForBufferRow").and.throwError("unbounded line");
+      const cursor = origin.getCursorBufferPosition();
+      expect(await main.runSelection({ target: origin.element })).toBeFalse();
+      expect(selectedRead).not.toHaveBeenCalled();
+      expect(lineRead).not.toHaveBeenCalled();
+      expect(main.performOnActiveTerminal).not.toHaveBeenCalled();
+      expect(terminal.run).not.toHaveBeenCalled();
+      expect(origin.getCursorBufferPosition()).toEqual(cursor);
+      expect(
+        lumine.notifications
+          .getNotifications()
+          .some((notification) => notification.getMessage().includes("input budget")),
+      ).toBeTrue();
+      selectedRead.and.callThrough();
+      lineRead.and.callThrough();
+    });
+  }
+
   it("advances the captured source only after a terminal accepts its line", async () => {
     origin.setSelectedBufferRange([
       [0, 0],

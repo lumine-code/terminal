@@ -65,6 +65,8 @@ Commands available in `terminal-view`:
 
 See the [Terminal guide](docs/usage.md) for placement, editor text, links, scrollback search, images, shell integration and appearance.
 
+Run/Insert Selected Text accepts up to 1 Mi UTF-16 code units per invocation by default. `maximumEditorInputLength` can raise that protocol-input budget to 16 Mi. The complete selection or current line is checked before reading or opening a terminal; oversized input is reported and nothing is sent or truncated.
+
 ## Customization
 
 The terminal treats CSS custom properties on `:root` as the source of truth for its colors. Redefine any of them in your `styles.css` to override the defaults:

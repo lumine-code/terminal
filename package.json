@@ -102,6 +102,14 @@
     }
   },
   "configSchema": {
+    "maximumEditorInputLength": {
+      "title": "Maximum Editor Input Length",
+      "description": "Maximum UTF-16 code units sent by Run/Insert Selected Text. Checked before reading the selection or current line; oversized input is rejected without sending a prefix.",
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 16777216,
+      "default": 1048576
+    },
     "terminal": {
       "title": "Terminal Settings",
       "description": "Settings related to the process running the shell.",
