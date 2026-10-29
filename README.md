@@ -65,6 +65,8 @@ Commands available in `terminal-view`:
 
 See the [Terminal guide](docs/usage.md) for placement, editor text, links, scrollback search, images, shell integration and appearance.
 
+Document inspectors can read the terminal's title and live working directory through the pane-item metadata API. Inspecting a terminal does not start a process or treat its working directory as a backing file.
+
 Run/Insert Selected Text accepts up to 1 Mi UTF-16 code units per invocation by default. `maximumEditorInputLength` can raise that protocol-input budget to 16 Mi. The complete selection or current line is checked before reading or opening a terminal; oversized input is reported and nothing is sent or truncated.
 
 ## Customization
