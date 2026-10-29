@@ -2,7 +2,7 @@
   "title": "terminal",
   "description": "Execute the current script in an integrated terminal.",
   "recordedOn": "2026-10-29",
-  "sourceRevision": "687520fe1c5dbbce45584ab5f427e46d1f1ded87",
+  "sourceRevision": "42a855e1dd66d69e42b0674a82fc44b0321a6676",
   "themeSourceRevision": "543b6786cc6eed20334c381eb322fc06e00a67b0",
   "mode": "normal",
   "fontSettings": "default",
@@ -24,17 +24,17 @@
   "privacy": { "version": 1, "location": "neutral", "textChecked": true },
   "sources": {
     "editor": {
-      "revision": "ad89c254a9f9e4c07ffbf5bc471030dbfb22b127",
+      "revision": "b569c426733b65e6e7ea16b00430f701a289996e",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "package": {
-      "revision": "687520fe1c5dbbce45584ab5f427e46d1f1ded87",
+      "revision": "42a855e1dd66d69e42b0674a82fc44b0321a6676",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "terminal": {
-      "revision": "687520fe1c5dbbce45584ab5f427e46d1f1ded87",
+      "revision": "42a855e1dd66d69e42b0674a82fc44b0321a6676",
       "dirty": false,
       "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
@@ -61,7 +61,7 @@
       "label": "Execute the current script in an integrated terminal.",
       "width": 1100,
       "height": 730,
-      "sha256": "fd58eccf85aabbc48b1ce21bc39c3604a35ff62fa45f892b619a0f4f578f0f72"
+      "sha256": "455d0940aab4b76031d9251ce1dbc7145b239104f66718fc61b29cd520a4cc62"
     }
   ]
 }
