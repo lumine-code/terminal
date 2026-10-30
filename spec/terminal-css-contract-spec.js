@@ -53,3 +53,84 @@ describe("Terminal default CSS palette", () => {
     expect(color("terminal-selection-text-color")).toBe("rgb(150, 170, 190)");
   });
 });
+
+describe("Terminal scrollbar presentation boundary", () => {
+  let styles, fixture;
+
+  beforeEach(() => {
+    styles = lumine.styles.addStyleSheet(
+      fs.readFileSync(path.join(__dirname, "../styles/terminal.css"), "utf8"),
+      { priority: 2000 },
+    );
+    fixture = document.createElement("div");
+    fixture.className = "disable-animations";
+    fixture.style.cssText = "position:absolute;left:-10000px;top:0;width:400px;height:200px";
+    jasmine.attachToDOM(fixture);
+  });
+
+  afterEach(() => {
+    fixture.remove();
+    styles.dispose();
+  });
+
+  function mount({ dock = false, nested = false, pane = true } = {}) {
+    const terminal = document.createElement("terminal-view");
+    const scrollable = document.createElement("div");
+    scrollable.className = "xterm-scrollable-element";
+    const track = document.createElement("div");
+    track.className = "scrollbar vertical invisible";
+    scrollable.appendChild(track);
+    terminal.appendChild(scrollable);
+    let parent = fixture;
+    if (dock) {
+      const dockElement = document.createElement("lumine-dock");
+      parent.appendChild(dockElement);
+      parent = dockElement;
+    }
+    if (pane) {
+      const paneElement = document.createElement("lumine-pane");
+      // Only the real element's DOM presentation is needed; no pane item is
+      // opened, terminal initialized or PTY process launched by this fixture.
+      paneElement.model = {
+        isFocused: () => false,
+        isDestroyed: () => false,
+        focus() {},
+        blur() {},
+      };
+      paneElement.views = { getView: () => null };
+      parent.appendChild(paneElement);
+      parent = paneElement.itemViews;
+    }
+    if (nested) {
+      const embedded = document.createElement("div");
+      parent.appendChild(embedded);
+      parent = embedded;
+    }
+    parent.appendChild(terminal);
+    return track;
+  }
+
+  it("keeps a terminal outside pane items permanently visible", () => {
+    const style = getComputedStyle(mount({ pane: false }));
+    expect(style.opacity).toBe("1");
+    expect(style.pointerEvents).toBe("auto");
+  });
+
+  it("keeps an embedded terminal visible even inside an unfocused dock", () => {
+    const style = getComputedStyle(mount({ dock: true, nested: true }));
+    expect(style.opacity).toBe("1");
+    expect(style.pointerEvents).toBe("auto");
+  });
+
+  it("hides only an unfocused dock's primary terminal item", () => {
+    const style = getComputedStyle(mount({ dock: true }));
+    expect(style.opacity).toBe("0");
+    expect(style.pointerEvents).toBe("none");
+  });
+
+  it("keeps a center terminal's primary track and separator visible", () => {
+    const style = getComputedStyle(mount());
+    expect(style.opacity).toBe("1");
+    expect(style.boxShadow).not.toBe("none");
+  });
+});

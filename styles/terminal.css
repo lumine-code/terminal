@@ -118,10 +118,22 @@ terminal-view.terminal--resize-settling
    visibility policy without creating a second scroll model or scrollbar. */
 .xterm-scrollable-element > .scrollbar,
 .xterm-scrollable-element > .xterm-scrollbar {
-  opacity: 0 !important;
-  pointer-events: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
   visibility: visible !important;
   transition: opacity 150ms ease-out !important;
+}
+
+/* Only a dock's primary terminal item uses transient chrome. An embedded
+   terminal keeps xterm's reserved text width and always-visible legacy bar. */
+lumine-dock
+  lumine-pane
+  > .item-views
+  > terminal-view
+  .xterm-scrollable-element
+  > :is(.scrollbar, .xterm-scrollbar) {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 lumine-pane:not(lumine-dock lumine-pane)
@@ -131,7 +143,8 @@ lumine-pane:not(lumine-dock lumine-pane)
   > :is(.scrollbar, .xterm-scrollbar),
 lumine-dock
   lumine-pane:is(:hover, :focus-within)
-  terminal-view
+  > .item-views
+  > terminal-view
   .xterm-scrollable-element
   > :is(.scrollbar, .xterm-scrollbar),
 .xterm-scrollable-element > .scrollbar:has(> .slider.active),
