@@ -114,16 +114,49 @@ terminal-view.terminal--resize-settling
   top: var(--terminal-frozen-slider-top) !important;
 }
 
-/* xterm hard-codes its scrollbar to auto-hide (fade out after scrolling); the
-   editor's scrollbars are permanently visible, so pin the terminal's visible
-   too. `visibility` matters as much as `opacity`: xterm's rest-state class is
-   `invisible`, which historically collided with a global `.invisible`
-   utility class hiding the scrollbar via `visibility: hidden`. */
+/* Xterm keeps ownership of the thumb and search ruler. Match the workspace's
+   visibility policy without creating a second scroll model or scrollbar. */
 .xterm-scrollable-element > .scrollbar,
 .xterm-scrollable-element > .xterm-scrollbar {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: visible !important;
+  transition: opacity 150ms ease-out !important;
+}
+
+lumine-pane:not(lumine-dock lumine-pane)
+  > .item-views
+  > terminal-view
+  .xterm-scrollable-element
+  > :is(.scrollbar, .xterm-scrollbar),
+lumine-dock
+  lumine-pane:is(:hover, :focus-within)
+  terminal-view
+  .xterm-scrollable-element
+  > :is(.scrollbar, .xterm-scrollbar),
+.xterm-scrollable-element > .scrollbar:has(> .slider.active),
+.xterm-scrollable-element > .xterm-scrollbar:has(> .xterm-slider.xterm-active) {
   opacity: 1 !important;
   pointer-events: auto !important;
-  visibility: visible !important;
+}
+
+lumine-pane:not(lumine-dock lumine-pane)
+  > .item-views
+  > terminal-view
+  .xterm-scrollable-element
+  > :is(.scrollbar, .xterm-scrollbar) {
+  box-shadow: inset 1px 0 0
+    var(--scrollbar-border-color, color-mix(in srgb, var(--text-color) 18%, transparent));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xterm-scrollable-element > :is(.scrollbar, .xterm-scrollbar) {
+    transition: none !important;
+  }
+}
+
+.disable-animations .xterm-scrollable-element > :is(.scrollbar, .xterm-scrollbar) {
+  transition: none !important;
 }
 
 /* No right padding: the scrollbar sits at the right edge of the scrollable

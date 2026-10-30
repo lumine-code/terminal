@@ -533,26 +533,57 @@ describe("TerminalElement", () => {
   });
 
   describe("getOverviewRulerOptions()", () => {
-    // `overviewRuler.width` governs the xterm scrollbar width, so it should
-    // track whatever width the active theme gives the editor's native
-    // scrollbars rather than a hard-coded value.
-    it("sizes the scrollbar to match the editor's native scrollbar width", () => {
-      let probe = document.createElement("div");
-      probe.style.cssText =
-        "position: absolute; top: -9999px; width: 100px; height: 100px; overflow: scroll;";
-      element.appendChild(probe);
-      let editorScrollbarWidth = probe.offsetWidth - probe.clientWidth;
-      probe.remove();
-
-      let { width } = element.getOverviewRulerOptions();
-      if (editorScrollbarWidth > 0) {
-        expect(width).toBe(editorScrollbarWidth);
-      } else {
-        // Overlay scrollbars (e.g. macOS) reserve no width; the terminal falls
-        // back to a sensible default so the scrollbar stays usable.
-        expect(width).toBeGreaterThan(0);
-      }
+    it("sizes the overlay from the editor token without creating a native probe", () => {
+      element.style.setProperty("--scrollbar-size-editor", "14px");
+      spyOn(element, "appendChild").and.callThrough();
+      expect(element.getOverviewRulerOptions().width).toBe(14);
+      expect(element.appendChild).not.toHaveBeenCalled();
     });
+
+    it("uses the same supported thickness bounds as the shared scrollbar", () => {
+      element.style.setProperty("--scrollbar-size-editor", "80px");
+      expect(element.getOverviewRulerOptions().width).toBe(40);
+      element.style.setProperty("--scrollbar-size-editor", "1px");
+      expect(element.getOverviewRulerOptions().width).toBe(4);
+    });
+  });
+
+  it("jumps immediately on an xterm track press and cancels pending smooth scrolling", () => {
+    const scrollable = element.terminal._core._viewport._scrollableElement;
+    const model = scrollable._scrollable;
+    scrollable.setScrollDimensions({ height: 200, scrollHeight: 2000 });
+    model.setSmoothScrollDuration(1000);
+    model.setScrollPositionNow({ scrollTop: 0 });
+    model.setScrollPositionSmooth({ scrollTop: 1800 });
+    expect(model.hasPendingScrollAnimation()).toBeTrue();
+
+    const track = element.querySelector(
+      ".xterm-scrollable-element > .scrollbar.vertical, .xterm-scrollable-element > .xterm-scrollbar.xterm-vertical",
+    );
+    const top = track.getBoundingClientRect().top;
+    const expected =
+      scrollable._verticalScrollbar._scrollbarState.getDesiredScrollPositionFromOffset(140);
+    track.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        button: 0,
+        buttons: 1,
+        pointerId: 1,
+        pointerType: "mouse",
+        clientY: top + 140,
+      }),
+    );
+    expect(model.getCurrentScrollPosition().scrollTop).toBe(expected);
+    expect(expected).toBeGreaterThan(0);
+    expect(model.hasPendingScrollAnimation()).toBeFalse();
+    track.dispatchEvent(
+      new PointerEvent("pointerup", {
+        bubbles: true,
+        button: 0,
+        pointerId: 1,
+        pointerType: "mouse",
+      }),
+    );
   });
 
   describe("getEnv()", () => {
