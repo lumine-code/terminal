@@ -29,6 +29,7 @@ terminal-view {
   align-items: center;
   gap: 5px;
   padding: 5px 5px 5px 10px;
+  border-bottom: 1px solid var(--base-border-color);
   flex-direction: row;
   z-index: 8 !important;
 }
