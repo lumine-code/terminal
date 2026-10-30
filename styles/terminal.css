@@ -114,8 +114,13 @@ terminal-view.terminal--resize-settling
   top: var(--terminal-frozen-slider-top) !important;
 }
 
-/* Xterm keeps ownership of the thumb and search ruler. Match the workspace's
-   visibility policy without creating a second scroll model or scrollbar. */
+/* Xterm keeps ownership of the thumb and search ruler. Keep markers above the
+   thumb and match the workspace's visibility policy without a second scrollbar. */
+.xterm .xterm-decoration-overview-ruler {
+  z-index: 12;
+  pointer-events: none;
+}
+
 .xterm-scrollable-element > .scrollbar,
 .xterm-scrollable-element > .xterm-scrollbar {
   opacity: 1 !important;
