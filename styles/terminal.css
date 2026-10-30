@@ -124,10 +124,9 @@ terminal-view.terminal--resize-settling
   transition: opacity 150ms ease-out !important;
 }
 
-/* Only a dock's primary terminal item uses transient chrome. An embedded
+/* A primary terminal item uses transient chrome in any pane. An embedded
    terminal keeps xterm's reserved text width and always-visible legacy bar. */
-lumine-dock
-  lumine-pane
+lumine-pane
   > .item-views
   > terminal-view
   .xterm-scrollable-element
@@ -136,13 +135,7 @@ lumine-dock
   pointer-events: none !important;
 }
 
-lumine-pane:not(lumine-dock lumine-pane)
-  > .item-views
-  > terminal-view
-  .xterm-scrollable-element
-  > :is(.scrollbar, .xterm-scrollbar),
-lumine-dock
-  lumine-pane:is(:hover, :focus-within)
+lumine-pane:is(:hover, :focus-within)
   > .item-views
   > terminal-view
   .xterm-scrollable-element
@@ -151,15 +144,6 @@ lumine-dock
 .xterm-scrollable-element > .xterm-scrollbar:has(> .xterm-slider.xterm-active) {
   opacity: 1 !important;
   pointer-events: auto !important;
-}
-
-lumine-pane:not(lumine-dock lumine-pane)
-  > .item-views
-  > terminal-view
-  .xterm-scrollable-element
-  > :is(.scrollbar, .xterm-scrollbar) {
-  box-shadow: inset 1px 0 0
-    var(--scrollbar-border-color, color-mix(in srgb, var(--text-color) 18%, transparent));
 }
 
 @media (prefers-reduced-motion: reduce) {

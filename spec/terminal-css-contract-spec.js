@@ -128,9 +128,16 @@ describe("Terminal scrollbar presentation boundary", () => {
     expect(style.pointerEvents).toBe("none");
   });
 
-  it("keeps a center terminal's primary track and separator visible", () => {
-    const style = getComputedStyle(mount());
-    expect(style.opacity).toBe("1");
-    expect(style.boxShadow).not.toBe("none");
+  it("reveals a center terminal's primary track on focus without a separator", () => {
+    const track = mount();
+    expect(getComputedStyle(track).opacity).toBe("0");
+    expect(getComputedStyle(track).pointerEvents).toBe("none");
+    expect(getComputedStyle(track).boxShadow).toBe("none");
+    const input = document.createElement("input");
+    track.closest("terminal-view").appendChild(input);
+    input.focus();
+    expect(getComputedStyle(track).opacity).toBe("1");
+    expect(getComputedStyle(track).pointerEvents).toBe("auto");
+    expect(getComputedStyle(track).boxShadow).toBe("none");
   });
 });
