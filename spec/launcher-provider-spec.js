@@ -6,7 +6,6 @@ describe("Terminal Launcher provider", () => {
   let main, provider, consumer, items;
 
   beforeEach(async () => {
-    localStorage.setItem("terminal.autoShellSet", "true");
     main = (await activatePackage()).mainModule;
     items = [];
     consumer = lumine.packages.serviceHub.consume("launcher.provider", "^1.0.0", (value) => {

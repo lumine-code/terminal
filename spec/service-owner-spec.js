@@ -10,7 +10,6 @@ describe("Terminal service payload ownership", () => {
     for (const name of ["openPath", "openExternal", "openApplication", "showItemInFolder"])
       spyOn(lumine.shell, name).and.resolveTo();
     spyOn(lumine.application, "openWindow").and.resolveTo();
-    localStorage.setItem("terminal.autoShellSet", "true");
     const pack = await lumine.packages.activatePackage("terminal");
     main = pack.mainModule;
     state = require(path.join(pack.path, "lib", "runtime-state"));

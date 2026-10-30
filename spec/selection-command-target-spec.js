@@ -4,7 +4,6 @@ describe("Terminal selection command origin", () => {
     for (const name of ["openPath", "openExternal", "openApplication", "showItemInFolder"])
       spyOn(lumine.shell, name).and.resolveTo();
     spyOn(lumine.application, "openWindow").and.resolveTo();
-    localStorage.setItem("terminal.autoShellSet", "true");
     main = (await lumine.packages.activatePackage("terminal")).mainModule;
     jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
     origin = await lumine.workspace.open();

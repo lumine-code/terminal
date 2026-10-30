@@ -7,7 +7,6 @@ describe("Terminal native renderer retirement", () => {
     for (const name of ["openPath", "openExternal", "openApplication", "showItemInFolder"])
       spyOn(lumine.shell, name).and.resolveTo();
     spyOn(lumine.application, "openWindow").and.resolveTo();
-    localStorage.setItem("terminal.autoShellSet", "true");
     const pack = await lumine.packages.activatePackage("terminal");
     root = path.join(pack.path, "lib");
     require("@lumine-code/etch").setScheduler(lumine.views);

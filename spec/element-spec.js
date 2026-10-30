@@ -146,6 +146,63 @@ describe("TerminalElement", () => {
     expect(element.terminal).toBeTruthy();
   });
 
+  describe("getShellCommand()", () => {
+    let originalShell, originalComspec, originalLoginShell;
+
+    beforeEach(() => {
+      originalShell = lumine.config.get("terminal.terminal.shell");
+      originalComspec = process.env.COMSPEC;
+      originalLoginShell = process.env.SHELL;
+      lumine.config.set("terminal.terminal.shell", "");
+    });
+
+    afterEach(() => {
+      lumine.config.set("terminal.terminal.shell", originalShell);
+      if (originalComspec === undefined) delete process.env.COMSPEC;
+      else process.env.COMSPEC = originalComspec;
+      if (originalLoginShell === undefined) delete process.env.SHELL;
+      else process.env.SHELL = originalLoginShell;
+    });
+
+    it("uses COMSPEC for a blank Windows setting without saving it", () => {
+      Object.defineProperty(process, "platform", { value: "win32" });
+      process.env.COMSPEC = "C:\\Windows\\System32\\cmd.exe";
+
+      expect(element.getShellCommand()).toBe(process.env.COMSPEC);
+      expect(lumine.config.get("terminal.terminal.shell")).toBe("");
+    });
+
+    it("uses cmd.exe when COMSPEC is absent", () => {
+      Object.defineProperty(process, "platform", { value: "win32" });
+      delete process.env.COMSPEC;
+
+      expect(element.getShellCommand()).toBe("cmd.exe");
+      expect(lumine.config.get("terminal.terminal.shell")).toBe("");
+    });
+
+    it("uses the login shell for a blank Unix setting without saving it", () => {
+      Object.defineProperty(process, "platform", { value: "linux" });
+      process.env.SHELL = "/bin/zsh";
+
+      expect(element.getShellCommand()).toBe("/bin/zsh");
+      expect(lumine.config.get("terminal.terminal.shell")).toBe("");
+    });
+
+    it("uses /bin/sh when SHELL is absent", () => {
+      Object.defineProperty(process, "platform", { value: "linux" });
+      delete process.env.SHELL;
+
+      expect(element.getShellCommand()).toBe("/bin/sh");
+      expect(lumine.config.get("terminal.terminal.shell")).toBe("");
+    });
+
+    it("uses an explicitly configured shell instead of the environment default", () => {
+      lumine.config.set("terminal.terminal.shell", "custom-shell");
+
+      expect(element.getShellCommand()).toBe("custom-shell");
+    });
+  });
+
   it("keeps the PTY, terminal buffer and selection alive across physical editor windows", async () => {
     const workspace = lumine.workspace;
     jasmine.attachToDOM(workspace.getElement());
