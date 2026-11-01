@@ -93,9 +93,8 @@ terminal-view {
 
 .xterm-scrollable-element > .scrollbar > .slider.active,
 .xterm-scrollable-element > .xterm-scrollbar > .xterm-slider.xterm-active {
+  border-width: 0;
   border-radius: 0;
-  border-left-width: 0;
-  border-right-width: 0;
 }
 
 /* While a resize settle window is open (`lib/element.js` sets the class after
