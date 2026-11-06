@@ -64,7 +64,7 @@
     }
   },
   "dependencies": {
-    "@lumine-code/etch": "github:lumine-code/etch#a543b97d4b75e1a7e92251e4998b5425a9714765",
+    "@lumine-code/etch": "github:lumine-code/etch#d6670187657f33e109570f4dc749bf42b99a0c33",
     "@lumine-code/node-pty": "github:lumine-code/node-pty#f7b20df5f9aa76333db76452cfe67b463fa31092",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/addon-image": "^0.9.0",
@@ -77,7 +77,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@lumine-code/fs-temp": "github:lumine-code/fs-temp#45485c522d8548846b20b2793adacb2146b53dc1",
+    "@lumine-code/fs-temp": "github:lumine-code/fs-temp#1a6b777f19f970a351ce227f4b2acd096546878a",
     "@playwright/test": "^1.64.1",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
