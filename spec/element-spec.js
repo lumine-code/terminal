@@ -1445,7 +1445,7 @@ describe("TerminalElement", () => {
             .and.callFake((name) => (name === "WEBGL_lose_context" ? { loseContext } : null)),
         };
         spyOn(WebglAddon.prototype, "activate").and.callFake(function () {
-          this._renderer = { _gl: context };
+          this._renderer = { _gl: context, _charAtlas: undefined };
         });
         return { context, loseContext };
       }
@@ -1502,7 +1502,7 @@ describe("TerminalElement", () => {
       });
 
       it("tolerates a missing private renderer or context-loss extension", async () => {
-        let renderers = [undefined, { _gl: { getExtension: () => null } }];
+        let renderers = [undefined, { _gl: { getExtension: () => null }, _charAtlas: undefined }];
         spyOn(WebglAddon.prototype, "activate").and.callFake(function () {
           this._renderer = renderers.shift();
         });
