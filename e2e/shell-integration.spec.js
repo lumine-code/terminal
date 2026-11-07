@@ -54,11 +54,11 @@ test.describe(`shell integration (${SHELL_NAME})`, () => {
               (selector) => document.querySelector(selector)?.getModel?.().cwd,
               TERMINAL_ELEMENT_SELECTOR,
             );
-            return cwd ? path.normalize(cwd) : cwd;
+            return cwd ? path.normalize(fs.realpathSync.native(cwd)) : cwd;
           },
           { message: "waiting for shell integration to report the new cwd", timeout: 20_000 },
         )
-        .toBe(path.normalize(fs.realpathSync(targetDirectory)));
+        .toBe(path.normalize(fs.realpathSync.native(targetDirectory)));
     } catch (error) {
       console.log(`--- terminal contents at failure ---\n${await readTerminalContents(page)}`);
       throw error;
