@@ -139,9 +139,14 @@ lumine-pane
   pointer-events: none !important;
 }
 
-lumine-pane:is(:hover, :focus-within)
+lumine-pane:hover
   > .item-views
   > terminal-view
+  .xterm-scrollable-element
+  > :is(.scrollbar, .xterm-scrollbar),
+lumine-pane
+  > .item-views
+  > terminal-view.terminal--scrollbar-active
   .xterm-scrollable-element
   > :is(.scrollbar, .xterm-scrollbar),
 .xterm-scrollable-element > .scrollbar:has(> .slider.active),

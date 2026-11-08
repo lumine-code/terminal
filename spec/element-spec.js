@@ -146,6 +146,48 @@ describe("TerminalElement", () => {
     expect(element.terminal).toBeTruthy();
   });
 
+  it("reports accepted terminal navigation, including a Shift-Page boundary, but not typing", () => {
+    const reveal = spyOn(element, "revealScrollbar");
+    const key = (name, code, shiftKey = false) =>
+      element.terminal.textarea.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: name,
+          keyCode: code,
+          shiftKey,
+        }),
+      );
+    key("ArrowUp", 38);
+    expect(reveal).toHaveBeenCalledTimes(1);
+    key("PageUp", 33, true);
+    expect(reveal).toHaveBeenCalledTimes(2);
+    key("a", 65);
+    expect(reveal).toHaveBeenCalledTimes(2);
+  });
+
+  it("reports native scroll movement and a handled same-match find request", async () => {
+    await new Promise((resolve) => element.terminal.write("row\r\n".repeat(100), resolve));
+    const reveal = spyOn(element, "revealScrollbar");
+    element.terminal.scrollLines(-1);
+    expect(reveal).toHaveBeenCalled();
+    reveal.calls.reset();
+    element.findPalette.term = "row";
+    element.findPalette.resultCount = 1;
+    spyOn(element.findPalette.searchAddon, "findNext").and.returnValue(true);
+    element.findNext();
+    expect(reveal).toHaveBeenCalledTimes(1);
+  });
+
+  it("retires the shared renderer activity and removes its visible class", () => {
+    element.revealScrollbar();
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeTrue();
+    element.destroy();
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+    element.revealScrollbar();
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+  });
+
   describe("getShellCommand()", () => {
     let originalShell, originalComspec, originalLoginShell;
 

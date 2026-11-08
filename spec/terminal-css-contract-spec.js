@@ -128,7 +128,7 @@ describe("Terminal scrollbar presentation boundary", () => {
     expect(style.pointerEvents).toBe("none");
   });
 
-  it("reveals a center terminal's primary track on focus without a separator", () => {
+  it("keeps focus transient and reveals a center terminal only for activity without a separator", () => {
     const track = mount();
     expect(getComputedStyle(track).opacity).toBe("0");
     expect(getComputedStyle(track).pointerEvents).toBe("none");
@@ -136,8 +136,22 @@ describe("Terminal scrollbar presentation boundary", () => {
     const input = document.createElement("input");
     track.closest("terminal-view").appendChild(input);
     input.focus();
+    expect(getComputedStyle(track).opacity).toBe("0");
+    track.closest("terminal-view").classList.add("terminal--scrollbar-active");
     expect(getComputedStyle(track).opacity).toBe("1");
     expect(getComputedStyle(track).pointerEvents).toBe("auto");
     expect(getComputedStyle(track).boxShadow).toBe("none");
+    track.closest("terminal-view").classList.remove("terminal--scrollbar-active");
+    expect(getComputedStyle(track).opacity).toBe("0");
+  });
+
+  it("keeps a dragged thumb visible after activity expires", () => {
+    const track = mount();
+    const thumb = document.createElement("div");
+    thumb.className = "slider active";
+    track.appendChild(thumb);
+    expect(getComputedStyle(track).opacity).toBe("1");
+    thumb.classList.remove("active");
+    expect(getComputedStyle(track).opacity).toBe("0");
   });
 });
