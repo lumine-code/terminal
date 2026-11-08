@@ -108,7 +108,7 @@ jobs:
           install || install || install
       - name: Download the Electron binary
         working-directory: lumine
-        run: node ./node_modules/electron/install.js
+        run: node script/install-electron.js
       - name: Rebuild native modules for Electron
         working-directory: lumine
         run: npm run build
@@ -174,7 +174,7 @@ jobs:
           install || install || install
       - name: Download the Electron binary
         working-directory: lumine
-        run: node ./node_modules/electron/install.js
+        run: node script/install-electron.js
       - name: Rebuild editor native modules for Electron
         working-directory: lumine
         run: npm run build
