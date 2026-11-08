@@ -433,6 +433,42 @@ describe("TerminalModel", () => {
   });
 
   describe("moveToPane()", () => {
+    it("opens the same view's tab in the center and separates it in every dock", () => {
+      const view = document.createElement("div");
+      model.setElement(view);
+      expect(view.classList.contains("tab-content-separated")).toBe(false);
+
+      const containers = [
+        lumine.workspace.getBottomDock(),
+        lumine.workspace.getLeftDock(),
+        lumine.workspace.getRightDock(),
+      ];
+      for (const dock of containers) {
+        model.moveToPane(dock.getActivePane());
+        expect(model.getElement()).toBe(view);
+        expect(view.classList.contains("tab-content-separated")).toBe(true);
+
+        model.moveToPane(lumine.workspace.getCenter().getActivePane());
+        expect(model.getElement()).toBe(view);
+        expect(view.classList.contains("tab-content-separated")).toBe(false);
+      }
+    });
+
+    it("applies the current location when the view is created after the model is placed", () => {
+      for (const [container, separated] of [
+        [lumine.workspace.getCenter(), false],
+        [lumine.workspace.getBottomDock(), true],
+        [lumine.workspace.getLeftDock(), true],
+        [lumine.workspace.getRightDock(), true],
+      ]) {
+        model.setElement(null);
+        model.moveToPane(container.getActivePane());
+        const view = document.createElement("div");
+        model.setElement(view);
+        expect(view.classList.contains("tab-content-separated")).toBe(separated);
+      }
+    });
+
     it("(mock)", async () => {
       const expected = { getContainer: () => ({ getLocation: () => {} }) };
       model.moveToPane(expected);

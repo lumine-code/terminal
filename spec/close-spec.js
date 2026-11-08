@@ -71,6 +71,7 @@ describe("closing from a focused terminal", () => {
 
   it("closes the terminal when it is an editor tab in the center", async () => {
     await openTerminal(lumine.workspace.getCenter());
+    expect(terminal.element.classList.contains("tab-content-separated")).toBe(false);
     lumine.config.set("terminal.behavior.prioritizedCommands", []);
     const event = closeKeystroke(terminal.element.terminal.textarea);
     const onData = jasmine.createSpy("onData");
@@ -104,6 +105,8 @@ describe("closing from a focused terminal", () => {
 
   it("uses the terminal's current container after moving its tab", async () => {
     await openTerminal(lumine.workspace.getRightDock());
+    const element = terminal.element;
+    expect(element.classList.contains("tab-content-separated")).toBe(true);
     const pane = lumine.workspace.paneForItem(terminal);
     const centerPane = lumine.workspace.getCenter().getActivePane();
     const event = closeKeystroke(terminal.element.terminal.textarea);
@@ -116,6 +119,8 @@ describe("closing from a focused terminal", () => {
     pane.moveItemToPane(terminal, centerPane);
     centerPane.activateItem(terminal);
     await wait(0);
+    expect(terminal.element).toBe(element);
+    expect(element.classList.contains("tab-content-separated")).toBe(false);
     onData.calls.reset();
     expect(deliverToXterm(event)).toBe(false);
     expect(onData).not.toHaveBeenCalled();
@@ -124,6 +129,8 @@ describe("closing from a focused terminal", () => {
     centerPane.moveItemToPane(terminal, dockPane);
     dockPane.activateItem(terminal);
     await wait(0);
+    expect(terminal.element).toBe(element);
+    expect(element.classList.contains("tab-content-separated")).toBe(true);
     deliverToXterm(event);
     if (process.platform !== "darwin") expect(onData).toHaveBeenCalledWith("\x17");
   });
