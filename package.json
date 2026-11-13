@@ -83,7 +83,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.5.0",
     "globals": "^17.14.0",
-    "prettier": "^3.10.0"
+    "prettier": "^3.10.1"
   },
   "allowScripts": {
     "github:lumine-code/node-pty#c20759ff04c40eadc5c0c0218d7112393de64f3b": true
