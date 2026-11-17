@@ -444,8 +444,9 @@ describe("TerminalElement", () => {
       await wait(0);
 
       expect(lumine.notifications.addError).toHaveBeenCalled();
-      let [message] = lumine.notifications.addError.calls.mostRecent().args;
-      expect(message).toContain("exited unexpectedly");
+      let [message, options] = lumine.notifications.addError.calls.mostRecent().args;
+      expect(message).toBe("Terminal process stopped unexpectedly");
+      expect(options.detail).toContain("exited unexpectedly");
       expect(element.isPtyProcessRunning()).toBeFalsy();
     });
 
@@ -949,6 +950,17 @@ describe("TerminalElement", () => {
   });
 
   describe("showNotification()", () => {
+    it("keeps diagnostic paths literal in the banner and below the global heading", () => {
+      const detail = String.raw`Command: C:\Programs\[shell]\_launch <unknown>`;
+      spyOn(lumine.notifications, "addError");
+      element.showNotification("Failed to start terminal", "error", { detail, force: true });
+      expect(lumine.notifications.addError).toHaveBeenCalledOnceWith("Failed to start terminal", {
+        detail,
+      });
+      const inlineDetail = element.querySelector(".terminal__notification-detail");
+      expect(inlineDetail.textContent).toBe(detail);
+      expect(inlineDetail.children.length).toBe(0);
+    });
     it("is gated by behavior.showNotifications, except when forced", () => {
       spyOn(lumine.notifications, "addInfo");
       element.showNotification("hello", "info");
