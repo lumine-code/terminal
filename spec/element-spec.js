@@ -162,21 +162,99 @@ describe("TerminalElement", () => {
     expect(reveal).toHaveBeenCalledTimes(1);
     key("PageUp", 33, true);
     expect(reveal).toHaveBeenCalledTimes(2);
+    key("Tab", 9);
+    expect(reveal).toHaveBeenCalledTimes(3);
     key("a", 65);
-    expect(reveal).toHaveBeenCalledTimes(2);
+    expect(reveal).toHaveBeenCalledTimes(3);
   });
 
-  it("reports native scroll movement and a handled same-match find request", async () => {
+  it("keeps programmatic scroll and new output quiet but reports a handled same-match find request", async () => {
     await new Promise((resolve) => element.terminal.write("row\r\n".repeat(100), resolve));
     const reveal = spyOn(element, "revealScrollbar");
+    const scroll = jasmine.createSpy("native scroll");
+    const subscription = element.terminal.onScroll(scroll);
     element.terminal.scrollLines(-1);
-    expect(reveal).toHaveBeenCalled();
-    reveal.calls.reset();
+    element.terminal.scrollToTop();
+    element.terminal.scrollToBottom();
+    await new Promise((resolve) => element.terminal.write("new output\r\n".repeat(20), resolve));
+    expect(scroll).toHaveBeenCalled();
+    expect(reveal).not.toHaveBeenCalled();
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+    subscription.dispose();
     element.findPalette.term = "row";
     element.findPalette.resultCount = 1;
     spyOn(element.findPalette.searchAddon, "findNext").and.returnValue(true);
     element.findNext();
     expect(reveal).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not extend or clear a navigation deadline when wheel or native scrolling follows it", async () => {
+    await new Promise((resolve) => element.terminal.write("row\r\n".repeat(100), resolve));
+    element.terminal.scrollToTop();
+    let now = 0;
+    let nextTimer = 0;
+    const timers = new Map();
+    spyOn(window.performance, "now").and.callFake(() => now);
+    spyOn(window, "setTimeout").and.callFake((callback, delay) => {
+      const id = ++nextTimer;
+      timers.set(id, { at: now + delay, callback });
+      return id;
+    });
+    spyOn(window, "clearTimeout").and.callFake((id) => timers.delete(id));
+    const tick = (duration) => {
+      now += duration;
+      for (const [id, timer] of [...timers]) {
+        if (timer.at > now) continue;
+        timers.delete(id);
+        timer.callback();
+      }
+    };
+    try {
+      element.revealScrollbar();
+      tick(400);
+      const scrollable = element.querySelector(".xterm-scrollable-element");
+      scrollable.dispatchEvent(
+        new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: 120 }),
+      );
+      element.terminal.scrollLines(1);
+      expect(element.classList.contains("terminal--scrollbar-active")).toBeTrue();
+      tick(299);
+      expect(element.classList.contains("terminal--scrollbar-active")).toBeTrue();
+      tick(1);
+      expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+      element.terminal.scrollToBottom();
+      scrollable.dispatchEvent(
+        new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: -120 }),
+      );
+      tick(100);
+      expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+    } finally {
+      jasmine.useRealClock();
+    }
+  });
+
+  it("keeps xterm's drag state until release outside the terminal", () => {
+    const thumb = element.querySelector(".slider, .xterm-slider");
+    const activeClass = thumb.classList.contains("xterm-slider") ? "xterm-active" : "active";
+    // Exercise xterm's supported window-listener fallback for uncaptured pointers.
+    spyOn(thumb, "setPointerCapture").and.throwError("No active pointer");
+    thumb.dispatchEvent(
+      new PointerEvent("pointerdown", {
+        bubbles: true,
+        cancelable: true,
+        pointerId: 1,
+        button: 0,
+        buttons: 1,
+      }),
+    );
+    expect(thumb.classList.contains(activeClass)).toBeTrue();
+    window.dispatchEvent(
+      new PointerEvent("pointermove", { pointerId: 1, buttons: 1, clientX: -100, clientY: -100 }),
+    );
+    expect(thumb.classList.contains(activeClass)).toBeTrue();
+    window.dispatchEvent(new PointerEvent("pointerup", { pointerId: 1, buttons: 0 }));
+    expect(thumb.classList.contains(activeClass)).toBeFalse();
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
   });
 
   it("retires the shared renderer activity and removes its visible class", () => {
