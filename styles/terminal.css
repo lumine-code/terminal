@@ -124,8 +124,14 @@ terminal-view.terminal--resize-settling
 .xterm-scrollable-element > .xterm-scrollbar {
   opacity: 1 !important;
   pointer-events: auto !important;
-  visibility: visible !important;
+  visibility: hidden !important;
   transition: opacity 150ms ease-out !important;
+}
+
+terminal-view.terminal--scrollbar-scrollable
+  .xterm-scrollable-element
+  > :is(.scrollbar, .xterm-scrollbar) {
+  visibility: visible !important;
 }
 
 /* A primary terminal item uses transient chrome in any pane. An embedded

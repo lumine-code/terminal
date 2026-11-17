@@ -73,8 +73,9 @@ describe("Terminal scrollbar presentation boundary", () => {
     styles.dispose();
   });
 
-  function mount({ dock = false, nested = false, pane = true } = {}) {
+  function mount({ dock = false, nested = false, pane = true, overflow = true } = {}) {
     const terminal = document.createElement("terminal-view");
+    terminal.classList.toggle("terminal--scrollbar-scrollable", overflow);
     const scrollable = document.createElement("div");
     scrollable.className = "xterm-scrollable-element";
     const track = document.createElement("div");
@@ -154,4 +155,12 @@ describe("Terminal scrollbar presentation boundary", () => {
     thumb.classList.remove("active");
     expect(getComputedStyle(track).opacity).toBe("0");
   });
+
+  for (const nested of [false, true]) {
+    it(`hides a fitting ${nested ? "embedded" : "primary"} terminal even during activity`, () => {
+      const track = mount({ nested, overflow: false });
+      track.closest("terminal-view").classList.add("terminal--scrollbar-active");
+      expect(getComputedStyle(track).visibility).toBe("hidden");
+    });
+  }
 });

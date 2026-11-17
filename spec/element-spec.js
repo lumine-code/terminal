@@ -146,6 +146,76 @@ describe("TerminalElement", () => {
     expect(element.terminal).toBeTruthy();
   });
 
+  const writeOutput = (terminal, text) => new Promise((resolve) => terminal.write(text, resolve));
+  const rendererScrollbar = (terminal) => terminal._core._viewport._scrollableElement;
+  const waitForOverflow = async (canScroll) => {
+    await window.waitForFrames(
+      () =>
+        rendererScrollbar(element.terminal)._verticalScrollbar.isNeeded() === canScroll &&
+        element.classList.contains("terminal--scrollbar-scrollable") === canScroll,
+      { description: `the real terminal scrollbar overflow to become ${canScroll}` },
+    );
+  };
+
+  it("hides fitting chrome, shows overflowing chrome and retires activity when output fits again", async () => {
+    element.terminal.clear();
+    await waitForOverflow(false);
+    const track = element.querySelector(".scrollbar.vertical, .xterm-scrollbar.xterm-vertical");
+    expect(getComputedStyle(track).visibility).toBe("hidden");
+    element.revealScrollbar();
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+
+    await writeOutput(element.terminal, "visible output\r\n".repeat(element.terminal.rows * 3));
+    await waitForOverflow(true);
+    expect(getComputedStyle(track).visibility).toBe("visible");
+    element.revealScrollbar();
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeTrue();
+
+    element.terminal.clear();
+    await waitForOverflow(false);
+    expect(getComputedStyle(track).visibility).toBe("hidden");
+    expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+  });
+
+  it("updates real scrollbar presence after alternate-buffer switches and viewport resize", async () => {
+    await writeOutput(element.terminal, "scrollback\r\n".repeat(80));
+    await waitForOverflow(true);
+    await writeOutput(element.terminal, "\x1b[?1049h");
+    await waitForOverflow(false);
+    await writeOutput(element.terminal, "\x1b[?1049l");
+    await waitForOverflow(true);
+    element.terminal.resize(80, 200);
+    element.terminal.clear();
+    await waitForOverflow(false);
+    await writeOutput(element.terminal, "fitting rows\r\n".repeat(20));
+    await waitForOverflow(false);
+    element.terminal.resize(80, 8);
+    await waitForOverflow(true);
+  });
+
+  it("disables the renderer hide timer for real output, programmatic scroll and wheel", async () => {
+    const scrollable = rendererScrollbar(element.terminal);
+    expect(scrollable._revealOnScroll).toBeFalse();
+    const hide = spyOn(scrollable._hideTimeout, "cancelAndSet").and.callThrough();
+    const scroll = jasmine.createSpy("real renderer scroll");
+    const subscription = scrollable.onScroll(scroll);
+    try {
+      await writeOutput(element.terminal, "scrollback\r\n".repeat(80));
+      await waitForOverflow(true);
+      element.terminal.scrollToTop();
+      element.terminal.scrollToBottom();
+      scrollable
+        .getDomNode()
+        .dispatchEvent(new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: -120 }));
+      await wait(50);
+      expect(scroll).toHaveBeenCalled();
+      expect(hide).not.toHaveBeenCalled();
+      expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
+    } finally {
+      subscription.dispose();
+    }
+  });
+
   it("reports accepted terminal navigation, including a Shift-Page boundary, but not typing", () => {
     const reveal = spyOn(element, "revealScrollbar");
     const key = (name, code, shiftKey = false) =>
@@ -257,7 +327,9 @@ describe("TerminalElement", () => {
     expect(element.classList.contains("terminal--scrollbar-active")).toBeFalse();
   });
 
-  it("retires the shared renderer activity and removes its visible class", () => {
+  it("retires the shared renderer activity and removes its visible class", async () => {
+    await writeOutput(element.terminal, "scrollback\r\n".repeat(80));
+    await waitForOverflow(true);
     element.revealScrollbar();
     expect(element.classList.contains("terminal--scrollbar-active")).toBeTrue();
     element.destroy();
