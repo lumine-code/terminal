@@ -8,14 +8,25 @@ module.exports = {
     const { lumine, state, fixture, open } = context;
     state.editor = await open("terminal-sample/signal.js");
     await lumine.project.setPaths([fixture("terminal-sample")]);
-    lumine.config.set(
-      "terminal.terminal.shell",
-      process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/sh",
-    );
+    const windows = process.platform === "win32";
+    lumine.config.set("terminal.terminal.shell", windows ? "powershell.exe" : "/bin/sh");
     lumine.config.set(
       "terminal.terminal.args",
-      process.platform === "win32" ? ["-NoLogo", "-NoProfile", "-NoExit"] : [],
+      windows
+        ? [
+            "-NoLogo",
+            "-NoProfile",
+            "-NoExit",
+            "-Command",
+            "function prompt { 'PS ' + (Get-Item -LiteralPath .).Name + '> ' }",
+          ]
+        : ["-i"],
     );
+    if (!windows)
+      lumine.config.set(
+        "terminal.terminal.env.overrideEnv",
+        JSON.stringify({ ENV: "", PS1: "$ " }),
+      );
   },
   scenes: [
     {
@@ -63,6 +74,7 @@ module.exports = {
     const { lumine } = context;
     lumine.config.unset("terminal.terminal.shell");
     lumine.config.unset("terminal.terminal.args");
+    if (process.platform !== "win32") lumine.config.unset("terminal.terminal.env.overrideEnv");
   },
   privacyText({ state }) {
     const buffer = state.terminal?.element?.terminal?.buffer.active;
