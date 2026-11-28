@@ -46,6 +46,16 @@ terminal-view {
 
 .terminal-find-palette__btn-close {
   margin-left: auto;
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+
+  &:focus-visible {
+    outline: 1px solid var(--accent-indicator-color);
+  }
 }
 
 /* The terminal's colors are CSS custom properties (`--terminal-*`). Package
